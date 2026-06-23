@@ -17,6 +17,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- Thư viện Chart.js cho Biểu đồ thống kê -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Thư viện Canvas Confetti cho hiệu ứng ăn mừng -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Thêm Tone.js để tạo âm thanh thông báo -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
     <!-- Thư viện Leaflet cho Bản đồ -->
@@ -418,6 +420,13 @@
                 <i class="fa-solid fa-boxes-stacked mr-2"></i> QL Nguyên liệu
               </a>
               <a
+                id="nav-messages"
+                onclick="switchView('messages')"
+                class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap relative"
+              >
+                <i class="fa-solid fa-comments mr-2"></i> Tin nhắn <span id="nav-messages-badge" class="hidden absolute top-3 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">0</span>
+              </a>
+              <a
                 id="nav-menu"
                 onclick="switchView('menu')"
                 class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
@@ -478,6 +487,7 @@
           <a id="nav-mobile-marketing" onclick="switchView('marketing'); document.getElementById('mobile-menu').classList.add('hidden')" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-bullseye w-6"></i> Marketing</a>
           <a id="nav-mobile-orders" onclick="switchView('orders'); document.getElementById('mobile-menu').classList.add('hidden')" class="px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors flex justify-between items-center"><div class="flex items-center"><i class="fa-solid fa-receipt w-6"></i> Quản lý đơn hàng</div> <span id="mobile-order-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span></a>
           <a id="nav-mobile-inventory" onclick="switchView('inventory'); document.getElementById('mobile-menu').classList.add('hidden')" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-boxes-stacked w-6"></i> QL Nguyên liệu</a>
+          <a id="nav-mobile-messages" onclick="switchView('messages'); document.getElementById('mobile-menu').classList.add('hidden')" class="px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors flex justify-between items-center"><div class="flex items-center"><i class="fa-solid fa-comments w-6"></i> Tin nhắn</div> <span id="nav-mobile-messages-badge" class="hidden bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">0</span></a>
           <a id="nav-mobile-menu" onclick="switchView('menu'); document.getElementById('mobile-menu').classList.add('hidden')" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-utensils w-6"></i> Quản lý Menu</a>
           <a id="nav-mobile-customers" onclick="switchView('customers'); document.getElementById('mobile-menu').classList.add('hidden')" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-users w-6"></i> Dữ liệu KH</a>
           <a id="nav-mobile-consulting" onclick="switchView('consulting'); document.getElementById('mobile-menu').classList.add('hidden')" class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"><i class="fa-solid fa-stethoscope w-6"></i> Tư vấn dinh dưỡng</a>
@@ -843,6 +853,48 @@
           class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           id="dish-grid"
         ></div>
+      </div>
+
+      <!-- View: MESSAGES -->
+      <div id="view-messages" class="hidden animate-fade-in h-[calc(100vh-100px)] flex-col md:flex-row gap-4 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <!-- Sidebar -->
+        <div class="w-full md:w-1/3 lg:w-1/4 border-r border-slate-200 flex flex-col bg-slate-50 shrink-0">
+            <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
+                <h2 class="font-bold text-lg text-slate-800">Tin nhắn</h2>
+                <button onclick="renderMessagesList()" class="text-slate-500 hover:text-emerald-600 transition-colors"><i class="fa-solid fa-rotate-right"></i></button>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1" id="messages-list">
+                <!-- Chat sessions go here -->
+            </div>
+        </div>
+        <!-- Main Chat Area -->
+        <div class="flex-1 flex flex-col bg-white overflow-hidden">
+            <div id="admin-chat-header" class="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between shrink-0 hidden">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800" id="admin-chat-title">Khách hàng</h3>
+                        <p class="text-xs text-slate-500" id="admin-chat-subtitle">Đang hỗ trợ...</p>
+                    </div>
+                </div>
+                <button onclick="resolveSupportRequest()" id="btn-resolve-support" class="hidden bg-emerald-100 hover:bg-emerald-200 text-emerald-700 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors"><i class="fa-solid fa-check mr-1"></i> Đã hỗ trợ</button>
+            </div>
+            <div id="admin-chat-empty" class="flex-1 flex items-center justify-center text-slate-400 flex-col gap-3">
+                <i class="fa-solid fa-comments text-4xl text-slate-200"></i>
+                <p>Chọn một cuộc trò chuyện để xem chi tiết</p>
+            </div>
+            <div id="admin-chat-messages" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 custom-scrollbar hidden">
+                <!-- Messages -->
+            </div>
+            <div id="admin-chat-input-area" class="p-4 border-t border-slate-200 bg-slate-50 hidden shrink-0">
+                <form onsubmit="sendAdminMessage(event)" class="flex gap-2">
+                    <input type="text" id="admin-chat-input" placeholder="Nhập tin nhắn trả lời..." class="flex-1 border border-slate-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 bg-white" required>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl transition-colors shadow-sm"><i class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </div>
       </div>
 
       <!-- View: INVENTORY -->
@@ -2333,12 +2385,14 @@
                       >
                         Năng Lượng Đề Xuất
                       </p>
-                      <div
-                        class="text-5xl md:text-6xl font-black text-[#10B981] mb-2 drop-shadow-[0_2px_10px_rgba(16,185,129,0.4)]"
+                      <input
+                        type="number"
+                        class="text-5xl md:text-6xl font-black text-[#10B981] mb-2 drop-shadow-[0_2px_10px_rgba(16,185,129,0.4)] bg-transparent text-center focus:outline-none w-full border-b border-transparent focus:border-emerald-500/50 hover:border-emerald-500/30 transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none cursor-text"
                         id="res-target"
-                      >
-                        --
-                      </div>
+                        value=""
+                        placeholder="--"
+                        oninput="updateTargetCalories(this.value)"
+                      />
                       <p
                         class="text-xs text-emerald-100 font-medium opacity-90"
                       >
@@ -2452,17 +2506,81 @@
                   </div>
                 </div>
 
+                <!-- Macro Nutrient Distribution Card -->
+                <div class="bg-white dark:bg-[#1e293b] border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6 shadow-sm">
+                  <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg mb-6 text-center md:text-left">
+                    Phân Bổ Dinh Dưỡng Mục Tiêu (Macros)
+                  </h3>
+                  <div class="flex flex-row items-center justify-between gap-4 sm:gap-8 lg:gap-12 w-full">
+                      <!-- Donut Chart -->
+                      <div class="w-2/5 sm:w-1/2 max-w-[140px] md:max-w-[200px] relative aspect-square shrink-0">
+                          <canvas id="macroDistributionChart"></canvas>
+                          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <div class="text-center mt-1">
+                                  <div class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-medium">Mục tiêu</div>
+                                  <div class="text-lg md:text-xl font-black text-slate-800 dark:text-white tracking-tight leading-none mt-1 items-center gap-1" id="macro-total-cal">--</div>
+                                  <div class="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 md:mt-1 uppercase tracking-widest font-semibold flex justify-center items-center gap-1"><i class="fa-solid fa-fire text-orange-400"></i> Kcal/Ngày</div>
+                              </div>
+                          </div>
+                      </div>
+                      
+                      <!-- Legend / Values -->
+                      <div class="w-3/5 sm:w-1/2 lg:w-auto flex-1 grid grid-cols-1 gap-2 md:gap-4">
+                          <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-red-50/40 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-100/50 dark:border-red-900/30 rounded-xl transition-colors">
+                              <div class="flex items-center gap-2 md:gap-3">
+                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 shrink-0">
+                                  <i class="fa-solid fa-drumstick-bite text-[10px] md:text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                 <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Protein</div>
+                                 <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Xây dựng cơ</div>
+                                </div>
+                              </div>
+                              <div class="text-sm md:text-lg font-black text-red-600 dark:text-red-400 text-right tracking-tight" id="macro-protein">--g</div>
+                          </div>
+                          
+                          <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-amber-50/40 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-amber-100/50 dark:border-amber-900/30 rounded-xl transition-colors">
+                              <div class="flex items-center gap-2 md:gap-3">
+                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-amber-100 dark:border-amber-900/50 flex items-center justify-center text-amber-500 shrink-0">
+                                  <i class="fa-solid fa-wheat-awn text-[10px] md:text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                 <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Carb</div>
+                                 <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Năng lượng</div>
+                                </div>
+                              </div>
+                              <div class="text-sm md:text-lg font-black text-amber-600 dark:text-amber-400 text-right tracking-tight" id="macro-carb">--g</div>
+                          </div>
+                          
+                          <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-sky-50/40 dark:bg-sky-900/10 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-sky-100/50 dark:border-sky-900/30 rounded-xl transition-colors">
+                              <div class="flex items-center gap-2 md:gap-3">
+                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-sky-100 dark:border-sky-900/50 flex items-center justify-center text-sky-500 shrink-0 text-sm">
+                                  <i class="fa-solid fa-droplet text-[10px] md:text-sm"></i>
+                                </div>
+                                <div class="text-left">
+                                 <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Fat</div>
+                                 <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Nội tiết tố</div>
+                                </div>
+                              </div>
+                              <div class="text-sm md:text-lg font-black text-sky-600 dark:text-sky-400 text-right tracking-tight" id="macro-fat">--g</div>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+
                 <!-- AI Advice Card -->
                 <div
-                  class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 flex items-start gap-4"
+                  class="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800/50 rounded-2xl p-5 flex items-start gap-4"
                 >
-                  <div class="text-2xl mt-0.5">🤖</div>
-                  <div class="flex-1">
-                    <h4 class="font-bold text-[#14532D] text-sm mb-1">
-                      Lời Khuyên Từ Chuyên Gia AI
+                  <div class="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center text-2xl shadow-sm shrink-0">
+                    <i class="fa-solid fa-user-doctor mt-0.5"></i>
+                  </div>
+                  <div class="flex-1 mt-1">
+                    <h4 class="font-bold text-[#14532D] dark:text-emerald-300 text-base mb-1">
+                      Lời Khuyên Từ Chuyên Gia
                     </h4>
                     <p
-                      class="text-[#14532D] text-sm leading-relaxed"
+                      class="text-[#14532D] dark:text-emerald-100 text-sm leading-relaxed"
                       id="res-advice"
                     ></p>
                     <p
@@ -2593,22 +2711,29 @@
               NutriAI đang phân tích...
             </div>
             <!-- Input Area -->
-            <div
-              class="p-3 bg-white border-t border-slate-100 flex gap-2 shrink-0"
-            >
-              <input
-                type="text"
-                id="chatbot-input"
-                placeholder="Nhập câu hỏi của bạn..."
-                class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-slate-50 focus:bg-white transition-colors"
-                onkeypress="if (event.key === 'Enter') sendChatMessage();"
-              />
-              <button
-                onclick="sendChatMessage()"
-                class="bg-primary hover:bg-primaryHover text-white w-11 h-11 rounded-xl flex items-center justify-center transition-colors shrink-0 shadow-sm"
-              >
-                <i class="fa-solid fa-paper-plane"></i>
-              </button>
+            <div class="bg-white border-t border-slate-100 flex flex-col shrink-0">
+              <!-- Fast Replies -->
+              <div class="px-3 pt-3 pb-1 flex gap-2 overflow-x-auto hide-scrollbar whitespace-nowrap">
+                <button onclick="sendFastReply('Tra cứu trạng thái đơn hàng')" class="text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors shrink-0">📦 Tra cứu đơn</button>
+                <button onclick="sendFastReply('Hôm nay có thực đơn gì?')" class="text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors shrink-0">🥗 Thực đơn hôm nay</button>
+                <button onclick="sendFastReply('Cần tư vấn chọn gói')" class="text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors shrink-0">🩺 Tư vấn gói</button>
+                <button onclick="sendFastReply('Liên hệ nhân viên hỗ trợ')" class="text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors shrink-0">🎧 Hỗ trợ</button>
+              </div>
+              <div class="p-3 flex gap-2">
+                <input
+                  type="text"
+                  id="chatbot-input"
+                  placeholder="Nhập câu hỏi của bạn..."
+                  class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-slate-50 focus:bg-white transition-colors"
+                  onkeypress="if (event.key === 'Enter') sendChatMessage();"
+                />
+                <button
+                  onclick="sendChatMessage()"
+                  class="bg-primary hover:bg-primaryHover text-white w-11 h-11 rounded-xl flex items-center justify-center transition-colors shrink-0 shadow-sm"
+                >
+                  <i class="fa-solid fa-paper-plane"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -4622,6 +4747,17 @@
       </div>
     </div>
 
+    <!-- Recent Sales Popup -->
+    <div id="recent-sales-popup" class="fixed bottom-4 left-4 z-[60] bg-white shadow-xl rounded-lg p-3 flex items-center gap-3 transition-all duration-500 transform translate-y-[150%] opacity-0 max-w-[280px] md:max-w-sm pointer-events-none">
+        <div class="bg-emerald-100 text-emerald-600 rounded-full w-10 h-10 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-shopping-bag"></i>
+        </div>
+        <div>
+            <p class="text-[13px] md:text-sm text-slate-800 leading-tight" id="rsp-text"></p>
+            <p class="text-[10px] md:text-xs text-slate-500 mt-0.5">Vài giây trước</p>
+        </div>
+    </div>
+
     <script>
       // ==========================================
       // 1. STATE & CONFIGURATION
@@ -4634,7 +4770,9 @@
       let confirmActionCallback = null;
       let latestAIAssignments = [];
       let cart = [];
+      let allChats = JSON.parse(localStorage.getItem("nutriadmin_all_chats")) || {};
       let chatHistory = [];
+      let currentAdminChatId = null;
       let revenueChartInst, statusChartInst, topDishesChartInst;
       let mktSourceChartInst, mktFunnelChartInst;
 
@@ -4643,9 +4781,80 @@
         customerDeviceId = "DEV_" + Math.random().toString(36).substr(2, 9);
         localStorage.setItem("customer_device_id", customerDeviceId);
       }
+      
+      // Initialize mock chats if empty
+      if (Object.keys(allChats).length === 0) {
+        allChats["DEV_MOCK1"] = {
+            id: "DEV_MOCK1",
+            name: "Nguyễn Thị Mai",
+            history: [
+                { role: "user", parts: [{ text: "Chào bạn, mình muốn mua gói" }] },
+                { role: "model", parts: [{ text: "Chào bạn! NutriAI có thể giúp gì cho bạn?" }] },
+                { role: "user", parts: [{ text: "Mình cần hỗ trợ tư vấn trực tiếp từ nhân viên" }] }
+            ],
+            needsSupport: true,
+            hasUnread: true,
+            lastUpdated: Date.now() - 1000 * 60 * 5
+        };
+        allChats["DEV_MOCK2"] = {
+            id: "DEV_MOCK2",
+            name: "Trần Anh Tuấn",
+            history: [
+                { role: "user", parts: [{ text: "Cho mình xem thực đơn" }] },
+                { role: "model", parts: [{ text: "Dạ, đây là thực đơn hôm nay..." }] }
+            ],
+            needsSupport: false,
+            hasUnread: false,
+            lastUpdated: Date.now() - 1000 * 60 * 60
+        };
+      }
+
+      if (!allChats[customerDeviceId]) {
+        allChats[customerDeviceId] = {
+            id: customerDeviceId,
+            name: "Khách hàng " + customerDeviceId.substr(-4),
+            history: [],
+            needsSupport: false,
+            hasUnread: false,
+            lastUpdated: Date.now()
+        };
+      }
+      chatHistory = allChats[customerDeviceId].history;
+
+      function saveAllChats() {
+        allChats[customerDeviceId].history = chatHistory;
+        allChats[customerDeviceId].lastUpdated = Date.now();
+        localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
+        
+        // Update unread badge in navigation if any chat needs support
+        updateMessagesNavBadge();
+        
+        if (typeof renderMessagesList === 'function' && document.getElementById('view-messages') && !document.getElementById('view-messages').classList.contains('hidden')) {
+            renderMessagesList();
+            if (currentAdminChatId === customerDeviceId) {
+                renderAdminChatMessages(customerDeviceId);
+            }
+        }
+      }
+      
+      function updateMessagesNavBadge() {
+          const badge1 = document.getElementById("nav-messages-badge");
+          const badge2 = document.getElementById("nav-mobile-messages-badge");
+          const count = Object.values(allChats).filter(c => c.needsSupport || c.hasUnread).length;
+          
+          if(badge1) {
+              if(count > 0) { badge1.classList.remove("hidden"); badge1.innerText = count; }
+              else badge1.classList.add("hidden");
+          }
+          if(badge2) {
+              if(count > 0) { badge2.classList.remove("hidden"); badge2.innerText = count; }
+              else badge2.classList.add("hidden");
+          }
+      }
 
       // Tone.js Synth for notification
       let notificationSynth = null;
+      let stepSynth = null;
       let isToneInitialized = false;
 
       function initTone() {
@@ -4657,7 +4866,28 @@
           }).toDestination();
           // Giảm âm lượng xuống một chút để không quá chói
           notificationSynth.volume.value = -10;
+
+          // Âm thanh chuyển bước tinh tế (pop/click)
+          stepSynth = new Tone.Synth({
+            oscillator: { type: "triangle" },
+            envelope: { attack: 0.005, decay: 0.1, sustain: 0, release: 0.1 },
+          }).toDestination();
+          stepSynth.volume.value = -15;
+
           isToneInitialized = true;
+        }
+      }
+
+      function playStepSound(isNext) {
+        initTone();
+        if (Tone.context.state !== "running") {
+          Tone.context.resume();
+        }
+        const now = Tone.now();
+        if (isNext) {
+            stepSynth.triggerAttackRelease("E5", "32n", now);
+        } else {
+            stepSynth.triggerAttackRelease("C5", "32n", now);
         }
       }
 
@@ -5434,6 +5664,72 @@
       function formatCurrency(amount) {
         return new Intl.NumberFormat("vi-VN").format(amount);
       }
+      
+      let countdownInterval = null;
+      function startCountdown(minutes) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        let seconds = minutes * 60;
+        const el = document.getElementById("offer-countdown");
+        const banner = document.getElementById("countdown-banner");
+        if(banner) banner.classList.remove("hidden");
+        
+        countdownInterval = setInterval(() => {
+            seconds--;
+            if (seconds <= 0) {
+                clearInterval(countdownInterval);
+                if(el) el.innerText = "00:00";
+                if(banner) banner.classList.add("hidden");
+                return;
+            }
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            if(el) el.innerText = `${m}:${s}`;
+        }, 1000);
+      }
+      
+      const salesNames = [
+        "Trần Thu Thảo", "Nguyễn Minh Khang", "Lê Bích Ngọc", "Phạm Tuấn Anh", "Hoàng Kim Chi",
+        "Bùi Hoàng Lâm", "Vũ Mai Phương", "Đỗ Việt Thắng", "Đặng Yến Nhi", "Phan Nhật Nam",
+        "Ngô Thanh Hằng", "Lý Quốc Bảo", "Trương Thảo Lan", "Hồ Văn Quân", "Đinh Bích Quyên"
+      ];
+      const salesPkgs = ["Gói Tăng cơ 4 tuần", "Gói Giảm mỡ 2 tuần", "Gói Duy trì vóc dáng 1 tuần", "Gói Khởi động 7 Ngày", "Gói Cá nhân hóa 30 Ngày"];
+      
+      function showRecentSalesPopup() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const hasQRMarketing = urlParams.has("utm_source");
+        
+        const consultingView = document.getElementById("view-consulting");
+        const orderFormView = document.getElementById("view-order-form");
+        const analysisResultState = document.getElementById("analysis-result-state");
+        
+        const isConsultingResult = consultingView && !consultingView.classList.contains("hidden") && analysisResultState && !analysisResultState.classList.contains("hidden");
+        const isOrderForm = orderFormView && !orderFormView.classList.contains("hidden");
+
+        if (!hasQRMarketing || (!isConsultingResult && !isOrderForm)) {
+           return;
+        }
+
+        const popup = document.getElementById("recent-sales-popup");
+        if(!popup) return;
+        const textEl = document.getElementById("rsp-text");
+        const name = salesNames[Math.floor(Math.random() * salesNames.length)];
+        const pkg = salesPkgs[Math.floor(Math.random() * salesPkgs.length)];
+        textEl.innerHTML = `<span class="font-bold">${name}</span> vừa chốt đơn <br><span class="font-bold text-emerald-600">${pkg}</span>`;
+        
+        popup.classList.remove("translate-y-[150%]", "opacity-0");
+        setTimeout(() => {
+            popup.classList.add("translate-y-[150%]", "opacity-0");
+        }, 4000);
+      }
+      
+      // Khởi động popup ảo sau 10s, lặp lại mỗi 25-45s
+      setTimeout(() => {
+          showRecentSalesPopup();
+          setInterval(() => {
+              // Lặp lại ngẫu nhiên từ 25 đến 45 giây
+              setTimeout(showRecentSalesPopup, Math.random() * 20000);
+          }, 25000);
+      }, 10000);
 
       function animateValue(id, start, end, duration, isCurrencyOrOptions) {
         let isCurrency = false;
@@ -5468,22 +5764,28 @@
           }
           
           if (formatter) {
-              obj.innerText = formatter(currentCount);
+              if (obj.tagName === 'INPUT') obj.value = formatter(currentCount);
+              else obj.innerText = formatter(currentCount);
           } else if (isCurrency) {
-             obj.innerText = formatCurrency(currentCount) + "đ";
+             if (obj.tagName === 'INPUT') obj.value = formatCurrency(currentCount) + "đ";
+             else obj.innerText = formatCurrency(currentCount) + "đ";
           } else {
-             obj.innerText = currentCount;
+             if (obj.tagName === 'INPUT') obj.value = currentCount;
+             else obj.innerText = currentCount;
           }
 
           if (progress < 1) {
             obj.dataset.animationId = window.requestAnimationFrame(step);
           } else {
             if (formatter) {
-               obj.innerText = formatter(numEnd);
+               if (obj.tagName === 'INPUT') obj.value = formatter(numEnd);
+               else obj.innerText = formatter(numEnd);
             } else if (isCurrency) {
-               obj.innerText = formatCurrency(numEnd) + "đ";
+               if (obj.tagName === 'INPUT') obj.value = formatCurrency(numEnd) + "đ";
+               else obj.innerText = formatCurrency(numEnd) + "đ";
             } else {
-               obj.innerText = numEnd;
+               if (obj.tagName === 'INPUT') obj.value = numEnd;
+               else obj.innerText = numEnd;
             }
             delete obj.dataset.animationId;
           }
@@ -5976,6 +6278,7 @@
           "marketing",
           "menu",
           "inventory",
+          "messages",
           "system",
           "consulting",
           "customers",
@@ -5988,7 +6291,7 @@
           const el = document.getElementById(`view-${v}`);
           if (el) {
             el.classList.add("hidden");
-            if (v === "consulting") el.classList.remove("flex");
+            if (v === "consulting" || v === "messages") el.classList.remove("flex");
           }
         });
 
@@ -5997,6 +6300,7 @@
           "marketing",
           "orders",
           "inventory",
+          "messages",
           "menu",
           "customers",
           "consulting",
@@ -6048,6 +6352,11 @@
           } else {
             setTrackingViewMode('desktop');
           }
+        }
+        if (viewName === "messages") {
+            renderMessagesList();
+            updateMessagesNavBadge();
+            document.getElementById("view-messages").classList.replace("hidden", "flex");
         }
         if (viewName === "consulting") {
           if (window.innerWidth <= 768) {
@@ -6598,12 +6907,19 @@
                   "#ef4444",
                 ],
                 borderWidth: 0,
+                hoverOffset: 6,
               },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+              animateScale: true,
+              animateRotate: true,
+              duration: 1000,
+              easing: "easeOutQuart",
+            },
             plugins: {
               legend: {
                 position: "right",
@@ -6661,12 +6977,24 @@
                 pointBorderColor: "#fff",
                 pointBorderWidth: 2,
                 pointRadius: 4,
+                pointHoverRadius: 6,
+                pointHoverBorderWidth: 3,
+                pointHoverBackgroundColor: "#fff",
+                pointHoverBorderColor: "#10b981",
               },
             ],
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+              duration: 1000,
+              easing: "easeOutQuart",
+            },
+            interaction: {
+              mode: 'index',
+              intersect: false,
+            },
             plugins: { legend: { display: false } },
             scales: {
               y: {
@@ -7350,6 +7678,7 @@
 
       function nextDietStep(current) {
         if (!validateDietStep(current)) return;
+        playStepSound(true);
         document.getElementById(`diet-step-${current}`).classList.add("hidden");
         document
           .getElementById(`diet-step-${current}`)
@@ -7365,6 +7694,7 @@
       }
 
       function prevDietStep(current) {
+        playStepSound(false);
         document.getElementById(`diet-step-${current}`).classList.add("hidden");
         document
           .getElementById(`diet-step-${current}`)
@@ -7402,6 +7732,70 @@
           adviceEl.innerText = defaultAdvice;
         } finally {
           loadingEl.classList.add("hidden");
+        }
+      }
+
+      window.updateTargetCalories = function(calVal) {
+        if (!calVal) return;
+        const targetCal = parseFloat(calVal);
+        if (isNaN(targetCal)) return;
+
+        const goal = document.querySelector('input[name="goal"]:checked')?.value || "maintain";
+        let pRatio, cRatio, fRatio;
+        
+        if (goal === "loss") {
+            pRatio = 0.4;
+            cRatio = 0.3;
+            fRatio = 0.3;
+        } else if (goal === "gain") {
+            pRatio = 0.25;
+            cRatio = 0.5;
+            fRatio = 0.25;
+        } else if (goal === "recomp") {
+            pRatio = 0.4;
+            cRatio = 0.35;
+            fRatio = 0.25;
+        } else {
+            pRatio = 0.3;
+            cRatio = 0.4;
+            fRatio = 0.3;
+        }
+
+        const dailyProtein = Math.round((targetCal * pRatio) / 4);
+        const dailyCarbs = Math.round((targetCal * cRatio) / 4);
+        const dailyFat = Math.round((targetCal * fRatio) / 9);
+
+        const objTotalCal = document.getElementById("macro-total-cal");
+        if (objTotalCal) {
+            const currentTotalCal = parseFloat(objTotalCal.innerText) || targetCal;
+            animateValue("macro-total-cal", currentTotalCal, targetCal, 800, false);
+        }
+
+        const objProtein = document.getElementById("macro-protein");
+        if (objProtein) animateValue("macro-protein", parseFloat(objProtein.innerText) || dailyProtein, dailyProtein, 800, { formatter: (val) => `${val}g` });
+
+        const objCarb = document.getElementById("macro-carb");
+        if (objCarb) animateValue("macro-carb", parseFloat(objCarb.innerText) || dailyCarbs, dailyCarbs, 800, { formatter: (val) => `${val}g` });
+
+        const objFat = document.getElementById("macro-fat");
+        if (objFat) animateValue("macro-fat", parseFloat(objFat.innerText) || dailyFat, dailyFat, 800, { formatter: (val) => `${val}g` });
+
+        if (window.macroChartInst) {
+            window.macroChartInst.data.datasets[0].data = [dailyProtein * 4, dailyCarbs * 4, dailyFat * 9];
+            window.macroChartInst.options.plugins.tooltip.callbacks.label = function(context) {
+                const label = context.label || '';
+                const value = context.raw || 0;
+                const total = context.chart._metasets[context.datasetIndex].total;
+                const percentage = Math.round((value / total) * 100) + '%';
+                const gramText = context.label === 'Protein' ? dailyProtein : context.label === 'Carb' ? dailyCarbs : dailyFat;
+                return `${label}: ${percentage} (${gramText}g)`;
+            };
+            window.macroChartInst.update({ duration: 800, easing: 'easeOutQuart' });
+        }
+
+        if (window.medicalStatsChartInst) {
+            window.medicalStatsChartInst.data.datasets[0].data[1] = targetCal;
+            window.medicalStatsChartInst.update({ duration: 800, easing: 'easeOutQuart' });
         }
       }
 
@@ -7802,6 +8196,13 @@
                     <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">Cam kết đạt mục tiêu với lộ trình được AI tính toán riêng cho bạn.<br>Giao món tận nơi mỗi ngày, không cần suy nghĩ hôm nay ăn gì.</p>
                 </div>
 
+                <!-- Countdown Banner -->
+                <div id="countdown-banner" class="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-4 text-white text-center shadow-lg mt-6 mb-6 animate-pulse hidden max-w-5xl mx-auto">
+                    <div class="font-bold text-lg mb-1"><i class="fa-solid fa-gift mr-2"></i> Ưu đãi độc quyền! Giảm ngay 10%</div>
+                    <div class="text-sm opacity-90 mb-2">Chỉ dành cho bạn khi đăng ký trong hôm nay</div>
+                    <div class="text-2xl font-black tabular-nums tracking-widest" id="offer-countdown">15:00</div>
+                </div>
+
                 <form onsubmit="submitPackage(event)" class="w-full relative z-10 animate-fade-in">
                     <!-- Pricing Cards Grid -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch max-w-5xl mx-auto mb-10 text-left">
@@ -7923,6 +8324,21 @@
                             <button type="submit" class="w-full bg-[linear-gradient(135deg,#15803D,#10B981)] lg:hover:bg-[linear-gradient(135deg,#166534,#059669)] text-white font-bold py-3.5 rounded-xl transition-all shadow-md lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
                                 Xác nhận đăng ký <i class="fa-solid fa-arrow-right"></i>
                             </button>
+                            <!-- Trust Badges -->
+                            <div class="mt-4 flex justify-center gap-4 flex-wrap">
+                                <div class="flex items-center gap-1.5 text-slate-500">
+                                    <i class="fa-solid fa-shield-check text-emerald-500 text-base"></i>
+                                    <span class="text-xs font-semibold">Cam kết hoàn tiền</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-slate-500">
+                                    <i class="fa-solid fa-leaf text-emerald-500 text-base"></i>
+                                    <span class="text-xs font-semibold">100% Nguyên liệu sạch</span>
+                                </div>
+                                <div class="flex items-center gap-1.5 text-slate-500">
+                                    <i class="fa-solid fa-user-doctor text-emerald-500 text-base"></i>
+                                    <span class="text-xs font-semibold">Bác sĩ khuyên dùng</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -8036,6 +8452,19 @@
           .getElementById("analysis-result-state")
           .classList.remove("hidden");
           
+        // Kích hoạt hiệu ứng Confetti
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#10B981', '#34D399', '#FCD34D', '#F87171']
+            });
+        }
+        
+        // Bắt đầu đếm ngược 15 phút
+        startCountdown(15);
+          
         const skipBtn = document.getElementById("skip-analysis-btn");
         if (skipBtn) skipBtn.classList.add("hidden");
 
@@ -8078,6 +8507,66 @@
         animateValue("res-tdee", 0, parseFloat(tdee), 1500, false);
         document.getElementById("res-target").innerText = targetCal;
         animateValue("res-target", 0, parseFloat(targetCal), 1500, false);
+
+        // Update Macro UI
+        const dailyProtein = Math.round((targetCal * pRatio) / 4);
+        const dailyCarbs = Math.round((targetCal * cRatio) / 4);
+        const dailyFat = Math.round((targetCal * fRatio) / 9);
+        
+        document.getElementById("macro-total-cal").innerText = targetCal;
+        animateValue("macro-total-cal", 0, parseFloat(targetCal), 1500, false);
+        document.getElementById("macro-protein").innerText = dailyProtein + "g";
+        animateValue("macro-protein", 0, parseFloat(dailyProtein), 1500, { formatter: (val) => `${val}g` });
+        document.getElementById("macro-carb").innerText = dailyCarbs + "g";
+        animateValue("macro-carb", 0, parseFloat(dailyCarbs), 1500, { formatter: (val) => `${val}g` });
+        document.getElementById("macro-fat").innerText = dailyFat + "g";
+        animateValue("macro-fat", 0, parseFloat(dailyFat), 1500, { formatter: (val) => `${val}g` });
+
+        // Render Macro Chart
+        if (window.macroChartInst) {
+            window.macroChartInst.destroy();
+        }
+        const ctxMacroChart = document.getElementById("macroDistributionChart").getContext("2d");
+        window.macroChartInst = new Chart(ctxMacroChart, {
+            type: 'doughnut',
+            data: {
+                labels: ['Protein', 'Carb', 'Fat'],
+                datasets: [{
+                    data: [dailyProtein * 4, dailyCarbs * 4, dailyFat * 9],
+                    backgroundColor: ['#ef4444', '#f59e0b', '#0ea5e9'],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '75%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 1500,
+                    easing: 'easeOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.chart._metasets[context.datasetIndex].total;
+                                const percentage = Math.round((value / total) * 100) + '%';
+                                const gramText = context.label === 'Protein' ? dailyProtein : context.label === 'Carb' ? dailyCarbs : dailyFat;
+                                return `${label}: ${percentage} (${gramText}g)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
 
         // Animate Package Cards
         ['front-pkg1-title', 'front-pkg2-title', 'front-pkg3-title'].forEach(id => {
@@ -10643,6 +11132,16 @@
         const overlay = document.getElementById("success-overlay");
         const content = document.getElementById("success-overlay-content");
         
+        // Kích hoạt hiệu ứng Confetti khi đăng ký thành công
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.5 },
+                colors: ['#10B981', '#34D399', '#FCD34D', '#F87171']
+            });
+        }
+        
         overlay.classList.remove("opacity-0", "pointer-events-none");
         overlay.classList.add("opacity-100", "pointer-events-auto");
         content.classList.remove("scale-95");
@@ -11169,6 +11668,12 @@
       async function fetchGeminiChatAPI(userMessage) {
         // Append new user message to history
         chatHistory.push({ role: "user", parts: [{ text: userMessage }] });
+        
+        if (/(hỗ trợ|nhân viên|người thật|liên hệ|giúp đỡ|tư vấn trực tiếp)/i.test(userMessage)) {
+            allChats[customerDeviceId].needsSupport = true;
+        }
+        allChats[customerDeviceId].hasUnread = true; // Set unread for admin
+        saveAllChats();
 
         // ---------------------------------------------------------
         // BƯỚC QUAN TRỌNG: BƠM DỮ LIỆU ĐỘNG (CONTEXT INJECTION)
@@ -11259,17 +11764,25 @@
 
             if (aiText) {
               chatHistory.push({ role: "model", parts: [{ text: aiText }] });
+              saveAllChats();
             }
             return aiText;
           } catch (error) {
             if (i === delays.length - 1) {
               chatHistory.pop(); // Remove user message from history on final failure
+              saveAllChats();
               console.error("Chat API Error:", error);
               return "Xin lỗi, mình đang gặp sự cố kết nối. Bạn thử lại sau chút nhé! 😔";
             }
             await new Promise((res) => setTimeout(res, delays[i]));
           }
         }
+      }
+
+      function sendFastReply(text) {
+        const input = document.getElementById("chatbot-input");
+        input.value = text;
+        sendChatMessage();
       }
 
       async function sendChatMessage() {
@@ -11451,6 +11964,161 @@
       }
 
       // ==========================================
+      // 15. MESSAGES VIEW LOGIC
+      // ==========================================
+      function renderMessagesList() {
+          const listEl = document.getElementById("messages-list");
+          if (!listEl) return;
+          
+          let html = "";
+          // Sort by latest message first
+          const sortedChats = Object.values(allChats).sort((a, b) => b.lastUpdated - a.lastUpdated);
+          
+          if (sortedChats.length === 0) {
+              listEl.innerHTML = `<div class="text-center text-slate-400 py-8 text-sm">Chưa có tin nhắn nào</div>`;
+              return;
+          }
+          
+          sortedChats.forEach(chat => {
+              const lastMsgObj = chat.history.length > 0 ? chat.history[chat.history.length - 1] : null;
+              let lastMsg = "Chưa có tin nhắn";
+              if (lastMsgObj) {
+                  lastMsg = lastMsgObj.role === 'user' ? "Khách: " + lastMsgObj.parts[0].text : "AI: " + lastMsgObj.parts[0].text;
+              }
+              if (lastMsg.length > 30) lastMsg = lastMsg.substring(0, 30) + "...";
+              
+              const isSelected = currentAdminChatId === chat.id;
+              const supportBadge = chat.needsSupport ? `<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap animate-pulse">Cần hỗ trợ</span>` : '';
+              const unreadDot = chat.hasUnread ? `<span class="w-2.5 h-2.5 bg-red-500 rounded-full absolute top-3 right-3"></span>` : '';
+              
+              const activeClass = isSelected ? "bg-emerald-50 border-emerald-200" : "bg-white hover:bg-slate-50 border-slate-100 hover:border-slate-200";
+              const titleClass = chat.hasUnread || chat.needsSupport ? "font-bold text-slate-800" : "font-medium text-slate-700";
+              
+              html += `
+                  <div onclick="openAdminChat('${chat.id}')" class="p-3 rounded-xl border cursor-pointer transition-colors relative ${activeClass} mb-2">
+                      ${unreadDot}
+                      <div class="flex justify-between items-start mb-1">
+                          <h4 class="${titleClass} text-sm">${chat.name}</h4>
+                      </div>
+                      <div class="flex justify-between items-end gap-2">
+                          <p class="text-xs text-slate-500 truncate flex-1">${lastMsg}</p>
+                          ${supportBadge}
+                      </div>
+                  </div>
+              `;
+          });
+          listEl.innerHTML = html;
+      }
+      
+      function openAdminChat(chatId) {
+          currentAdminChatId = chatId;
+          const chat = allChats[chatId];
+          if (chat) {
+              chat.hasUnread = false; // Mark as read
+              saveAllChats(); // This will re-render the list and update badge
+          }
+          
+          document.getElementById("admin-chat-empty").classList.add("hidden");
+          document.getElementById("admin-chat-header").classList.remove("hidden");
+          document.getElementById("admin-chat-messages").classList.remove("hidden");
+          document.getElementById("admin-chat-input-area").classList.remove("hidden");
+          
+          if (chat) {
+              document.getElementById("admin-chat-title").innerText = chat.name;
+              
+              if (chat.needsSupport) {
+                  document.getElementById("btn-resolve-support").classList.remove("hidden");
+                  document.getElementById("admin-chat-subtitle").innerHTML = `<span class="text-red-500 font-medium">Đang cần hỗ trợ trực tiếp</span>`;
+              } else {
+                  document.getElementById("btn-resolve-support").classList.add("hidden");
+                  document.getElementById("admin-chat-subtitle").innerHTML = `Chăm sóc khách hàng`;
+              }
+          }
+          
+          renderAdminChatMessages(chatId);
+      }
+      
+      function renderAdminChatMessages(chatId) {
+          const container = document.getElementById("admin-chat-messages");
+          const chat = allChats[chatId];
+          if (!chat || !container) return;
+          
+          container.innerHTML = "";
+          
+          chat.history.forEach(msg => {
+              const isUser = msg.role === "user";
+              const msgDiv = document.createElement("div");
+              let formattedText = msg.parts[0].text
+                  .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                  .replace(/\*(.*?)\*/g, "<i>$1</i>")
+                  .replace(/\n/g, "<br>");
+                  
+              if (isUser) {
+                  msgDiv.className = "flex gap-2.5 w-max max-w-[85%] animate-fade-in";
+                  msgDiv.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center shrink-0 text-xs shadow-sm">
+                      <i class="fa-solid fa-user"></i>
+                    </div>
+                    <div class="bg-slate-100 text-slate-800 px-4 py-2.5 rounded-2xl rounded-tl-sm text-[13px] leading-relaxed shadow-sm">
+                      ${formattedText}
+                    </div>
+                  `;
+              } else {
+                  msgDiv.className = "flex gap-2.5 w-max max-w-[85%] self-end flex-row-reverse animate-fade-in";
+                  msgDiv.innerHTML = `
+                    <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm">
+                      <i class="fa-solid fa-robot"></i>
+                    </div>
+                    <div class="bg-[linear-gradient(135deg,#15803D,#10B981)] text-white px-4 py-2.5 rounded-2xl rounded-tr-sm text-[13px] leading-relaxed shadow-sm text-left">
+                      ${formattedText}
+                    </div>
+                  `;
+              }
+              container.appendChild(msgDiv);
+          });
+          
+          // Scroll to bottom
+          setTimeout(() => {
+              container.scrollTop = container.scrollHeight;
+          }, 50);
+      }
+      
+      function sendAdminMessage(e) {
+          e.preventDefault();
+          if (!currentAdminChatId) return;
+          
+          const input = document.getElementById("admin-chat-input");
+          const text = input.value.trim();
+          if (!text) return;
+          
+          const chat = allChats[currentAdminChatId];
+          if (chat) {
+              chat.history.push({ role: "model", parts: [{ text: text }] }); // We inject it as "model" so AI sees it as its own output or at least store reply
+              chat.lastUpdated = Date.now();
+              chat.hasUnread = false; // Admin sent, so it's read
+              saveAllChats(); // This will trigger re-render of messages list and admin chat
+              
+              if (customerDeviceId === currentAdminChatId) {
+                  // Admin is replying to their own test session
+                  appendMessageUI("model", text); 
+              }
+          }
+          
+          input.value = "";
+      }
+      
+      function resolveSupportRequest() {
+          if (!currentAdminChatId) return;
+          const chat = allChats[currentAdminChatId];
+          if (chat) {
+              chat.needsSupport = false;
+              saveAllChats();
+              openAdminChat(currentAdminChatId); // Refresh header
+              showToast("Đã đánh dấu hỗ trợ xong");
+          }
+      }
+
+      // ==========================================
       // 17. INITIALIZATION
       // ==========================================
       window.onload = () => {
@@ -11494,6 +12162,8 @@
                initFirebaseSync();
             }
         }, 500);
+
+        updateMessagesNavBadge();
 
         const mode = urlParams.get("mode");
 
