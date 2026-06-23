@@ -2,7 +2,7 @@
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>NutriAdmin - Quản Lý Menu Healthy</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link
@@ -1264,6 +1264,13 @@
           >
             <i class="fa-solid fa-cubes mr-2"></i> Quản lý gói
           </button>
+          <button
+            id="tab-btn-history"
+            onclick="switchCustomerTab('history')"
+            class="whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium transition-all bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent"
+          >
+            <i class="fa-solid fa-clock-rotate-left mr-2"></i> Lịch sử đơn hàng
+          </button>
         </div>
 
         <!-- Tab: Discounts -->
@@ -1462,6 +1469,42 @@
            </div>
         </div>
 
+        <!-- Tab: Order History -->
+        <div id="tab-content-history" class="hidden animate-fade-in relative z-10 w-full min-h-[500px]">
+          <div class="mb-4">
+            <label class="block text-sm font-bold text-slate-700 mb-2">Chọn khách hàng</label>
+            <div class="relative max-w-md">
+              <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+              <input type="text" id="order-history-customer-search" onclick="filterOrderHistoryCustomerSelect()" onkeyup="filterOrderHistoryCustomerSelect()" placeholder="Tìm theo tên/SĐT khách hàng..." class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary">
+            </div>
+            <div id="order-history-customer-list" class="mt-2 bg-white border border-slate-200 rounded-lg shadow-sm hidden max-h-60 overflow-y-auto max-w-md">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+          
+          <div id="order-history-display" class="hidden">
+            <h3 class="text-lg font-bold text-slate-800 mb-4" id="order-history-customer-name">Lịch sử đơn hàng của: ...</h3>
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm whitespace-nowrap">
+                        <thead class="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-xs tracking-wider">
+                            <tr>
+                                <th class="px-6 py-4">Mã ĐH</th>
+                                <th class="px-6 py-4">Ngày giao</th>
+                                <th class="px-6 py-4">Món chính</th>
+                                <th class="px-6 py-4">Tổng tiền</th>
+                                <th class="px-6 py-4">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-history-table-body" class="divide-y divide-slate-100">
+                            <!-- Filled dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <style>
@@ -1476,39 +1519,12 @@
         ::view-transition-group(diet-opt-act-2),
         ::view-transition-group(diet-opt-act-3),
         ::view-transition-group(diet-opt-act-4) {
-            animation-duration: 0.7s;
+            animation-duration: 0.5s;
             animation-timing-function: cubic-bezier(0.25, 1.0, 0.5, 1.0);
         }
 
-        ::view-transition-old(diet-opt-male),
-        ::view-transition-old(diet-opt-female),
-        ::view-transition-old(diet-opt-goal-loss),
-        ::view-transition-old(diet-opt-goal-gain),
-        ::view-transition-old(diet-opt-goal-recomp),
-        ::view-transition-old(diet-opt-goal-maintain),
-        ::view-transition-old(diet-opt-act-1),
-        ::view-transition-old(diet-opt-act-2),
-        ::view-transition-old(diet-opt-act-3),
-        ::view-transition-old(diet-opt-act-4) {
-            animation: none;
-            display: none;
-        }
-
-        ::view-transition-new(diet-opt-male),
-        ::view-transition-new(diet-opt-female),
-        ::view-transition-new(diet-opt-goal-loss),
-        ::view-transition-new(diet-opt-goal-gain),
-        ::view-transition-new(diet-opt-goal-recomp),
-        ::view-transition-new(diet-opt-goal-maintain),
-        ::view-transition-new(diet-opt-act-1),
-        ::view-transition-new(diet-opt-act-2),
-        ::view-transition-new(diet-opt-act-3),
-        ::view-transition-new(diet-opt-act-4) {
-            animation: none;
-        }
-
         .diet-opt-label, .diet-opt-inner {
-            transition: all 0.7s cubic-bezier(0.25, 1.0, 0.5, 1.0) !important;
+            transition: all 0.5s cubic-bezier(0.25, 1.0, 0.5, 1.0) !important;
         }
 
         /* Active Item Layout */
@@ -1518,11 +1534,18 @@
         }
         .diet-opt-active .diet-opt-inner {
             transform: scale(1.02);
-            background-color: #ECFDF5 !important;
+            background-color: #0F172A !important;
             border-color: #10B981 !important;
-            box-shadow: 0 10px 20px -5px rgba(16, 185, 129, 0.2);
+            box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.4);
             height: auto !important;
             min-height: 80px;
+        }
+        .diet-opt-active .diet-opt-inner .text-slate-800,
+        .diet-opt-active .diet-opt-inner .text-slate-700 {
+            color: white !important;
+        }
+        .diet-opt-active .diet-opt-inner .text-slate-500 {
+            color: #34D399 !important;
         }
 
         /* Inactive Items Layout */
@@ -1668,7 +1691,7 @@
             </div>
           </div>
 
-          <div class="sim-scrollable w-full overflow-x-hidden">
+          <div class="sim-scrollable w-full overflow-x-clip">
             <!-- Trust Panel / Hero Section -->
           <div class="mb-6 mt-2 mx-4 md:mx-0 relative rounded-3xl bg-[#043F2E] overflow-hidden flex flex-row items-center p-5 md:p-12 text-left shadow-2xl">
             <!-- Background pattern/glow -->
@@ -1779,7 +1802,7 @@
                   </h2>
                   <div class="mb-5" id="diet-grid-1">
                     <div class="grid grid-cols-2 gap-4">
-                      <label class="diet-opt-label relative cursor-pointer group animate-slide-right-2 transition-all duration-500" style="order: 1; view-transition-name: diet-opt-male;">
+                      <label class="diet-opt-label relative cursor-pointer group transition-all duration-500" style="order: 1; view-transition-name: diet-opt-male;">
                         <input
                           type="radio"
                           name="gender"
@@ -1800,7 +1823,7 @@
                           </div>
                         </div>
                       </label>
-                      <label class="diet-opt-label relative cursor-pointer group animate-slide-right-3 transition-all duration-500" style="order: 2; view-transition-name: diet-opt-female;">
+                      <label class="diet-opt-label relative cursor-pointer group transition-all duration-500" style="order: 2; view-transition-name: diet-opt-female;">
                         <input
                           type="radio"
                           name="gender"
@@ -1852,7 +1875,7 @@
                   </h2>
                   <div class="mb-6" id="diet-grid-2">
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-2 transition-all duration-500" style="order: 1; view-transition-name: diet-opt-goal-loss;">
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 1; view-transition-name: diet-opt-goal-loss;">
                         <input
                           type="radio"
                           name="goal"
@@ -1874,7 +1897,7 @@
                           </div>
                         </div>
                       </label>
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-3 transition-all duration-500" style="order: 2; view-transition-name: diet-opt-goal-gain;">
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 2; view-transition-name: diet-opt-goal-gain;">
                         <input
                           type="radio"
                           name="goal"
@@ -1896,7 +1919,7 @@
                           </div>
                         </div>
                       </label>
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-4 transition-all duration-500" style="order: 3; view-transition-name: diet-opt-goal-recomp;">
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 3; view-transition-name: diet-opt-goal-recomp;">
                         <input
                           type="radio"
                           name="goal"
@@ -1918,7 +1941,7 @@
                           </div>
                         </div>
                       </label>
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-5 transition-all duration-500" style="order: 4; view-transition-name: diet-opt-goal-maintain;">
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 4; view-transition-name: diet-opt-goal-maintain;">
                         <input
                           type="radio"
                           name="goal"
@@ -2057,7 +2080,7 @@
 
                   <div class="mb-6" id="diet-grid-4">
                     <div class="space-y-3 flex flex-col gap-3">
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-2 transition-all duration-500" style="order: 1; view-transition-name: diet-opt-act-1;"
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 1; view-transition-name: diet-opt-act-1;"
                         ><input
                           type="radio"
                           name="activity"
@@ -2075,7 +2098,7 @@
                           >
                         </div></label
                       >
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-3 transition-all duration-500" style="order: 2; view-transition-name: diet-opt-act-2;"
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 2; view-transition-name: diet-opt-act-2;"
                         ><input
                           type="radio"
                           name="activity"
@@ -2093,7 +2116,7 @@
                           >
                         </div></label
                       >
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-4 transition-all duration-500" style="order: 3; view-transition-name: diet-opt-act-3;"
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 3; view-transition-name: diet-opt-act-3;"
                         ><input
                           type="radio"
                           name="activity"
@@ -2111,7 +2134,7 @@
                           >
                         </div></label
                       >
-                      <label class="diet-opt-label relative cursor-pointer block animate-slide-right-5 transition-all duration-500" style="order: 4; view-transition-name: diet-opt-act-4;"
+                      <label class="diet-opt-label relative cursor-pointer block transition-all duration-500" style="order: 4; view-transition-name: diet-opt-act-4;"
                         ><input
                           type="radio"
                           name="activity"
@@ -2415,7 +2438,7 @@
           <button
             id="chatbot-fab"
             onclick="toggleChat()"
-            class="fixed bottom-6 right-6 z-[85] w-14 h-14 bg-[linear-gradient(135deg,#15803D,#10B981)] hover:bg-[#059669] text-white rounded-full shadow-[0_8px_20px_rgba(16,185,129,0.3)] flex items-center justify-center text-2xl transition-all hover:scale-110"
+            class="fixed bottom-6 right-4 sm:right-6 z-[85] w-14 h-14 bg-[linear-gradient(135deg,#15803D,#10B981)] hover:bg-[#059669] text-white rounded-full shadow-[0_8px_20px_rgba(16,185,129,0.3)] flex items-center justify-center text-2xl transition-all hover:scale-110"
           >
             <i class="fa-solid fa-message"></i>
             <span
@@ -2435,7 +2458,7 @@
           <!-- AI Chatbot Window -->
           <div
             id="chatbot-window"
-            class="fixed bottom-24 right-6 z-[90] w-[340px] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden transition-all transform origin-bottom-right h-[500px] max-h-[70vh]"
+            class="fixed bottom-24 right-4 sm:right-6 z-[90] w-[calc(100vw-2rem)] sm:w-[380px] bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden transition-all transform origin-bottom-right h-[500px] max-h-[70vh]"
           >
             <!-- Header -->
             <div
@@ -2563,7 +2586,7 @@
               </button>
             </div>
           </div>
-          <div class="sim-scrollable w-full overflow-x-hidden px-4 md:px-0">
+          <div class="sim-scrollable w-full overflow-x-clip px-4 md:px-0">
             <div class="mb-6 mt-2">
               <button
                 onclick="switchView('consulting')"
@@ -2768,12 +2791,21 @@
                   <textarea
                     id="cust-notes"
                     rows="2"
-                    class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors resize-none"
+                    class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors resize-none mb-4"
                     placeholder="Ghi chú (Tòa nhà, yêu cầu thêm...)"
                   ></textarea>
                 </div>
                 <div>
-                  <label class="block text-sm font-semibold text-slate-700 mb-2">Phương thức thanh toán</label>
+                  <select
+                    id="cust-delivery-time"
+                    class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors cursor-pointer"
+                    required
+                  >
+                    <option value="">Chọn thời gian nhận hàng *</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-slate-700 mb-2 mt-4">Phương thức thanh toán</label>
                   <select
                     id="payment-method"
                     onchange="togglePaymentQR()"
@@ -2860,7 +2892,7 @@
               </button>
             </div>
           </div>
-          <div class="sim-scrollable w-full overflow-x-hidden px-4 md:px-0">
+          <div class="sim-scrollable w-full overflow-x-clip px-4 md:px-0">
             <div class="mb-6 mt-2">
               <button onclick="switchView('order-form')" class="text-slate-500 hover:text-slate-800 text-sm font-medium mb-4 inline-flex items-center transition-colors">
                 <i class="fa-solid fa-arrow-left mr-2"></i> Quay lại Đặt hàng
@@ -2909,6 +2941,13 @@
             class="whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium transition-all bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent"
           >
             <i class="fa-solid fa-motorcycle mr-2"></i> Quản lý Shipper
+          </button>
+          <button
+            id="tab-btn-kitchen"
+            onclick="switchOrderTab('kitchen')"
+            class="whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium transition-all bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent"
+          >
+            <i class="fa-solid fa-fire-burner mr-2"></i> Quản lý Bếp
           </button>
         </div>
 
@@ -3180,6 +3219,59 @@
                   class="divide-y divide-slate-100"
                 ></tbody>
               </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Kitchen -->
+        <div id="tab-content-kitchen" class="hidden animate-fade-in">
+          <div class="mb-4 flex flex-wrap gap-4 items-center justify-between">
+            <div>
+              <h2 class="text-xl font-bold text-slate-800"><i class="fa-solid fa-fire-burner mr-2 text-rose-500"></i> Bảng điều khiển Bếp</h2>
+              <p class="text-sm text-slate-500">Gom nhóm các món ăn theo thời gian giao để tối ưu nấu nướng</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-slate-600">Lọc theo TG giao:</span>
+              <select id="kitchen-delivery-time-filter" onchange="renderKitchen()" class="border-slate-300 rounded-lg text-sm bg-white border px-3 py-2 focus:ring-rose-500 focus:border-rose-500">
+                <option value="all">Tất cả</option>
+                <!-- JS will populate options based on orders -->
+              </select>
+              <button onclick="renderKitchen()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors"><i class="fa-solid fa-rotate-right mr-1"></i> Làm mới</button>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Cần làm -->
+            <div class="bg-rose-50/50 rounded-xl p-4 border border-rose-100 flex flex-col h-full">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-rose-200">
+                <h3 class="font-bold text-rose-700 flex items-center gap-2"><i class="fa-solid fa-clipboard-list"></i> Cần làm</h3>
+                <span id="kitchen-todo-count" class="bg-rose-200 text-rose-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+              </div>
+              <div id="kitchen-todo-list" class="flex-1 space-y-3 overflow-y-auto pr-1" style="max-height: 600px;">
+                <!-- JS rendering -->
+              </div>
+            </div>
+
+            <!-- Đang làm -->
+            <div class="bg-amber-50/50 rounded-xl p-4 border border-amber-100 flex flex-col h-full">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-amber-200">
+                <h3 class="font-bold text-amber-700 flex items-center gap-2"><i class="fa-solid fa-fire text-amber-500"></i> Đang nấu</h3>
+                <span id="kitchen-cooking-count" class="bg-amber-200 text-amber-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+              </div>
+              <div id="kitchen-cooking-list" class="flex-1 space-y-3 overflow-y-auto pr-1" style="max-height: 600px;">
+                <!-- JS rendering -->
+              </div>
+            </div>
+
+            <!-- Đã xong -->
+            <div class="bg-emerald-50/50 rounded-xl p-4 border border-emerald-100 flex flex-col h-full">
+              <div class="flex items-center justify-between mb-4 pb-2 border-b border-emerald-200">
+                <h3 class="font-bold text-emerald-700 flex items-center gap-2"><i class="fa-solid fa-check-double drop-shadow-sm"></i> Chờ lấy/Giao</h3>
+                <span id="kitchen-done-count" class="bg-emerald-200 text-emerald-800 text-xs font-bold px-2 py-1 rounded-full">0</span>
+              </div>
+              <div id="kitchen-done-list" class="flex-1 space-y-3 overflow-y-auto pr-1" style="max-height: 600px;">
+                <!-- JS rendering -->
+              </div>
             </div>
           </div>
         </div>
@@ -5205,7 +5297,9 @@
       async function fetchGeminiAPI(prompt, isJson = false) {
         const customKey =
           localStorage.getItem("nutriadmin_custom_api_key") || "";
-        const url = `/api/gemini`;
+        const url = customKey 
+          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
+          : `/api/gemini`;
         const payload = {
           contents: [{ parts: [{ text: prompt }] }],
           systemInstruction: {
@@ -5220,12 +5314,12 @@
         const delays = [1000, 2000, 4000, 8000, 16000];
         for (let i = 0; i < delays.length; i++) {
           try {
+            const headers = { "Content-Type": "application/json" };
+            if (!customKey) headers["x-custom-api-key"] = customKey;
+
             const response = await fetch(url, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-custom-api-key": customKey,
-              },
+              headers: headers,
               body: JSON.stringify(payload),
             });
             
@@ -5819,6 +5913,7 @@
         if (viewName === "inventory") renderInventory();
         if (viewName === "order-form") {
           renderCustomerMenu();
+          generateDeliveryTimes();
           if (window.innerWidth <= 768) {
             setOrderFormViewMode('mobile');
           } else {
@@ -5943,7 +6038,7 @@
       // 4. MARKETING, TRACKING & SIMULATION
       // ==========================================
       function getBaseUrl() {
-        let baseUrl = window.location.href.split("?")[0];
+        let baseUrl = window.location.href.split("?")[0].split("#")[0];
         if (
           baseUrl.startsWith("blob:") ||
           baseUrl.includes("googleusercontent") ||
@@ -5953,6 +6048,24 @@
           baseUrl = "https://nutriadmin-demo.web.app/";
         }
         return baseUrl;
+      }
+
+      function buildUrlWithCredentials(base) {
+          const customKey = localStorage.getItem("nutriadmin_custom_api_key");
+          const customFb = localStorage.getItem("nutriadmin_custom_firebase_config");
+          
+          if (!customKey && !customFb) return base;
+          
+          try {
+              const cfg = {};
+              if (customKey) cfg.ak = customKey;
+              if (customFb) cfg.fb = customFb;
+              
+              const hash = btoa(encodeURIComponent(JSON.stringify(cfg)));
+              return base + (base.includes('?') ? '&' : '?') + 'hasCfg=1#cfg=' + hash;
+          } catch(e) {
+              return base;
+          }
       }
 
       function copyLandingUrl() {
@@ -5984,6 +6097,8 @@
         } else {
           badgeEl.classList.add("hidden");
         }
+        
+        landingUrl = buildUrlWithCredentials(landingUrl);
 
         document.getElementById("landing-url").value = landingUrl;
         document.getElementById("qr-code-img").src =
@@ -6015,7 +6130,8 @@
 
         tbody.innerHTML = trackingSources
           .map((s) => {
-            const url = getBaseUrl() + `?mode=landing&utm_source=${s.code}`;
+            let url = getBaseUrl() + `?mode=landing&utm_source=${s.code}`;
+            url = buildUrlWithCredentials(url);
             return `
                 <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-4 py-3 font-semibold text-slate-800">${s.name}</td>
@@ -7405,31 +7521,31 @@
                         ${options.length > 1 ? `<button type="button" onclick="swapMeal('${type}')" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm transition-transform hover:scale-105 active:scale-95 flex items-center gap-2 meal-swap-btn"><i class="fa-solid fa-rotate"></i>Đổi món</button>` : ''}
                     </div>
                     
-                    <div class="relative bg-[#FFFFFF] rounded-2xl border-2 border-[#10B981] hover:shadow-[0_12px_32px_rgba(16,185,129,0.18)] transition-all duration-300 shadow-sm p-4 flex flex-col md:flex-row gap-6 mb-6 meal-card-anim">
-                        <div class="absolute -top-3 left-4 bg-[linear-gradient(135deg,#15803D,#10B981)] text-[#FFFFFF] text-xs font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1 z-10">
+                    <div class="relative bg-[#FFFFFF] rounded-2xl border-2 border-[#10B981] hover:shadow-[0_12px_32px_rgba(16,185,129,0.18)] transition-all duration-300 shadow-sm p-3 md:p-4 flex flex-row gap-3 md:gap-6 mb-6 meal-card-anim">
+                        <div class="absolute -top-3 left-4 bg-[linear-gradient(135deg,#15803D,#10B981)] text-[#FFFFFF] text-[10px] md:text-xs font-bold px-2 md:px-3 py-1 rounded-full shadow-sm flex items-center gap-1 z-10">
                             <i class="fa-solid fa-star text-amber-300"></i> AI BEST MATCH - ${mainMatch}%
                         </div>
-                        <div class="w-full md:w-1/3 h-48 md:h-auto rounded-xl overflow-hidden relative shrink-0">
+                        <div class="w-[35%] md:w-1/3 min-h-[120px] rounded-xl overflow-hidden relative shrink-0">
                             <img src="${mainDish.image}" alt="${mainDish.name}" class="w-full h-full object-cover">
-                            <div class="absolute bottom-2 left-2 bg-white/90 backdrop-blur text-slate-800 text-xs font-bold px-2 py-1 rounded shadow-sm">
-                                ${mainInfo.kcal} kcal • ${mainSizeLabel}
+                            <div class="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-white/90 backdrop-blur text-slate-800 text-[9px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm">
+                                ${mainInfo.kcal} kcal
                             </div>
                         </div>
-                        <div class="flex-1 flex flex-col justify-center">
-                            <h4 class="font-bold text-xl text-slate-900 mb-2">${mainDish.name}</h4>
-                            <p class="text-sm text-slate-500 mb-6">${mainDish.ingredients}</p>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div class="bg-[#F8FAFC] rounded-lg p-3 text-center border border-[#E2E8F0]">
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Đạm</p>
-                                    <p class="font-bold text-[#0F172A]">${Math.round(mainInfo.protein)}g</p>
+                        <div class="flex-1 flex flex-col justify-center py-1">
+                            <h4 class="font-bold text-base md:text-xl text-slate-900 mb-1 md:mb-2 leading-tight">${mainDish.name}</h4>
+                            <p class="text-[11px] md:text-sm text-slate-500 mb-3 md:mb-6 line-clamp-2 md:line-clamp-none">${mainDish.ingredients}</p>
+                            <div class="grid grid-cols-3 gap-1.5 md:gap-3">
+                                <div class="bg-[#F8FAFC] rounded-lg p-1.5 md:p-3 text-center border border-[#E2E8F0]">
+                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Đạm</p>
+                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(mainInfo.protein)}g</p>
                                 </div>
-                                <div class="bg-[#F8FAFC] rounded-lg p-3 text-center border border-[#E2E8F0]">
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Tinh Bột</p>
-                                    <p class="font-bold text-[#0F172A]">${Math.round(mainInfo.carbs)}g</p>
+                                <div class="bg-[#F8FAFC] rounded-lg p-1.5 md:p-3 text-center border border-[#E2E8F0]">
+                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Tinh Bột</p>
+                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(mainInfo.carbs)}g</p>
                                 </div>
-                                <div class="bg-[#F8FAFC] rounded-lg p-3 text-center border border-[#E2E8F0]">
-                                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Béo</p>
-                                    <p class="font-bold text-[#0F172A]">${Math.round(mainInfo.fat)}g</p>
+                                <div class="bg-[#F8FAFC] rounded-lg p-1.5 md:p-3 text-center border border-[#E2E8F0]">
+                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Béo</p>
+                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(mainInfo.fat)}g</p>
                                 </div>
                             </div>
                         </div>
@@ -7439,7 +7555,7 @@
           if (options.length > 1) {
             html += `
                     <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Các lựa chọn thay thế</h4>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3 md:gap-4">
                     `;
 
             for (let i = 1; i < options.length; i++) {
@@ -7512,15 +7628,22 @@
                     }
                     
                     /* Active Package Styles */
+                    @keyframes borderGlow {
+                        0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4), 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
+                        50% { box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.2), 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
+                        100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4), 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
+                    }
                     .pkg-label.active-pkg { z-index: 20; }
                     .pkg-label.active-pkg .pkg-inner {
                         background-color: #0F172A !important;
                         border-color: #10B981 !important;
                         box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2) !important;
-                        transform: scale(1.05);
+                        transform: scale(1.05) !important;
+                        animation: borderGlow 2s infinite ease-in-out;
                     }
                     @media (min-width: 768px) {
                         .pkg-label.active-pkg .pkg-inner {
+                            transform: scale(1.05) translateY(-5px) !important;
                             margin-top: -16px !important;
                             margin-bottom: 16px !important;
                         }
@@ -8203,6 +8326,40 @@
          }
       }
 
+      function generateDeliveryTimes() {
+        const select = document.getElementById("cust-delivery-time");
+        if (!select) return;
+
+        select.innerHTML = '<option value="">Chọn thời gian nhận hàng *</option>';
+        
+        const now = new Date();
+        const future = new Date(now.getTime() + 30 * 60000);
+        
+        select.innerHTML += `<option value="Giao ngay (Asap)">Giao ngay (khoảng 30-45 phút)</option>`;
+
+        const timeSlots = [
+            { startH: 10, startM: 0, endH: 10, endM: 30 },
+            { startH: 10, startM: 30, endH: 11, endM: 0 },
+            { startH: 11, startM: 0, endH: 11, endM: 30 },
+            { startH: 11, startM: 30, endH: 12, endM: 0 },
+            { startH: 12, startM: 0, endH: 12, endM: 30 },
+            { startH: 12, startM: 30, endH: 13, endM: 0 },
+            { startH: 16, startM: 0, endH: 16, endM: 30 },
+            { startH: 16, startM: 30, endH: 17, endM: 0 },
+            { startH: 17, startM: 0, endH: 17, endM: 30 },
+            { startH: 17, startM: 30, endH: 18, endM: 0 },
+            { startH: 18, startM: 0, endH: 18, endM: 30 },
+            { startH: 18, startM: 30, endH: 19, endM: 0 },
+        ];
+
+        timeSlots.forEach(slot => {
+            const startStr = `${slot.startH.toString().padStart(2, "0")}h${slot.startM === 0 ? '00' : '30'}`;
+            const endStr = `${slot.endH.toString().padStart(2, "0")}h${slot.endM === 0 ? '00' : '30'}`;
+            const val = `${startStr} - ${endStr}`;
+            select.innerHTML += `<option value="${val}">${val}</option>`;
+        });
+      }
+
       function submitOrder(e) {
         e.preventDefault();
         if (cart.length === 0) return;
@@ -8211,6 +8368,7 @@
         const paymentMethod = document.getElementById("payment-method").value;
         const lat = document.getElementById("cust-lat").value;
         const lng = document.getElementById("cust-lng").value;
+        const deliveryTime = document.getElementById("cust-delivery-time").value;
 
         const newOrder = {
           id: "ORD" + Math.floor(1000 + Math.random() * 9000),
@@ -8222,6 +8380,7 @@
           notes: document.getElementById("cust-notes").value,
           paymentMethod: paymentMethod,
           paymentStatus: paymentMethod === 'cod' ? 'unpaid' : 'unpaid',
+          deliveryTime: deliveryTime,
           items: [...cart],
           total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
           status: "pending",
@@ -8410,8 +8569,123 @@
       // ==========================================
       // 9. ADMIN: ORDERS & SHIPPERS
       // ==========================================
+      function renderKitchen() {
+        const filterEl = document.getElementById("kitchen-delivery-time-filter");
+        const filterDelivery = filterEl ? filterEl.value : "all";
+
+        // Extract tasks from active orders
+        const activeOrders = orders.filter(o => ["pending", "processing", "ready"].includes(o.status));
+        const kitchenTasksMap = {};
+
+        activeOrders.forEach(order => {
+          if (!order.items) return;
+          const kTime = order.deliveryTime || "Không hẹn giờ";
+          
+          order.items.forEach(item => {
+            const dName = item.name || dishes.find(d => d.id == item.dishId)?.name || 'Unknown';
+            const size = item.sizeLabel || (item.size === 'large' ? 'Lớn' : 'Thường');
+            const groupKey = `${item.dishId}_${size}_${kTime}`;
+
+            if (!kitchenTasksMap[groupKey]) {
+               kitchenTasksMap[groupKey] = {
+                   id: groupKey,
+                   dishId: item.dishId,
+                   name: dName,
+                   size: size,
+                   deliveryTime: kTime,
+                   qty: 0,
+                   orders: []
+               };
+            }
+            kitchenTasksMap[groupKey].qty += parseInt(item.quantity || item.qty || 1);
+            kitchenTasksMap[groupKey].orders.push({id: order.id, qty: parseInt(item.quantity || item.qty || 1)});
+          });
+        });
+
+        // Load states
+        const savedStates = JSON.parse(localStorage.getItem("nutriadmin_kitchen_states") || "{}");
+
+        // Prepare lists
+        const todoList = [];
+        const cookingList = [];
+        const doneList = [];
+        
+        const filterOptions = new Set();
+
+        Object.values(kitchenTasksMap).forEach(task => {
+            filterOptions.add(task.deliveryTime);
+            task.minOrderId = Math.min(...task.orders.map(o => parseInt(o.id.replace(/\D/g, '')) || 0));
+        });
+
+        let allTasks = Object.values(kitchenTasksMap).sort((a, b) => {
+            if (a.deliveryTime < b.deliveryTime) return -1;
+            if (a.deliveryTime > b.deliveryTime) return 1;
+            return a.minOrderId - b.minOrderId;
+        });
+
+        allTasks.forEach(task => {
+            if (filterDelivery !== "all" && task.deliveryTime !== filterDelivery) return;
+
+            const state = savedStates[task.id] || "todo";
+            task.state = state;
+            
+            if (state === "todo") todoList.push(task);
+            else if (state === "cooking") cookingList.push(task);
+            else doneList.push(task);
+        });
+
+        // Populate filter options if needed
+        if (filterEl && filterEl.options.length <= 1 && filterOptions.size > 0) {
+            filterEl.innerHTML = '<option value="all">Tất cả</option>';
+            Array.from(filterOptions).sort().forEach(opt => {
+                filterEl.innerHTML += `<option value="${opt}">${opt}</option>`;
+            });
+            filterEl.value = filterDelivery;
+        }
+
+        // Render functions
+        const renderTaskCard = (task, nextState, nextLabel, nextIcon, btnColor) => {
+           const ordersMsg = task.orders.map(o => `<span class="bg-white/50 px-1.5 py-0.5 rounded border border-black/10">#${o.id}(x${o.qty})</span>`).join(" ");
+           return `
+             <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative">
+                <div class="flex justify-between items-start mb-2">
+                    <h4 class="font-bold text-slate-800 text-sm">${task.name} <span class="bg-rose-100 text-rose-700 px-1.5 py-0.5 text-[10px] rounded ml-1">${task.size}</span></h4>
+                    <span class="bg-slate-800 text-white font-black text-xs px-2 py-1 rounded-full whitespace-nowrap leading-none ring-2 ring-white">x${task.qty}</span>
+                </div>
+                <div class="text-[11px] text-slate-500 mb-2 flex items-center font-medium">
+                    <i class="fa-regular fa-clock mr-1"></i> Giao: <span class="text-indigo-600 font-bold ml-1">${task.deliveryTime}</span>
+                </div>
+                <div class="text-[10px] text-slate-500 mb-3 leading-relaxed">
+                   Từ đơn: ${ordersMsg}
+                </div>
+                ${nextState ? `<button onclick="updateKitchenTask('${task.id}', '${nextState}')" class="w-full ${btnColor} text-white text-xs font-bold py-2 rounded transition-colors flex justify-center items-center gap-1.5 active:scale-95"><i class="fa-solid fa-${nextIcon}"></i> ${nextLabel}</button>` : ''}
+                ${task.state === 'done' ? `<button onclick="updateKitchenTask('${task.id}', 'todo')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium py-1.5 rounded transition-colors mt-2">Nấu lại</button>` : ''}
+             </div>
+           `;
+        };
+
+        const todoContainer = document.getElementById("kitchen-todo-list");
+        const cookingContainer = document.getElementById("kitchen-cooking-list");
+        const doneContainer = document.getElementById("kitchen-done-list");
+        
+        if(todoContainer) todoContainer.innerHTML = todoList.length ? todoList.map(t => renderTaskCard(t, "cooking", "Bắt đầu nấu", "fire", "bg-amber-500 hover:bg-amber-600")).join("") : `<p class="text-xs text-slate-400 text-center py-4">Không có món nào</p>`;
+        if(cookingContainer) cookingContainer.innerHTML = cookingList.length ? cookingList.map(t => renderTaskCard(t, "done", "Nấu xong", "check", "bg-emerald-500 hover:bg-emerald-600")).join("") : `<p class="text-xs text-slate-400 text-center py-4">Chưa có món nấu</p>`;
+        if(doneContainer) doneContainer.innerHTML = doneList.length ? doneList.map(t => renderTaskCard(t, null, "", "", "")).join("") : `<p class="text-xs text-slate-400 text-center py-4">Chưa xong món nào</p>`;
+
+        document.getElementById("kitchen-todo-count").innerText = todoList.length;
+        document.getElementById("kitchen-cooking-count").innerText = cookingList.length;
+        document.getElementById("kitchen-done-count").innerText = doneList.length;
+      }
+
+      function updateKitchenTask(id, newState) {
+        const savedStates = JSON.parse(localStorage.getItem("nutriadmin_kitchen_states") || "{}");
+        savedStates[id] = newState;
+        localStorage.setItem("nutriadmin_kitchen_states", JSON.stringify(savedStates));
+        renderKitchen();
+      }
+
       function switchOrderTab(tabName) {
-        ["orders-list", "shippers"].forEach((t) => {
+        ["orders-list", "shippers", "kitchen"].forEach((t) => {
           document.getElementById(`tab-content-${t}`).classList.add("hidden");
           document.getElementById(`tab-btn-${t}`).className =
             t === tabName
@@ -8426,6 +8700,7 @@
           renderOrdersAdmin();
         }
         if (tabName === "shippers") renderShippers();
+        if (tabName === "kitchen") renderKitchen();
       }
 
       function clearOrderFilters() {
@@ -8690,6 +8965,8 @@
         const container = document.getElementById("admin-orders-container");
         if (!container) return;
 
+        try { renderKitchen(); } catch(e){}
+
         const statusFilter = document.getElementById(
           "filter-order-status",
         ).value;
@@ -8816,6 +9093,7 @@
                                   ${(order.lat && order.lng) ? `<a href="https://www.google.com/maps/search/?api=1&query=${order.lat},${order.lng}" target="_blank" class="inline-flex items-center mt-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-2.5 py-1 rounded hover:bg-indigo-100 transition-colors"><i class="fa-solid fa-map-pin mr-1.5"></i>Xem vị trí khách ghim</a>` : ''}
                                </div>
                             </div>
+                            ${order.deliveryTime ? `<p class="text-xs text-emerald-700 mt-2 bg-emerald-50 p-2 rounded border border-emerald-100 font-medium"><i class="fa-regular fa-clock mr-1"></i> Giao lúc: ${order.deliveryTime}</p>` : ""}
                             ${order.notes ? `<p class="text-xs text-orange-600 mt-2 bg-orange-50 p-2 rounded border border-orange-100">${order.notes}</p>` : ""}
                         </div>
                         
@@ -9282,6 +9560,7 @@
         if(!shipper) return;
         
         let appUrl = getBaseUrl() + "?mode=shipper-app&id=" + id;
+        appUrl = buildUrlWithCredentials(appUrl);
         document.getElementById("shipper-qr-name").innerText = "TÀI XẾ: " + shipper.name;
         document.getElementById("shipper-qr-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(appUrl)}&margin=0`;
         
@@ -9448,9 +9727,10 @@
                   <ul class="text-slate-600 list-disc list-inside space-y-1 mb-2">
                      ${o.items.map(i => {
                          const dish = dishes.find(d => d.id == i.dishId);
-                         return `<li>${i.quantity}x ${dish ? dish.name : 'Unknown'} (${i.size === 'large' ? 'Lớn' : 'Thường'})</li>`;
+                         return `<li>${i.quantity || i.qty}x ${dish ? dish.name : (i.name || 'Unknown')} (${(i.size === 'large' || i.sizeLabel === 'Lớn') ? 'Lớn' : 'Thường'})</li>`;
                      }).join('')}
                   </ul>
+                  ${o.deliveryTime ? `<p class="text-xs text-emerald-700 bg-emerald-50 px-2 py-1 rounded inline-block font-medium mb-1 border border-emerald-100"><i class="fa-regular fa-clock"></i> Giao lúc: ${o.deliveryTime}</p><br/>` : ''}
                   ${o.isPackageOrder ? `<span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-0.5 rounded">Khách mua gói</span>` : ''}
                   
                   <div class="flex justify-between items-center mt-3 pt-2 border-t border-dashed border-slate-200">
@@ -9710,7 +9990,7 @@
       }
 
       function switchCustomerTab(t) {
-        ["discount", "potential", "purchased", "packages"].forEach((x) => {
+        ["discount", "potential", "purchased", "packages", "history"].forEach((x) => {
           document.getElementById(`tab-content-${x}`).classList.add("hidden");
           document.getElementById(`tab-btn-${x}`).className =
             x === t
@@ -9721,6 +10001,12 @@
         if (t === "discount") renderDiscountCodes();
         if (t === "potential") renderPotentialCustomers();
         if (t === "purchased") renderPurchasedCustomers();
+        if (t === "history") {
+            // maybe load initial customer list or reset view
+            document.getElementById("order-history-customer-search").value = "";
+            renderOrderHistoryCustomerList("");
+            document.getElementById("order-history-display").classList.add("hidden");
+        }
       }
 
       function renderDiscountCodes() {
@@ -9963,6 +10249,123 @@
           renderPurchasedCustomers();
           showToast("Đã xóa", "info");
         });
+      }
+
+      function filterOrderHistoryCustomerSelect() {
+        const query = document.getElementById("order-history-customer-search").value.toLowerCase();
+        renderOrderHistoryCustomerList(query);
+      }
+
+      function renderOrderHistoryCustomerList(query) {
+        const listDiv = document.getElementById("order-history-customer-list");
+        
+        const uniqueCustomersMap = new Map();
+        orders.forEach(o => {
+            const key = o.phone || o.customerPhone || "N/A";
+            if (!uniqueCustomersMap.has(key) && key !== "N/A") {
+                uniqueCustomersMap.set(key, {
+                    name: o.customerName || "Khách Hàng",
+                    phone: key
+                });
+            }
+        });
+        purchasedCustomers.forEach(p => {
+             const key = p.phone || "N/A";
+             if (!uniqueCustomersMap.has(key) && key !== "N/A") {
+                 uniqueCustomersMap.set(key, {
+                     name: p.name || "Khách Hàng",
+                     phone: key
+                 });
+             }
+        });
+
+        const allCustomers = Array.from(uniqueCustomersMap.values());
+        const filtered = allCustomers.filter(c => 
+            c.name.toLowerCase().includes(query) || 
+            c.phone.toLowerCase().includes(query)
+        );
+
+        if (filtered.length === 0) {
+            listDiv.innerHTML = `<div class="p-3 text-sm text-slate-500">Không tìm thấy khách hàng.</div>`;
+            listDiv.classList.remove("hidden");
+            return;
+        }
+
+        listDiv.innerHTML = filtered.map(c => `
+            <div class="px-4 py-3 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0" onclick="selectOrderHistoryCustomer('${c.phone}', '${c.name.replace(/'/g, "\\'")}')">
+                <div class="font-bold text-slate-800">${c.name}</div>
+                <div class="text-xs text-slate-500">${c.phone}</div>
+            </div>
+        `).join('');
+        
+        listDiv.classList.remove("hidden");
+      }
+
+      function selectOrderHistoryCustomer(phone, name) {
+        document.getElementById("order-history-customer-search").value = `${name} - ${phone}`;
+        document.getElementById("order-history-customer-list").classList.add("hidden");
+        document.getElementById("order-history-display").classList.remove("hidden");
+        document.getElementById("order-history-customer-name").innerText = `Lịch sử đơn hàng của: ${name}`;
+        
+        const tbody = document.getElementById("order-history-table-body");
+        
+        // Filter orders by phone
+        const customerOrders = orders.filter(o => o.phone === phone || o.customerPhone === phone);
+        
+        // Sort by date descending
+        customerOrders.sort((a, b) => new Date(b.date || b.id) - new Date(a.date || a.id));
+        
+        if (customerOrders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-slate-500">Khách hàng này chưa có đơn hàng nào.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = customerOrders.map(o => {
+            const dateStr = o.date ? (new Date(o.date).toLocaleDateString("vi-VN") + " " + new Date(o.date).toLocaleTimeString("vi-VN", {hour: '2-digit', minute: '2-digit'})) : "Chưa cập nhật";
+            
+            // Map status
+            let statusClass = "bg-slate-100 text-slate-600";
+            let statusText = o.status;
+            if (o.status === "pending") {
+                statusClass = "bg-amber-100 text-amber-800";
+                statusText = "Chờ xác nhận";
+            } else if (o.status === "cooking") {
+                statusClass = "bg-blue-100 text-blue-800";
+                statusText = "Đang nấu";
+            } else if (o.status === "ready") {
+                statusClass = "bg-purple-100 text-purple-800";
+                statusText = "Chờ giao";
+            } else if (o.status === "delivering") {
+                statusClass = "bg-teal-100 text-teal-800";
+                statusText = "Đang giao";
+            } else if (o.status === "completed") {
+                statusClass = "bg-emerald-100 text-emerald-800";
+                statusText = "Hoàn thành";
+            } else if (o.status === "cancelled") {
+                statusClass = "bg-red-100 text-red-800";
+                statusText = "Đã hủy";
+            }
+            
+            const cartItems = o.items || o.cart || [];
+            const dishesList = cartItems.length > 0 ? cartItems.map(cItem => cItem.name).join(", ") : (o.mainDish || "N/A");
+            
+            const total = o.total !== undefined ? o.total : (o.totalPrice !== undefined ? o.totalPrice : 0);
+            const priceStr = total.toLocaleString("vi-VN");
+
+            return `
+                <tr class="hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-slate-900 border-r border-[#E2E8F0]">#${o.id}</td>
+                    <td class="px-6 py-4 text-slate-500 border-r border-[#E2E8F0]">${dateStr}</td>
+                    <td class="px-6 py-4 border-r border-[#E2E8F0]">
+                        <div class="truncate max-w-[200px]" title="${dishesList}">${dishesList}</div>
+                    </td>
+                    <td class="px-6 py-4 font-bold text-[#0F172A] border-r border-[#E2E8F0]">${priceStr}đ</td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-bold rounded-full ${statusClass}">${statusText}</span>
+                    </td>
+                </tr>
+            `;
+        }).join('');
       }
 
       function handlePackageChange() {
@@ -10572,7 +10975,9 @@
 
         const customKey =
           localStorage.getItem("nutriadmin_custom_api_key") || "";
-        const url = `/api/gemini`;
+        const url = customKey 
+          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
+          : `/api/gemini`;
         const payload = {
           contents: chatHistory,
           systemInstruction: { parts: [{ text: fullSystemInstruction }] },
@@ -10582,12 +10987,12 @@
         const delays = [1000, 2000, 4000];
         for (let i = 0; i < delays.length; i++) {
           try {
+            const headers = { "Content-Type": "application/json" };
+            if (!customKey) headers["x-custom-api-key"] = customKey;
+
             const response = await fetch(url, {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-custom-api-key": customKey,
-              },
+              headers: headers,
               body: JSON.stringify(payload),
             });
             if (!response.ok)
@@ -10770,6 +11175,21 @@
       // 17. INITIALIZATION
       // ==========================================
       window.onload = () => {
+        // Parse credentials from hash if available
+        if (window.location.hash.startsWith('#cfg=')) {
+            try {
+                const cfgStr = atob(window.location.hash.substring(5));
+                const cfg = JSON.parse(decodeURIComponent(cfgStr));
+                if (cfg.ak) localStorage.setItem("nutriadmin_custom_api_key", cfg.ak);
+                if (cfg.fb) localStorage.setItem("nutriadmin_custom_firebase_config", cfg.fb);
+                
+                // Clear hash for cleaner URL and to prevent copy-pasting hash again by mistake
+                history.replaceState(null, "", window.location.pathname + window.location.search);
+            } catch (e) {
+                console.error("Failed to parse config from URL", e);
+            }
+        }
+
         loadSettings();
         renderCategories();
         renderDishes();
