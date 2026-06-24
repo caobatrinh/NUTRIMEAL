@@ -423,9 +423,13 @@
               <a
                 id="nav-messages"
                 onclick="switchView('messages')"
-                class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap relative"
+                class="border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:border-slate-600 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition-colors cursor-pointer whitespace-nowrap"
               >
-                <i class="fa-solid fa-comments mr-2"></i> Tin nhắn <span id="nav-messages-badge" class="hidden absolute top-3 -right-2 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">0</span>
+                <div class="relative flex items-center">
+                  <i class="fa-solid fa-comments mr-2"></i> 
+                  <span id="nav-messages-badge" class="hidden absolute -top-2 -right-3 bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-10">0</span>
+                </div>
+                Tin nhắn
               </a>
               <a
                 id="nav-menu"
@@ -5331,8 +5335,10 @@
       chatHistory = allChats[customerDeviceId].history;
 
       function saveAllChats() {
-        allChats[customerDeviceId].history = chatHistory;
-        allChats[customerDeviceId].lastUpdated = Date.now();
+        if (customerDeviceId && allChats[customerDeviceId]) {
+            allChats[customerDeviceId].history = chatHistory;
+            allChats[customerDeviceId].lastUpdated = Date.now();
+        }
         localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
         
         // Update unread badge in navigation if any chat needs support
@@ -5344,7 +5350,118 @@
                 renderAdminChatMessages(customerDeviceId);
             }
         }
+        
+        // Sync with server
+        syncChatsToServer();
       }
+
+      async function syncChatsToServer() {
+          try {
+              const res = await fetch('/api/chats', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(allChats)
+              });
+              if (res.ok) {
+                  const data = await res.json();
+                  if (data && data.chats) {
+                      updateLocalChatsFromServer(data.chats);
+                  }
+              }
+          } catch(e) {
+              console.log("Chat sync error:", e);
+          }
+      }
+
+      function updateLocalChatsFromServer(serverChats) {
+          let updated = false;
+          for (let key in serverChats) {
+              if (!serverChats[key]) continue;
+              if (!allChats[key]) {
+                  allChats[key] = serverChats[key];
+                  updated = true;
+              } else {
+                  const sHistoryLen = serverChats[key].history?.length || 0;
+                  const cHistoryLen = allChats[key]?.history?.length || 0;
+                  if (sHistoryLen > cHistoryLen || (serverChats[key].lastUpdated > (allChats[key]?.lastUpdated || 0))) {
+                      allChats[key] = serverChats[key];
+                      updated = true;
+                  }
+              }
+          }
+          if (updated) {
+              if (customerDeviceId && allChats[customerDeviceId]) {
+                  chatHistory = allChats[customerDeviceId].history || [];
+              }
+              localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
+              if (typeof updateMessagesNavBadge === 'function') updateMessagesNavBadge();
+              
+              if (typeof renderMessagesList === 'function') {
+                  renderMessagesList();
+                  if (currentAdminChatId) {
+                      renderAdminChatMessages(currentAdminChatId);
+                  }
+              }
+              // Update customer chat messages UI if visible
+              const chatbotMessages = document.getElementById("chatbot-messages");
+              if (chatbotMessages && typeof window.renderCustomerChatMessages === 'function') {
+                  const oldScroll = chatbotMessages.scrollTop;
+                  window.renderCustomerChatMessages();
+                  chatbotMessages.scrollTop = oldScroll;
+              } else if (chatbotMessages && !document.getElementById("chatbot-window").classList.contains("hidden")) {
+                  // Fallback: we can re-render it simply if window.renderCustomerChatMessages doesn't exist
+                  const history = allChats[customerDeviceId]?.history || chatHistory || [];
+                  chatbotMessages.innerHTML = "";
+                  history.forEach((msg) => {
+                      if (!msg) return;
+                      const msgDiv = document.createElement("div");
+                      msgDiv.className = "flex gap-2 items-start " + (msg.role === "user" ? "flex-row-reverse" : "");
+                      
+                      let textContent = "";
+                      if (msg.parts && msg.parts.length > 0 && msg.parts[0] && msg.parts[0].text) {
+                          textContent = msg.parts[0].text;
+                      } else if (msg.text) {
+                          textContent = msg.text;
+                      }
+                      
+                      const formattedText = String(textContent || "")
+                          .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                          .replace(/\*(.*?)\*/g, "<i>$1</i>")
+                          .replace(/\n/g, "<br>");
+                      
+                      msgDiv.innerHTML = msg.role === "user" ? `
+                          <div class="bg-slate-800 text-white rounded-2xl rounded-tr-sm p-3 text-sm max-w-[85%] break-words shadow-sm">
+                              ${formattedText}
+                          </div>
+                      ` : `
+                          <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shrink-0 shadow-sm">
+                              <i class="fa-solid fa-robot"></i>
+                          </div>
+                          <div class="bg-slate-100 rounded-2xl rounded-tl-sm p-3 text-sm text-slate-800 max-w-[85%] break-words shadow-sm">
+                              ${formattedText}
+                          </div>
+                      `;
+                      chatbotMessages.appendChild(msgDiv);
+                  });
+              }
+          }
+      }
+
+      // Start periodic sync
+      setInterval(async () => {
+          try {
+              const res = await fetch('/api/chats');
+              if (res.ok) {
+                  const serverChats = await res.json();
+                  updateLocalChatsFromServer(serverChats);
+              }
+          } catch(e) {}
+      }, 3000);
+
+      // Perform initial sync on load
+      setTimeout(() => {
+          syncChatsToServer();
+      }, 1000);
 
       function saveAllReviews() {
         localStorage.setItem("nutriadmin_all_reviews", JSON.stringify(allReviews));
@@ -13818,6 +13935,7 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
           }
           
           sortedChats.forEach(chat => {
+              if (!chat) return;
               const history = chat.history || [];
               const lastMsgObj = history.length > 0 ? history[history.length - 1] : null;
               let lastMsg = "Chưa có tin nhắn";
@@ -13834,7 +13952,7 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
               
               const isSelected = currentAdminChatId === chat.id;
               const supportBadge = chat.needsSupport ? `<span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap animate-pulse">Cần hỗ trợ</span>` : '';
-              const unreadDot = chat.hasUnread ? `<span class="w-2.5 h-2.5 bg-red-500 rounded-full absolute top-3 right-3"></span>` : '';
+              const unreadDot = chat.hasUnread ? `<span class="w-3 h-3 bg-red-500 rounded-full absolute top-1/2 -translate-y-1/2 right-4 shadow-sm border border-white"></span>` : '';
               
               const activeClass = isSelected ? "bg-emerald-50 border-emerald-200" : "bg-white hover:bg-slate-50 border-slate-100 hover:border-slate-200";
               const titleClass = chat.hasUnread || chat.needsSupport ? "font-bold text-slate-800" : "font-medium text-slate-700";
@@ -13862,7 +13980,10 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
               chat.hasUnread = false; // Mark as read
               localStorage.setItem("nutriadmin_all_chats", JSON.stringify(allChats));
               updateMessagesNavBadge();
-              renderMessagesList();
+              setTimeout(() => renderMessagesList(), 0);
+              if (typeof syncChatsToServer === 'function') {
+                  syncChatsToServer();
+              }
           }
           
           document.getElementById("admin-chat-sidebar").classList.add("hidden", "md:flex");
@@ -13878,7 +13999,7 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
           document.getElementById("admin-review-input-area").classList.add("hidden");
           
           if (chat) {
-              document.getElementById("admin-chat-title").innerText = chat.name;
+              document.getElementById("admin-chat-title").innerText = chat.name || "Khách hàng";
               
               if (chat.needsSupport) {
                   document.getElementById("btn-resolve-support").classList.remove("hidden");
@@ -13982,6 +14103,7 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
           
           const chat = allChats[currentAdminChatId];
           if (chat) {
+              chat.history = chat.history || [];
               chat.history.push({ role: "model", parts: [{ text: text }] }); // We inject it as "model" so AI sees it as its own output or at least store reply
               chat.lastUpdated = Date.now();
               chat.hasUnread = false; // Admin sent, so it's read
@@ -13995,6 +14117,10 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
               if (customerDeviceId === currentAdminChatId) {
                   // Admin is replying to their own test session
                   appendMessageUI("model", text); 
+              }
+              
+              if (typeof syncChatsToServer === 'function') {
+                  syncChatsToServer();
               }
           }
           
@@ -14012,6 +14138,10 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
               
               openAdminChat(currentAdminChatId); // Refresh header
               showToast("Đã đánh dấu hỗ trợ xong");
+              
+              if (typeof syncChatsToServer === 'function') {
+                  syncChatsToServer();
+              }
           }
       }
 
