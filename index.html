@@ -5435,6 +5435,93 @@
           }
       }
 
+      let lastStateStr = "";
+      async function syncStateToServer() {
+          try {
+              const settingsRaw = localStorage.getItem("nutriadmin_settings");
+              const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+              const currentState = {
+                  orders,
+                  potentialCustomers,
+                  purchasedCustomers,
+                  trackingSources,
+                  discountCodes,
+                  shippers,
+                  inventory,
+                  dishes,
+                  settings
+              };
+              const currentStr = JSON.stringify(currentState);
+              if (currentStr === lastStateStr) return;
+              lastStateStr = currentStr;
+
+              const res = await fetch('/api/state', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: currentStr
+              });
+              if (res.ok) {
+                  const data = await res.json();
+                  if (data && data.state) {
+                      updateLocalStateFromServer(data.state);
+                  }
+              }
+          } catch(e) {
+              console.log("State sync error:", e);
+          }
+      }
+
+      function updateLocalStateFromServer(serverState) {
+          const serverStr = JSON.stringify(serverState);
+          if (lastStateStr === serverStr) return;
+          lastStateStr = serverStr;
+          
+          let updatedUI = false;
+          
+          if (serverState.settings) {
+              localStorage.setItem("nutriadmin_settings", JSON.stringify(serverState.settings));
+              if (typeof loadSettings === 'function') loadSettings();
+          }
+          
+          if (serverState.orders) {
+             const prevCount = orders.length;
+             orders = serverState.orders.map((o) => ({...o, timestamp: new Date(o.timestamp)}));
+             if (orders.length > prevCount) {
+                const latestOrder = orders[0];
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get("mode") !== "landing" && typeof showNewOrderPopup === 'function') {
+                    showNewOrderPopup(latestOrder);
+                    const badge = document.getElementById("order-badge");
+                    if (badge) {
+                        badge.innerText = (parseInt(badge.innerText) || 0) + (orders.length - prevCount);
+                        badge.classList.remove("hidden");
+                    }
+                }
+             }
+             updatedUI = true;
+          }
+          if (serverState.dishes) dishes = serverState.dishes;
+          if (serverState.inventory) inventory = serverState.inventory;
+          if (serverState.trackingSources) trackingSources = serverState.trackingSources;
+          if (serverState.discountCodes) discountCodes = serverState.discountCodes;
+          if (serverState.potentialCustomers) potentialCustomers = serverState.potentialCustomers;
+          if (serverState.purchasedCustomers) purchasedCustomers = serverState.purchasedCustomers;
+          if (serverState.shippers) shippers = serverState.shippers;
+          
+          if (updatedUI) {
+              try { renderCategories(); } catch(e){}
+              try { renderDishes(); } catch(e){}
+              try { renderInventory(); } catch(e){}
+              try { renderOrdersAdmin(); } catch(e){}
+              try { renderShippers(); } catch(e){}
+              try { if (typeof updateMarketingStatsUI === 'function') updateMarketingStatsUI(); } catch(e){}
+              try { renderDashboard(); } catch(e){}
+              try { renderDiscountCodes(); } catch(e){}
+              try { renderPotentialCustomers(); } catch(e){}
+              try { renderPurchasedCustomers(); } catch(e){}
+          }
+      }
+
       function updateLocalChatsFromServer(serverChats) {
           let updated = false;
           for (let key in serverChats) {
@@ -5518,11 +5605,24 @@
                   updateLocalChatsFromServer(serverChats);
               }
           } catch(e) {}
+          
+          try {
+              const resState = await fetch('/api/state');
+              if (resState.ok) {
+                  const serverState = await resState.json();
+                  updateLocalStateFromServer(serverState);
+              }
+          } catch(e) {}
       }, 3000);
+      
+      setInterval(() => {
+          syncStateToServer();
+      }, 2000);
 
       // Perform initial sync on load
       setTimeout(() => {
           syncChatsToServer();
+          syncStateToServer();
       }, 1000);
 
       function saveAllReviews() {
@@ -6443,6 +6543,12 @@
 
         const obj = document.getElementById(id);
         if (!obj) return;
+        
+        if (obj.dataset.targetValue === String(end)) {
+            return;
+        }
+        obj.dataset.targetValue = String(end);
+        
         if (obj.dataset.animationId) {
             cancelAnimationFrame(parseInt(obj.dataset.animationId));
         }
@@ -8770,42 +8876,24 @@
         return html;
       }
 
-      let renderDishesTimeout;
       function renderDishes() {
         const container = document.getElementById("dish-grid");
         
         if (!container) return;
         
-        clearTimeout(renderDishesTimeout);
-        container.innerHTML = Array(4).fill(`
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden relative flex flex-col animate-pulse">
-                <div class="h-48 bg-slate-200"></div>
-                <div class="p-5 flex-1 flex flex-col">
-                    <div class="h-6 bg-slate-200 rounded w-3/4 mb-4"></div>
-                    <div class="h-4 bg-slate-200 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-slate-200 rounded w-5/6 mb-6"></div>
-                    <div class="mt-auto space-y-3">
-                        <div class="h-16 bg-slate-200 rounded-lg"></div>
-                        <div class="h-16 bg-slate-200 rounded-lg"></div>
-                    </div>
-                </div>
-            </div>
-        `).join("");
+        const filteredDishes =
+          currentFilter === "all"
+            ? dishes
+            : dishes.filter((d) => d.category === currentFilter);
 
-        renderDishesTimeout = setTimeout(() => {
-            const filteredDishes =
-              currentFilter === "all"
-                ? dishes
-                : dishes.filter((d) => d.category === currentFilter);
+        if (filteredDishes.length === 0) {
+          container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p>Chưa có món ăn nào trong nhóm này.</p></div>`;
+          return;
+        }
 
-            if (filteredDishes.length === 0) {
-              container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500"><i class="fa-solid fa-box-open text-4xl mb-3 opacity-50"></i><p>Chưa có món ăn nào trong nhóm này.</p></div>`;
-              return;
-            }
-
-            container.innerHTML = filteredDishes
-              .map(
-                (dish) => `
+        container.innerHTML = filteredDishes
+          .map(
+            (dish) => `
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden lg:hover:shadow-lg lg:hover:scale-105 active:scale-[0.98] transition-all duration-300 relative flex flex-col">
                         ${!dish.isActive ? '<div class="absolute top-2 left-2 bg-slate-800 text-white text-xs font-bold px-2 py-1 rounded z-10 opacity-80">Đã ẩn</div>' : ""}
                         <div class="h-48 overflow-hidden bg-slate-100 relative">
@@ -8852,7 +8940,6 @@
                     </div>`,
               )
               .join("");
-        }, 500);
       }
 
       function openModal(mode, id = null) {
@@ -11097,45 +11184,33 @@
         if (elDelivering) elDelivering.innerText = counts.delivering;
       }
 
-      let renderInventoryTimeout;
       function renderInventory() {
         const container = document.getElementById("inventory-list");
         if (!container) return;
 
-        clearTimeout(renderInventoryTimeout);
-        container.innerHTML = Array(3).fill(`
-            <tr class="animate-pulse">
-                <td class="p-4"><div class="h-5 bg-slate-200 rounded w-3/4 mb-1"></div></td>
-                <td class="p-4"><div class="h-6 bg-slate-200 rounded-lg w-20"></div></td>
-                <td class="p-4 flex justify-end"><div class="h-5 bg-slate-200 rounded w-1/3"></div></td>
+        container.innerHTML = inventory.map(item => {
+          let stockClass = "text-slate-800";
+          let alertTrigger = "";
+          if (item.stock < 5) {
+             stockClass = "text-red-500 font-bold";
+             alertTrigger = `<span class="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full ml-2">Sắp hết</span>`;
+          }
+          else if (item.stock < 10) {
+             stockClass = "text-amber-500 font-bold";
+          }
+          return `
+            <tr class="hover:bg-slate-50 transition-colors">
+              <td class="p-4 font-medium text-slate-800">${item.name} ${alertTrigger}</td>
+              <td class="p-4"><span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg">${item.category}</span></td>
+              <td class="p-4 text-right ${stockClass}">
+                <div class="flex items-center justify-end gap-3">
+                  <span>${item.stock.toFixed(2)} ${item.unit}</span>
+                  <button onclick="editInventoryStock(${item.id})" class="text-slate-400 hover:text-indigo-600 transition-colors" title="Cập nhật tồn kho"><i class="fa-solid fa-pen-to-square"></i></button>
+                </div>
+              </td>
             </tr>
-        `).join("");
-
-        renderInventoryTimeout = setTimeout(() => {
-            container.innerHTML = inventory.map(item => {
-              let stockClass = "text-slate-800";
-              let alertTrigger = "";
-              if (item.stock < 5) {
-                 stockClass = "text-red-500 font-bold";
-                 alertTrigger = `<span class="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full ml-2">Sắp hết</span>`;
-              }
-              else if (item.stock < 10) {
-                 stockClass = "text-amber-500 font-bold";
-              }
-              return `
-                <tr class="hover:bg-slate-50 transition-colors">
-                  <td class="p-4 font-medium text-slate-800">${item.name} ${alertTrigger}</td>
-                  <td class="p-4"><span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg">${item.category}</span></td>
-                  <td class="p-4 text-right ${stockClass}">
-                    <div class="flex items-center justify-end gap-3">
-                      <span>${item.stock.toFixed(2)} ${item.unit}</span>
-                      <button onclick="editInventoryStock(${item.id})" class="text-slate-400 hover:text-indigo-600 transition-colors" title="Cập nhật tồn kho"><i class="fa-solid fa-pen-to-square"></i></button>
-                    </div>
-                  </td>
-                </tr>
-              `;
-            }).join('');
-        }, 500);
+          `;
+        }).join('');
       }
 
       function generateGroceryList() {
@@ -11322,7 +11397,6 @@
         renderInventory();
       }
 
-      let renderOrdersAdminTimeout;
       function renderOrdersAdmin() {
         updateOrderWorkflowStats();
 
@@ -11331,91 +11405,55 @@
 
         try { renderKitchen(); } catch(e){}
 
-        clearTimeout(renderOrdersAdminTimeout);
-        container.innerHTML = Array(3).fill(`
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col relative animate-pulse">
-                <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50/50">
-                    <div class="flex items-start gap-3 w-1/2">
-                        <div class="w-4 h-4 bg-slate-200 rounded mt-1"></div>
-                        <div class="w-full">
-                            <div class="h-5 bg-slate-200 rounded w-1/3 mb-2"></div>
-                            <div class="h-3 bg-slate-200 rounded w-1/4"></div>
-                        </div>
-                    </div>
-                    <div class="h-6 bg-slate-200 rounded w-1/4"></div>
-                </div>
-                <div class="p-4 flex-1">
-                    <div class="mb-4 space-y-2">
-                        <div class="h-4 bg-slate-200 rounded w-1/2"></div>
-                        <div class="h-4 bg-slate-200 rounded w-1/3"></div>
-                        <div class="h-4 bg-slate-200 rounded w-2/3"></div>
-                    </div>
-                    <div class="mb-4 bg-slate-50 p-3 rounded-lg border border-slate-100 space-y-3">
-                        <div class="flex justify-between"><div class="h-3 bg-slate-200 rounded w-1/4"></div><div class="h-3 bg-slate-200 rounded w-1/4"></div></div>
-                        <div class="flex justify-between border-t border-slate-200 pt-2"><div class="h-3 bg-slate-200 rounded w-1/4"></div><div class="h-5 bg-slate-200 rounded w-1/4"></div></div>
-                    </div>
-                    <div class="border-t border-slate-100 pt-4 mb-4 space-y-2">
-                        <div class="h-3 bg-slate-200 rounded w-1/4 mb-2"></div>
-                        <div class="flex justify-between"><div class="h-4 bg-slate-200 rounded w-2/3"></div><div class="h-4 bg-slate-200 rounded w-1/4"></div></div>
-                    </div>
-                </div>
-                <div class="p-4 bg-slate-50 flex justify-between items-center border-t border-slate-100">
-                    <div class="h-5 bg-slate-200 rounded w-1/4"></div>
-                    <div class="h-6 bg-slate-200 rounded w-1/4"></div>
-                </div>
-            </div>
-        `).join("");
+        const statusFilter = document.getElementById(
+          "filter-order-status",
+        ).value;
+        const dateFilter = document.getElementById("filter-order-date").value;
+        const regionFilter = document
+          .getElementById("filter-order-region")
+          .value.toLowerCase();
+        const shipperFilter = document.getElementById(
+          "filter-order-shipper",
+        ).value;
 
-        renderOrdersAdminTimeout = setTimeout(() => {
-            const statusFilter = document.getElementById(
-              "filter-order-status",
-            ).value;
-            const dateFilter = document.getElementById("filter-order-date").value;
-            const regionFilter = document
-              .getElementById("filter-order-region")
-              .value.toLowerCase();
-            const shipperFilter = document.getElementById(
-              "filter-order-shipper",
-            ).value;
+        const filteredOrders = orders.filter((order) => {
+          if (statusFilter !== "all" && order.status !== statusFilter)
+            return false;
+          if (dateFilter) {
+            const d = new Date(order.timestamp);
+            if (
+              `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` !==
+              dateFilter
+            )
+              return false;
+          }
+          if (
+            regionFilter &&
+            !order.address.toLowerCase().includes(regionFilter)
+          )
+            return false;
+          if (shipperFilter !== "all") {
+            if (shipperFilter === "unassigned" && order.shipperId !== null)
+              return false;
+            if (
+              shipperFilter !== "unassigned" &&
+              order.shipperId !== parseInt(shipperFilter)
+            )
+              return false;
+          }
+          return true;
+        });
 
-            const filteredOrders = orders.filter((order) => {
-              if (statusFilter !== "all" && order.status !== statusFilter)
-                return false;
-              if (dateFilter) {
-                const d = new Date(order.timestamp);
-                if (
-                  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` !==
-                  dateFilter
-                )
-                  return false;
-              }
-              if (
-                regionFilter &&
-                !order.address.toLowerCase().includes(regionFilter)
-              )
-                return false;
-              if (shipperFilter !== "all") {
-                if (shipperFilter === "unassigned" && order.shipperId !== null)
-                  return false;
-                if (
-                  shipperFilter !== "unassigned" &&
-                  order.shipperId !== parseInt(shipperFilter)
-                )
-                  return false;
-              }
-              return true;
-            });
-
-            const sortBy = document.getElementById("filter-order-sort")?.value || "newest";
-            filteredOrders.sort((a, b) => {
-                if (sortBy === "oldest") {
-                    return new Date(a.timestamp) - new Date(b.timestamp);
-                } else if (sortBy === "highest_value") {
-                    return b.total - a.total;
-                } else {
-                    return new Date(b.timestamp) - new Date(a.timestamp);
-                }
-            });
+        const sortBy = document.getElementById("filter-order-sort")?.value || "newest";
+        filteredOrders.sort((a, b) => {
+            if (sortBy === "oldest") {
+                return new Date(a.timestamp) - new Date(b.timestamp);
+            } else if (sortBy === "highest_value") {
+                return b.total - a.total;
+            } else {
+                return new Date(b.timestamp) - new Date(a.timestamp);
+            }
+        });
 
             if (filteredOrders.length === 0) {
               container.innerHTML = `<div class="col-span-full py-12 text-center text-slate-500 bg-white rounded-2xl border border-slate-100"><i class="fa-solid fa-receipt text-4xl mb-3 opacity-50"></i><p>Không có đơn hàng nào.</p></div>`;
@@ -11545,7 +11583,6 @@
               .join("");
               
             updateBulkSelectionCount();
-        }, 500);
       }
 
       function sendZaloNotification(order, status) {
