@@ -367,7 +367,6 @@
     <style>
         .banner-scale-wrapper {
             width: 100%;
-            max-width: 1152px;
             margin: 0 auto;
             overflow: hidden;
             display: flex;
@@ -375,7 +374,7 @@
             align-items: flex-start;
         }
         .banner-scale {
-            width: 1152px !important;
+            width: var(--desktop-width, 1152px) !important;
             /* Remove fixed height so it adapts to content */
             height: auto !important;
             min-height: 500px;
@@ -390,7 +389,12 @@
                 const banner = wrapper.querySelector('.banner-scale');
                 if (!banner) return;
                 
-                const desktopWidth = 1152;
+                const customWidth = banner.getAttribute('data-desktop-width');
+                const desktopWidth = customWidth ? parseInt(customWidth) : 1152;
+                
+                wrapper.style.maxWidth = desktopWidth + 'px';
+                banner.style.setProperty('--desktop-width', desktopWidth + 'px');
+                
                 // offsetHeight gives the actual unscaled height
                 const desktopHeight = banner.offsetHeight;
                 
@@ -447,7 +451,7 @@
         });
     </script>
   </head>
-  <body class="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-200">
+  <body class="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-200 overflow-x-hidden">
     <!-- Navigation -->
     <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 shadow-sm transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1188,19 +1192,45 @@
                   <label class="block text-sm font-medium text-slate-700"
                     >Địa chỉ cửa hàng</label
                   >
-                  <div class="mt-1 relative rounded-md shadow-sm">
-                    <div
-                      class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"
+                  <div class="mt-1 grid grid-cols-2 gap-4">
+                    <select
+                      id="set-district"
+                      class="focus:ring-primary focus:border-primary block w-full sm:text-sm border-slate-300 rounded-lg py-2.5 border bg-white"
+                      onchange="updateSetWards()"
                     >
-                      <i class="fa-solid fa-location-dot text-slate-400"></i>
-                    </div>
-                    <input
-                      type="text"
-                      id="set-address"
-                      class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-slate-300 rounded-lg py-2.5 border"
-                      placeholder="Số nhà, Tên đường, Quận/Huyện, Thành phố"
-                    />
+                      <option value="">Quận/Huyện</option>
+                    </select>
+                    <select
+                      id="set-ward"
+                      disabled
+                      class="focus:ring-primary focus:border-primary block w-full sm:text-sm border-slate-300 rounded-lg py-2.5 border disabled:bg-slate-100 disabled:text-slate-400 bg-white"
+                    >
+                      <option value="">Phường/Xã</option>
+                    </select>
                   </div>
+                  <div class="mt-2 flex gap-2">
+                    <div class="relative flex-1 rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <i class="fa-solid fa-location-dot text-slate-400"></i>
+                        </div>
+                        <input
+                          type="text"
+                          id="set-street"
+                          class="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-slate-300 rounded-lg py-2.5 border"
+                          placeholder="Số nhà, Tên đường cụ thể"
+                        />
+                    </div>
+                    <button
+                      type="button"
+                      onclick="getStoreLocationFromGoogle()"
+                      class="bg-blue-50 text-blue-600 hover:bg-blue-100 px-3 py-2.5 rounded-lg border border-blue-200 transition-colors flex items-center gap-2 text-sm font-medium shrink-0 shadow-sm"
+                      title="Lấy tọa độ định vị"
+                    >
+                      <i class="fa-solid fa-location-crosshairs"></i> <span class="hidden sm:inline">Định vị</span>
+                    </button>
+                  </div>
+                  <input type="hidden" id="set-lat" />
+                  <input type="hidden" id="set-lng" />
                 </div>
               </div>
             </div>
@@ -1516,6 +1546,13 @@
             class="whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium transition-all bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent"
           >
             <i class="fa-solid fa-user-clock mr-2"></i> Khách hàng tiềm năng
+          </button>
+          <button
+            id="tab-btn-grandopening"
+            onclick="switchCustomerTab('grandopening')"
+            class="whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium transition-all bg-transparent text-red-500 hover:text-red-700 hover:bg-red-50 border-b-2 border-transparent"
+          >
+            <i class="fa-solid fa-party-popper mr-2"></i> Khai trương
           </button>
           <button
             id="tab-btn-purchased"
@@ -1839,6 +1876,54 @@
           </div>
         </div>
 
+        <!-- Tab: Grand Opening Customers -->
+        <div id="tab-content-grandopening" class="hidden animate-fade-in">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <!-- Gói Khai Trương -->
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 bg-red-50 flex justify-between items-center">
+                  <h3 class="font-bold text-red-800">Đăng Ký Mua Gói</h3>
+                  <span class="text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded-full border border-red-200" id="grandopening-pkg-count">0</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                      <tr>
+                        <th class="p-4">KHÁCH HÀNG</th>
+                        <th class="p-4">GÓI</th>
+                        <th class="p-4">NGÀY ĐK</th>
+                      </tr>
+                    </thead>
+                    <tbody id="grandopening-pkg-list" class="divide-y divide-slate-50">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Đặt 1 Bữa Khai Trương -->
+              <div class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div class="p-4 border-b border-slate-100 bg-red-50 flex justify-between items-center">
+                  <h3 class="font-bold text-red-800">Đăng Ký Đặt 1 Bữa</h3>
+                  <span class="text-xs font-medium bg-red-100 text-red-800 px-2 py-1 rounded-full border border-red-200" id="grandopening-order-count">0</span>
+                </div>
+                <div class="overflow-x-auto">
+                  <table class="w-full text-left text-sm text-slate-600">
+                    <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                      <tr>
+                        <th class="p-4">MÃ ĐƠN</th>
+                        <th class="p-4">KHÁCH HÀNG</th>
+                        <th class="p-4">TỔNG TIỀN</th>
+                        <th class="p-4">NGÀY ĐK</th>
+                      </tr>
+                    </thead>
+                    <tbody id="grandopening-order-list" class="divide-y divide-slate-50">
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+          </div>
+        </div>
+
         <!-- Tab: Purchased Customers -->
         <div id="tab-content-purchased" class="hidden animate-fade-in">
           <div class="flex justify-end mb-4 gap-2">
@@ -1964,86 +2049,87 @@
            <h4 class="font-bold text-slate-800 text-base md:text-lg mb-4">Gói Theo Mục Tiêu Dinh Dưỡng</h4>
            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch max-w-5xl mx-auto mb-10 text-left">
                <!-- Gói Trải Nghiệm -->
-               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+               <div class="h-full bg-white border-[3px] border-[#0F766E] rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 relative overflow-hidden shadow-lg shadow-emerald-900/5">
                    <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
                        <div>
                            <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                               <p oninput="document.getElementById('front-pkg4-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Trải Nghiệm</p>
+                               <p oninput="document.getElementById('front-pkg4-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-base md:text-lg uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Trải Nghiệm</p>
                            </div>
-                           <h4 oninput="document.getElementById('front-pkg4-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">5 Ngày</h4>
+                           <h4 oninput="document.getElementById('front-pkg4-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-4xl md:text-5xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">5 Ngày</h4>
                            <div class="flex items-center gap-2 mt-1">
-                               <p oninput="document.getElementById('front-pkg4-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+0.25kg dự kiến</p>
+                               <p oninput="document.getElementById('front-pkg4-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-lg md:text-xl cursor-text transition-colors duration-200">+0.25kg dự kiến</p>
                            </div>
-                           <p oninput="document.getElementById('front-pkg4-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 6% mục tiêu</p>
+                           <p oninput="document.getElementById('front-pkg4-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-base md:text-lg font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 6% mục tiêu</p>
                        </div>
                    </div>
                    
                    <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Menu AI thiết kế riêng</span></li>
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Giao hàng tận nơi</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Menu AI thiết kế riêng</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Giao hàng tận nơi</span></li>
                    </ul>
 
-                   <button type="button" onclick="openPricingModal('5', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                   <button type="button" onclick="openPricingModal('5', true)" class="text-emerald-600 font-semibold text-lg md:text-xl mb-3 hover:underline text-center w-full relative z-10">
                        <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
                    </button>
-                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                   <div class="cursor-pointer w-full text-center py-3 rounded-xl bg-[#059669] text-white font-bold text-lg md:text-xl transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-[#047857] hover:shadow-[0_8px_20px_rgba(5,150,105,0.3)] hover:-translate-y-0.5">
                        [Chọn gói]
                    </div>
                </div>
 
                <!-- Gói Chuyển Đổi -->
-               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+               <div class="h-full bg-white border-[3px] border-[#0F766E] rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 relative overflow-hidden shadow-lg shadow-emerald-900/5">
                    <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
                        <div>
                            <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                               <p oninput="document.getElementById('front-pkg5-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Chuyển Đổi</p>
+                               <p oninput="document.getElementById('front-pkg5-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-base md:text-lg uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Chuyển Đổi</p>
                            </div>
-                           <h4 oninput="document.getElementById('front-pkg5-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">10 Ngày</h4>
+                           <h4 oninput="document.getElementById('front-pkg5-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-4xl md:text-5xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">10 Ngày</h4>
                            <div class="flex items-center gap-2 mt-1">
-                               <p oninput="document.getElementById('front-pkg5-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+0.55kg dự kiến</p>
+                               <p oninput="document.getElementById('front-pkg5-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-lg md:text-xl cursor-text transition-colors duration-200">+0.55kg dự kiến</p>
                            </div>
-                           <p oninput="document.getElementById('front-pkg5-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 14% mục tiêu</p>
+                           <p oninput="document.getElementById('front-pkg5-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-base md:text-lg font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 14% mục tiêu</p>
                        </div>
                    </div>
                    
                    <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao từ 2 đơn</span></li>
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao từ 2 đơn</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
                    </ul>
 
-                   <button type="button" onclick="openPricingModal('10', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                   <button type="button" onclick="openPricingModal('10', true)" class="text-emerald-600 font-semibold text-lg md:text-xl mb-3 hover:underline text-center w-full relative z-10">
                        <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
                    </button>
-                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                   <div class="cursor-pointer w-full text-center py-3 rounded-xl bg-[#059669] text-white font-bold text-lg md:text-xl transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-[#047857] hover:shadow-[0_8px_20px_rgba(5,150,105,0.3)] hover:-translate-y-0.5">
                        [Chọn gói]
                    </div>
                </div>
 
                <!-- Gói Bứt Phá -->
-               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
-                   <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
+               <div class="h-full bg-white border-[3px] border-[#0F766E] rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 relative overflow-hidden shadow-lg shadow-emerald-900/5">
+                   <div class="absolute top-0 right-0 bg-[#0F766E] text-white text-xs md:text-sm font-bold px-4 py-1.5 rounded-bl-2xl z-20 uppercase tracking-wider">Phổ biến nhất</div>
+                   <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full mt-2 md:mt-0">
                        <div>
                            <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                               <p oninput="document.getElementById('front-pkg6-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Bứt Phá</p>
+                               <p oninput="document.getElementById('front-pkg6-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#0F766E] font-bold text-base md:text-lg uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Bứt Phá</p>
                            </div>
-                           <h4 oninput="document.getElementById('front-pkg6-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">20 Ngày</h4>
+                           <h4 oninput="document.getElementById('front-pkg6-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-4xl md:text-5xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">20 Ngày</h4>
                            <div class="flex items-center gap-2 mt-1">
-                               <p oninput="document.getElementById('front-pkg6-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+1.1kg dự kiến</p>
+                               <p oninput="document.getElementById('front-pkg6-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-lg md:text-xl cursor-text transition-colors duration-200">+1.1kg dự kiến</p>
                            </div>
-                           <p oninput="document.getElementById('front-pkg6-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 28% mục tiêu</p>
+                           <p oninput="document.getElementById('front-pkg6-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-base md:text-lg font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 28% mục tiêu</p>
                        </div>
                    </div>
                    
                    <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao hàng</span></li>
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Chuyên gia theo dõi 1:1</span></li>
-                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b3').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao hàng</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Chuyên gia theo dõi 1:1</span></li>
+                       <li class="flex items-start gap-2.5 text-lg md:text-xl text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-lg mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b3').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
                    </ul>
 
-                   <button type="button" onclick="openPricingModal('20', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                   <button type="button" onclick="openPricingModal('20', true)" class="text-emerald-600 font-semibold text-lg md:text-xl mb-3 hover:underline text-center w-full relative z-10">
                        <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
                    </button>
-                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                   <div class="cursor-pointer w-full text-center py-3 rounded-xl bg-[#059669] text-white font-bold text-lg md:text-xl transition-all duration-300 mt-auto relative z-10 animate-glow-pulse-emerald hover:bg-[#047857] hover:shadow-[0_8px_20px_rgba(5,150,105,0.3)] hover:-translate-y-0.5">
                        [Chọn gói]
                    </div>
                </div>
@@ -4282,7 +4368,7 @@
           <!-- AI Chatbot Window -->
           <div
             id="chatbot-window"
-            class="fixed top-0 bottom-0 sm:top-auto sm:bottom-24 left-0 right-0 sm:left-auto sm:right-6 z-[100] w-full sm:w-[380px] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 hidden flex-col transition-all transform origin-bottom sm:origin-bottom-right sm:h-[500px] sm:max-h-[calc(100dvh-7rem)]"
+            class="fixed inset-0 sm:inset-auto sm:bottom-24 sm:right-6 z-[100] w-full h-full max-h-[100%] sm:w-[380px] sm:h-[500px] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 hidden flex-col transition-all transform origin-bottom sm:origin-bottom-right sm:max-h-[calc(100vh-7rem)]"
           >
             <!-- Header -->
             <div
@@ -4322,6 +4408,7 @@
             <div
               id="chatbot-messages"
               class="flex-1 overflow-y-auto min-h-0 p-4 bg-slate-50 flex flex-col gap-4 custom-scrollbar"
+              style="-webkit-overflow-scrolling: touch; touch-action: pan-y;"
             >
               <!-- Welcome Message -->
               <div class="flex gap-2.5 w-max max-w-[85%] animate-fade-in">
@@ -4360,7 +4447,7 @@
               NutriAI đang phân tích...
             </div>
             <!-- Input Area -->
-            <div class="bg-white border-t border-slate-100 flex flex-col shrink-0 pb-[env(safe-area-inset-bottom)]">
+            <div class="bg-white border-t border-slate-100 flex flex-col shrink-0 pb-3 sm:pb-0">
               <!-- Fast Replies -->
               <div class="px-3 pt-3 pb-1 flex gap-2 overflow-x-auto hide-scrollbar whitespace-nowrap">
                 <button onclick="sendFastReply('Tra cứu trạng thái đơn hàng')" class="text-[11px] font-semibold bg-slate-50 text-slate-600 border border-slate-200 px-3 py-1.5 rounded-full hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 transition-colors shrink-0">📦 Tra cứu đơn</button>
@@ -7616,12 +7703,74 @@
         }
       }
 
+      function getKitchenPos() {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settingsLat = 10.7769;
+        let settingsLng = 106.7009;
+        if (savedSettings) {
+            const parsed = JSON.parse(savedSettings);
+            if (parsed.lat && parsed.lng) {
+                settingsLat = parseFloat(parsed.lat);
+                settingsLng = parseFloat(parsed.lng);
+            }
+        }
+        return [settingsLat, settingsLng];
+      }
+
+      function initSettingsLocation() {
+        const d = document.getElementById("set-district");
+        if (!d) return;
+        d.innerHTML = '<option value="">Quận/Huyện</option>';
+        for (let k in locationData["TP. Hồ Chí Minh"]) {
+          d.innerHTML += `<option value="${k}">${k}</option>`;
+        }
+      }
+
+      function updateSetWards() {
+        const d = document.getElementById("set-district").value,
+          w = document.getElementById("set-ward");
+        if (!w) return;
+        w.innerHTML = '<option value="">Phường/Xã</option>';
+        if (d) {
+          w.disabled = false;
+          for (let wd of locationData["TP. Hồ Chí Minh"][d]) {
+            w.innerHTML += `<option value="${wd}">${wd}</option>`;
+          }
+        } else {
+          w.disabled = true;
+        }
+      }
+
+      function getStoreLocationFromGoogle() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                document.getElementById('set-lat').value = position.coords.latitude;
+                document.getElementById('set-lng').value = position.coords.longitude;
+                showToast("Đã lấy định vị cửa hàng thành công!", "success");
+            }, function(error) {
+                showToast("Không thể lấy định vị: " + error.message, "error");
+            });
+        } else {
+            showToast("Trình duyệt không hỗ trợ Geolocation", "error");
+        }
+      }
+
       function loadSettings() {
+        initSettingsLocation();
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         if (savedSettings) {
           const settings = JSON.parse(savedSettings);
           document.getElementById("set-phone").value = settings.phone || "";
-          document.getElementById("set-address").value = settings.address || "";
+          
+          if (settings.district) {
+              document.getElementById("set-district").value = settings.district;
+              updateSetWards();
+              if (settings.ward) document.getElementById("set-ward").value = settings.ward;
+          }
+          if (settings.street) document.getElementById("set-street").value = settings.street;
+          if (settings.lat) document.getElementById("set-lat").value = settings.lat;
+          if (settings.lng) document.getElementById("set-lng").value = settings.lng;
+
           document.getElementById("set-zalo").value = settings.zalo || "";
           document.getElementById("set-facebook").value =
             settings.facebook || "";
@@ -7722,7 +7871,12 @@
           brandName: document.getElementById("set-brand-name").value,
           brandLogo: logoBase64,
           phone: document.getElementById("set-phone").value,
-          address: document.getElementById("set-address").value,
+          district: document.getElementById("set-district").value,
+          ward: document.getElementById("set-ward").value,
+          street: document.getElementById("set-street").value,
+          lat: document.getElementById("set-lat").value,
+          lng: document.getElementById("set-lng").value,
+          address: `${document.getElementById("set-street").value}, ${document.getElementById("set-ward").value}, ${document.getElementById("set-district").value}, TP. Hồ Chí Minh`,
           zalo: document.getElementById("set-zalo").value,
           facebook: document.getElementById("set-facebook").value,
           paymentMomoInfo: document.getElementById("set-payment-momo-info").value,
@@ -9010,7 +9164,8 @@
          if (!mapDiv) return;
          
          if (!mainDashboardMap) {
-             mainDashboardMap = L.map('dashboard-orders-map').setView([10.7769, 106.7009], 12);
+             const kPos = typeof getKitchenPos === 'function' ? getKitchenPos() : [10.7769, 106.7009];
+             mainDashboardMap = L.map('dashboard-orders-map').setView(kPos, 12);
              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                  attribution: '&copy; OpenStreetMap contributors'
              }).addTo(mainDashboardMap);
@@ -9206,7 +9361,8 @@
 
       function buildLeafletMap(mapDiv) {
          mapDiv.innerHTML = ""; // clear loading
-         dashboardMapInst = L.map(mapDiv).setView([10.776, 106.700], 13);
+         const kPos = typeof getKitchenPos === 'function' ? getKitchenPos() : [10.776, 106.700];
+         dashboardMapInst = L.map(mapDiv).setView(kPos, 13);
          
          L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -10360,126 +10516,112 @@
                     <!-- Removed general packages grid -->
 
                     <!-- Gói Theo Mục Tiêu -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch max-w-5xl mx-auto mb-10 text-left">
-                        
-                        <!-- Gói Trải Nghiệm 5 Ngày -->
-                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 1; view-transition-name: pkg-target-5;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_5" class="sr-only">
-                            <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
-                            <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
-                                <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
-                                <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg4-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Trải Nghiệm</p>
-                                            <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
-                                        </div>
-                                        <h4 id="front-pkg4-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">5 Ngày</h4>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p id="front-pkg4-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+0.25kg dự kiến</p>
-                                        </div>
-                                        <p id="front-pkg4-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 6% mục tiêu</p>
-                                    </div>
-                                    <div class="md:hidden shrink-0 mt-1">
-                                        <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
-                                            Chọn Gói
-                                        </div>
-                                    </div>
-                                </div>
+                    <div class="banner-scale-wrapper relative mb-10 mt-8 w-[calc(100%+80px)] -ml-[40px] md:w-[calc(100%+112px)] md:-ml-[56px] lg:w-full lg:ml-auto">
+                        <div class="banner-scale flex flex-col items-center bg-transparent border-0 shadow-none min-h-0 pt-4 pb-4" data-desktop-width="760">
+                            <div class="grid grid-cols-3 gap-2 lg:gap-6 items-stretch w-[760px] mx-auto text-left px-2 lg:px-0">
                                 
-                                <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg4-b1" class="flex-1">Menu AI thiết kế riêng</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg4-b2" class="flex-1">Giao hàng tận nơi</span></li>
-                                </ul>
+                                <!-- Gói Trải Nghiệm 5 Ngày -->
+                                <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 1; view-transition-name: pkg-target-5;">
+                                    <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_5" class="sr-only">
+                                    <div class="pkg-badge block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
+                                    <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-3xl p-5 lg:p-6 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                                        <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
+                                        <div class="flex flex-col justify-start items-start mb-4 gap-4 relative z-10 w-full">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <p id="front-pkg4-subtitle" class="pkg-subtitle text-slate-600 font-bold text-sm normal-case tracking-normal transition-colors duration-500">Trải Nghiệm</p>
+                                                </div>
+                                                <h4 id="front-pkg4-title" class="pkg-title text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">5 Ngày</h4>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <p id="front-pkg4-expected" class="pkg-saving text-[#10B981] font-bold text-sm">+0.25kg dự kiến</p>
+                                                </div>
+                                                <p id="front-pkg4-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 6% mục tiêu</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <ul class="space-y-3 mb-8 flex-1 relative z-10 mt-2">
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg4-b1" class="flex-1">Menu AI thiết kế riêng</span></li>
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg4-b2" class="flex-1">Giao hàng tận nơi</span></li>
+                                        </ul>
 
-                                <button type="button" onclick="openPricingModal('5', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
-                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
-                                </button>
-                                <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
-                                    Chọn Gói Này
-                                </div>
+                                        <button type="button" onclick="openPricingModal('5', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                            <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                        </button>
+                                        <div class="pkg-btn pkg-btn-desktop block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
+                                            Chọn Gói Này
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <!-- Gói Chuyển Đổi 10 Ngày -->
+                                <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 2; view-transition-name: pkg-target-10;">
+                                    <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_10" class="sr-only">
+                                    <div class="pkg-badge block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
+                                    <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-3xl p-5 lg:p-6 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                                        <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
+                                        <div class="flex flex-col justify-start items-start mb-4 gap-4 relative z-10 w-full">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <p id="front-pkg5-subtitle" class="pkg-subtitle text-slate-600 font-bold text-sm normal-case tracking-normal transition-colors duration-500">Chuyển Đổi</p>
+                                                </div>
+                                                <h4 id="front-pkg5-title" class="pkg-title text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">10 Ngày</h4>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <p id="front-pkg5-expected" class="pkg-saving text-[#10B981] font-bold text-sm">+0.55kg dự kiến</p>
+                                                </div>
+                                                <p id="front-pkg5-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 14% mục tiêu</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <ul class="space-y-3 mb-8 flex-1 relative z-10 mt-2">
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg5-b1" class="flex-1">Miễn phí giao từ 2 đơn</span></li>
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg5-b2" class="flex-1">Đổi món linh hoạt</span></li>
+                                        </ul>
+
+                                        <button type="button" onclick="openPricingModal('10', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                            <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                        </button>
+                                        <div class="pkg-btn pkg-btn-desktop block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
+                                            Chọn Gói Này
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <!-- Gói Bứt Phá 20 Ngày -->
+                                <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-target-20;">
+                                    <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_20" class="sr-only">
+                                    <div class="pkg-badge block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
+                                    <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-3xl p-5 lg:p-6 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                                        <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
+                                        <div class="flex flex-col justify-start items-start mb-4 gap-4 relative z-10 w-full">
+                                            <div>
+                                                <div class="flex items-center gap-2 mb-1">
+                                                    <p id="front-pkg6-subtitle" class="pkg-subtitle text-slate-600 font-bold text-sm normal-case tracking-normal transition-colors duration-500">Bứt Phá</p>
+                                                </div>
+                                                <h4 id="front-pkg6-title" class="pkg-title text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">20 Ngày</h4>
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <p id="front-pkg6-expected" class="pkg-saving text-[#10B981] font-bold text-sm">+1.1kg dự kiến</p>
+                                                </div>
+                                                <p id="front-pkg6-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 28% mục tiêu</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <ul class="space-y-3 mb-8 flex-1 relative z-10 mt-2">
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg6-b1" class="flex-1">Miễn phí giao hàng</span></li>
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg6-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
+                                            <li class="flex items-start gap-2.5 text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-0"></i> <span id="front-pkg6-b3" class="flex-1">Đổi món linh hoạt</span></li>
+                                        </ul>
+
+                                        <button type="button" onclick="openPricingModal('20', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                            <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                        </button>
+                                        <div class="pkg-btn pkg-btn-desktop block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
+                                            Chọn Gói Này
+                                        </div>
+                                    </div>
+                                </label>
+
                             </div>
-                        </label>
-
-                        <!-- Gói Chuyển Đổi 10 Ngày -->
-                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 2; view-transition-name: pkg-target-10;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_10" class="sr-only">
-                            <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
-                            <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
-                                <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
-                                <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg5-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Chuyển Đổi</p>
-                                            <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
-                                        </div>
-                                        <h4 id="front-pkg5-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">10 Ngày</h4>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p id="front-pkg5-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+0.55kg dự kiến</p>
-                                        </div>
-                                        <p id="front-pkg5-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 14% mục tiêu</p>
-                                    </div>
-                                    <div class="md:hidden shrink-0 mt-1">
-                                        <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
-                                            Chọn Gói
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg5-b1" class="flex-1">Miễn phí giao từ 2 đơn</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg5-b2" class="flex-1">Đổi món linh hoạt</span></li>
-                                </ul>
-
-                                <button type="button" onclick="openPricingModal('10', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
-                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
-                                </button>
-                                <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
-                                    Chọn Gói Này
-                                </div>
-                            </div>
-                        </label>
-
-                        <!-- Gói Bứt Phá 20 Ngày -->
-                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-target-20;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_20" class="sr-only">
-                            <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
-                            <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
-                                <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
-                                <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg6-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Bứt Phá</p>
-                                            <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
-                                        </div>
-                                        <h4 id="front-pkg6-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">20 Ngày</h4>
-                                        <div class="flex items-center gap-2 mt-1">
-                                            <p id="front-pkg6-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+1.1kg dự kiến</p>
-                                        </div>
-                                        <p id="front-pkg6-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 28% mục tiêu</p>
-                                    </div>
-                                    <div class="md:hidden shrink-0 mt-1">
-                                        <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
-                                            Chọn Gói
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b1" class="flex-1">Miễn phí giao hàng</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b3" class="flex-1">Đổi món linh hoạt</span></li>
-                                </ul>
-
-                                <button type="button" onclick="openPricingModal('20', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
-                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
-                                </button>
-                                <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
-                                    Chọn Gói Này
-                                </div>
-                            </div>
-                        </label>
-
+                        </div>
                     </div>
 
                     <!-- Form Nhập thông tin -->
@@ -11099,6 +11241,13 @@
         const total = subtotal + shippingFee;
         totalEl.innerText = formatCurrency(total) + "đ";
         checkSubmitButtonState();
+        
+        const showBanner = document.getElementById('toggle-grand-opening-banner')?.checked ?? true;
+        if (showBanner) {
+            btnSubmit.innerHTML = `Đăng kí đặt món trước <i class="fa-solid fa-arrow-right"></i>`;
+        } else {
+            btnSubmit.innerHTML = `Xác nhận đặt hàng <i class="fa-solid fa-arrow-right"></i>`;
+        }
 
         updateNutritionSummary();
       }
@@ -11266,6 +11415,7 @@
         const lat = document.getElementById("cust-lat").value;
         const lng = document.getElementById("cust-lng").value;
         const deliveryTime = document.getElementById("cust-delivery-time").value;
+        const showBanner = document.getElementById('toggle-grand-opening-banner')?.checked ?? true;
 
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         let settingsObj = savedSettings ? JSON.parse(savedSettings) : {};
@@ -11296,7 +11446,8 @@
           shipperId: null,
           isPackageOrder: false,
           packageCustomerId: null,
-          deviceId: customerDeviceId
+          deviceId: customerDeviceId,
+          isGrandOpening: showBanner
         };
 
         if (newOrder.lat && newOrder.lng) {
@@ -11536,6 +11687,8 @@
 
                     ${renderSteps(order.status)}
 
+                    ${order.status === 'delivering' ? `<div id="customer-map-${order.id}" class="w-full h-48 mt-6 rounded-xl z-0 overflow-hidden relative border border-slate-200"></div>` : ''}
+
                     <div class="mt-6 pt-4 border-t border-slate-100">
                         <p class="text-xs text-slate-500 mb-2 font-semibold tracking-wider">CHI TIẾT MÓN</p>
                         <ul class="space-y-2">
@@ -11556,6 +11709,65 @@
                 </div>
             `;
         }).join('');
+
+        setTimeout(() => {
+            myOrders.forEach(order => {
+                if (order.status === 'delivering') {
+                    const mapContainer = document.getElementById(`customer-map-${order.id}`);
+                    if (mapContainer && !mapContainer.hasChildNodes()) {
+                        const savedSettings = localStorage.getItem("nutriadmin_settings");
+                        let settingsLat = 10.7769;
+                        let settingsLng = 106.7009;
+                        if (savedSettings) {
+                            const parsed = JSON.parse(savedSettings);
+                            if (parsed.lat && parsed.lng) {
+                                settingsLat = parseFloat(parsed.lat);
+                                settingsLng = parseFloat(parsed.lng);
+                            }
+                        }
+                        const kitchenPos = [settingsLat, settingsLng];
+                        const destPos = [order.lat || 10.7744, order.lng || 106.7024];
+                        const map = L.map(mapContainer, { zoomControl: false }).setView(kitchenPos, 13);
+                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                            attribution: '&copy; OpenStreetMap contributors'
+                        }).addTo(map);
+
+                        const kitchenIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div class="w-8 h-8 bg-emerald-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-sm"><i class="fa-solid fa-store"></i></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        });
+                        
+                        const customerIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div class="w-8 h-8 bg-blue-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-sm"><i class="fa-solid fa-map-pin"></i></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 32]
+                        });
+
+                        const shipperIcon = L.divIcon({
+                            className: 'custom-div-icon',
+                            html: '<div class="w-8 h-8 bg-indigo-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-sm animate-bounce"><i class="fa-solid fa-motorcycle"></i></div>',
+                            iconSize: [32, 32],
+                            iconAnchor: [16, 16]
+                        });
+
+                        L.marker(kitchenPos, {icon: kitchenIcon}).addTo(map);
+                        L.marker(destPos, {icon: customerIcon}).addTo(map);
+
+                        const polyline = L.polyline([kitchenPos, destPos], {color: '#6366f1', weight: 4, dashArray: '8, 8', opacity: 0.8}).addTo(map);
+                        map.fitBounds(polyline.getBounds(), {padding: [30, 30]});
+
+                        const midPos = [
+                            (kitchenPos[0] + destPos[0]) / 2,
+                            (kitchenPos[1] + destPos[1]) / 2
+                        ];
+                        L.marker(midPos, {icon: shipperIcon}).addTo(map);
+                    }
+                }
+            });
+        }, 100);
       }
 
       window.setRating = function(orderId, rating) {
@@ -11760,7 +11972,8 @@
 
       function renderOrdersHeatmap() {
         if (!heatmapMapInst) {
-          heatmapMapInst = L.map('orders-heatmap-container').setView([10.7769, 106.7009], 12);
+          const kPos = typeof getKitchenPos === 'function' ? getKitchenPos() : [10.7769, 106.7009];
+          heatmapMapInst = L.map('orders-heatmap-container').setView(kPos, 12);
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
               attribution: '&copy; OpenStreetMap contributors'
           }).addTo(heatmapMapInst);
@@ -13193,16 +13406,29 @@
       }
 
       function switchCustomerTab(t) {
-        ["discount", "potential", "purchased", "packages", "history", "accounts"].forEach((x) => {
+        ["discount", "potential", "grandopening", "purchased", "packages", "history", "accounts"].forEach((x) => {
           document.getElementById(`tab-content-${x}`).classList.add("hidden");
-          document.getElementById(`tab-btn-${x}`).className =
-            x === t
-              ? "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-bold bg-emerald-100 text-emerald-800 border-b-2 border-primary"
-              : "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent";
+          const btn = document.getElementById(`tab-btn-${x}`);
+          if (btn) {
+              if (x === t) {
+                  if (x === 'grandopening') {
+                      btn.className = "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-bold bg-red-100 text-red-800 border-b-2 border-red-500";
+                  } else {
+                      btn.className = "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-bold bg-emerald-100 text-emerald-800 border-b-2 border-primary";
+                  }
+              } else {
+                  if (x === 'grandopening') {
+                      btn.className = "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium bg-transparent text-red-500 hover:text-red-800 hover:bg-red-50 border-b-2 border-transparent";
+                  } else {
+                      btn.className = "whitespace-nowrap px-5 py-2.5 rounded-t-lg text-sm font-medium bg-transparent text-slate-500 hover:text-slate-800 hover:bg-slate-50 border-b-2 border-transparent";
+                  }
+              }
+          }
         });
         document.getElementById(`tab-content-${t}`).classList.remove("hidden");
         if (t === "discount") renderDiscountCodes();
         if (t === "potential") renderPotentialCustomers();
+        if (t === "grandopening") renderGrandOpeningCustomers();
         if (t === "purchased") renderPurchasedCustomers();
         if (t === "accounts") renderAccountsList();
         if (t === "history") {
@@ -13349,6 +13575,49 @@
           document.getElementById("purchased-name").value = c.name;
           document.getElementById("purchased-phone").value = c.phone;
           document.getElementById("purchased-package").value = c.package;
+        }
+      }
+
+      function renderGrandOpeningCustomers() {
+        const pkgList = document.getElementById("grandopening-pkg-list");
+        const orderList = document.getElementById("grandopening-order-list");
+        if (!pkgList || !orderList) return;
+
+        const grandPkgs = potentialCustomers.filter(c => c.isGrandOpening === true);
+        const grandOrders = orders.filter(o => o.isGrandOpening === true);
+
+        document.getElementById("grandopening-pkg-count").innerText = grandPkgs.length;
+        document.getElementById("grandopening-order-count").innerText = grandOrders.length;
+
+        if (grandPkgs.length === 0) {
+            pkgList.innerHTML = `<tr><td colspan="3" class="px-4 py-8 text-center text-slate-500 text-sm">Chưa có lượt đăng ký gói.</td></tr>`;
+        } else {
+            pkgList.innerHTML = grandPkgs.map(c => `
+                <tr class="hover:bg-red-50/50 transition-colors">
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-slate-800">${c.name}</div>
+                        <div class="text-xs text-slate-500">${c.phone}</div>
+                    </td>
+                    <td class="px-4 py-3 text-red-600 font-medium text-xs">Gói ${c.package} Ngày</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${new Date(c.date).toLocaleDateString("vi-VN")}</td>
+                </tr>
+            `).join("");
+        }
+
+        if (grandOrders.length === 0) {
+            orderList.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-500 text-sm">Chưa có đơn đặt 1 bữa.</td></tr>`;
+        } else {
+            orderList.innerHTML = grandOrders.map(o => `
+                <tr class="hover:bg-red-50/50 transition-colors">
+                    <td class="px-4 py-3 font-mono text-xs text-slate-600">${o.id}</td>
+                    <td class="px-4 py-3">
+                        <div class="font-medium text-slate-800">${o.customerName}</div>
+                        <div class="text-xs text-slate-500">${o.phone}</div>
+                    </td>
+                    <td class="px-4 py-3 font-medium text-slate-800 text-xs">${formatCurrency(o.total)}đ</td>
+                    <td class="px-4 py-3 text-xs text-slate-500">${new Date(o.timestamp).toLocaleDateString("vi-VN")}</td>
+                </tr>
+            `).join("");
         }
       }
 
@@ -13827,6 +14096,8 @@
         // Lấy utm_source từ URL nếu có
         const urlParams = new URLSearchParams(window.location.search);
         const source = urlParams.get("utm_source") || "organic";
+        
+        const showBanner = document.getElementById('toggle-grand-opening-banner')?.checked ?? true;
 
         potentialCustomers.unshift({
           id: Date.now(),
@@ -13837,6 +14108,7 @@
             .value,
           source: source,
           date: new Date(),
+          isGrandOpening: showBanner
         });
         
         syncStateToServer();
@@ -14176,12 +14448,13 @@
         document.getElementById("map-modal").classList.add("flex");
         if (!leafletMap) {
            setTimeout(() => {
-              leafletMap = L.map('leaflet-map').setView([10.7769, 106.7009], 13);
+              const kPos = typeof getKitchenPos === 'function' ? getKitchenPos() : [10.7769, 106.7009];
+              leafletMap = L.map('leaflet-map').setView(kPos, 13);
               L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                   attribution: '&copy; OpenStreetMap contributors'
               }).addTo(leafletMap);
               
-              leafletMarker = L.marker([10.7769, 106.7009], { draggable: true }).addTo(leafletMap);
+              leafletMarker = L.marker(kPos, { draggable: true }).addTo(leafletMap);
               
               leafletMap.on('click', function(e) {
                   leafletMarker.setLatLng(e.latlng);
@@ -14390,6 +14663,23 @@
           }
 
           chatWindow.classList.remove("hidden");
+          if (window.innerWidth <= 768) {
+            chatWindow.style.height = window.innerHeight + 'px';
+          } else {
+            chatWindow.style.height = ''; // reset on desktop
+          }
+          
+          if (!window._chatResizeListener) {
+              window._chatResizeListener = function() {
+                  if (!chatWindow.classList.contains("hidden") && window.innerWidth <= 768) {
+                      chatWindow.style.height = window.innerHeight + 'px';
+                  } else if (window.innerWidth > 768) {
+                      chatWindow.style.height = '';
+                  }
+              };
+              window.addEventListener('resize', window._chatResizeListener);
+          }
+
           document.getElementById("chatbot-input").focus();
           // Ẩn badge khi mở chat
           badge.classList.add("hidden");
