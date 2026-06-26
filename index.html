@@ -364,6 +364,88 @@
         }
       }
     </script>
+    <style>
+        .banner-scale-wrapper {
+            width: 100%;
+            max-width: 1152px;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .banner-scale {
+            width: 1152px !important;
+            /* Remove fixed height so it adapts to content */
+            height: auto !important;
+            min-height: 500px;
+            transform-origin: top center;
+            transform: scale(var(--scale, 1));
+            flex-shrink: 0;
+        }
+    </style>
+    <script>
+        function applyBannerScale() {
+            document.querySelectorAll('.banner-scale-wrapper').forEach(wrapper => {
+                const banner = wrapper.querySelector('.banner-scale');
+                if (!banner) return;
+                
+                const desktopWidth = 1152;
+                // offsetHeight gives the actual unscaled height
+                const desktopHeight = banner.offsetHeight;
+                
+                // Get the wrapper's own width (which respects parent padding)
+                const availableWidth = wrapper.clientWidth;
+                const boundedWidth = Math.min(availableWidth, desktopWidth);
+                const scale = Math.min(1, boundedWidth / desktopWidth);
+                
+                wrapper.style.setProperty('--scale', scale);
+                wrapper.style.height = (desktopHeight * scale) + 'px';
+            });
+        }
+        window.addEventListener('resize', applyBannerScale);
+        
+        window.hasShownGrandOpeningPopup = false;
+        window.openGrandOpeningPopup = function() {
+            const modal = document.getElementById('user-grand-opening-modal');
+            const content = document.getElementById('user-grand-opening-modal-content');
+            const icon = document.getElementById('floating-grand-opening-icon');
+            if (modal && content) {
+                modal.classList.remove('opacity-0', 'pointer-events-none');
+                content.classList.remove('scale-90', 'translate-y-8');
+                if (icon) icon.classList.add('hidden');
+                
+                // Play sound effect
+                try {
+                    const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
+                    audio.volume = 0.5;
+                    audio.play().catch(e => console.log('Audio autoplay blocked'));
+                } catch(e) {}
+            }
+        };
+        
+        window.closeGrandOpeningPopup = function() {
+            const modal = document.getElementById('user-grand-opening-modal');
+            const content = document.getElementById('user-grand-opening-modal-content');
+            const icon = document.getElementById('floating-grand-opening-icon');
+            if (modal && content) {
+                modal.classList.add('opacity-0', 'pointer-events-none');
+                content.classList.add('scale-90', 'translate-y-8');
+                if (icon) {
+                    setTimeout(() => {
+                        icon.classList.remove('hidden');
+                        icon.classList.add('animate-fade-in');
+                    }, 300);
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            applyBannerScale();
+            // Setup observer to handle dynamically injected banners and content changes
+            new MutationObserver(() => applyBannerScale()).observe(document.body, { childList: true, subtree: true, characterData: true });
+        });
+    </script>
   </head>
   <body class="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-200">
     <!-- Navigation -->
@@ -1514,6 +1596,208 @@
               </table>
             </div>
           </div>
+
+          <div class="mt-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div>
+                <h3 class="font-bold text-slate-800 text-lg">Banner Khai Trương (Trang Tư Vấn)</h3>
+                <p class="text-sm text-slate-500">Bật để hiển thị banner tại trang kết quả tư vấn</p>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+                <input type="checkbox" id="toggle-grand-opening-banner" class="sr-only peer" checked onchange="const el = document.getElementById('user-grand-opening-banner-container'); if(el) el.classList.toggle('hidden', !this.checked);">
+                <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#10B981]"></div>
+            </label>
+          </div>
+
+          <!-- GRAND OPENING BANNER WRAPPER -->
+          <div class="banner-scale-wrapper mt-4 mb-6 relative">
+            <div class="banner-scale bg-[#f3faeb] rounded-3xl overflow-hidden shadow-sm border border-emerald-100 flex flex-col z-0">
+               <!-- Main Content Area -->
+               <div class="flex flex-row items-center p-12 pb-12 z-10 h-full overflow-visible">
+                   <!-- Left Content -->
+                   <div class="w-7/12 z-10 flex flex-col items-start text-left shrink-0">
+                       <!-- Ribbon -->
+                       <div class="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-br-2xl rounded-tl-2xl text-2xl font-black uppercase tracking-wide mb-6 transform -skew-x-6 shadow-md animate-[pulse_2s_ease-in-out_infinite]">
+                           <span class="skew-x-6 flex items-center gap-3">
+                              <i class="fa-solid fa-party-popper text-yellow-300 animate-bounce"></i> <span id="banner-grand-opening-text" oninput="document.getElementById('user-banner-grand-opening-text').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-[#1b5e20] rounded px-1 -mx-1 cursor-text transition-colors">GRAND OPENING - 15/11/2026</span>
+                           </span>
+                       </div>
+                       
+                       <!-- Main Title -->
+                       <h2 class="text-7xl font-black uppercase leading-[1.1] mb-6 tracking-tight">
+                          <span oninput="document.getElementById('user-banner-title1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors text-[#1b5e20] block">SIÊU ƯU ĐÃI</span>
+                          <span oninput="document.getElementById('user-banner-title2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors text-slate-900 block drop-shadow-sm">KHAI TRƯƠNG!</span>
+                       </h2>
+                       
+                       <!-- Subtitle -->
+                       <p oninput="document.getElementById('user-banner-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors text-slate-700 text-xl font-medium mb-8 max-w-lg leading-relaxed">
+                          Ăn ngon mỗi ngày, vóc dáng chuẩn ngay! Cơ hội trải nghiệm thực đơn chuẩn y khoa với mức giá không tưởng.
+                       </p>
+                       
+                       <!-- Countdown section -->
+                       <div class="mb-10 w-full flex flex-col items-start shrink-0">
+                           <div class="flex items-center gap-2 text-[#2e7d32] font-bold text-sm mb-4 uppercase tracking-wider">
+                               <i class="fa-solid fa-leaf text-emerald-500"></i> <span oninput="document.getElementById('user-banner-cd-text').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors">ƯU ĐÃI KẾT THÚC SAU</span> <i class="fa-solid fa-leaf text-emerald-500 transform scale-x-[-1]"></i>
+                           </div>
+                           <div class="flex items-center justify-start gap-4">
+                               <!-- Day -->
+                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                   <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                   <span id="banner-cd-day" class="text-3xl font-black text-white relative z-10">03</span>
+                                   <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">NGÀY</span>
+                               </div>
+                               <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                               <!-- Hour -->
+                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                   <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                   <span id="banner-cd-hour" class="text-3xl font-black text-white relative z-10">02</span>
+                                   <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">GIỜ</span>
+                               </div>
+                               <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                               <!-- Minute -->
+                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                   <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                   <span id="banner-cd-minute" class="text-3xl font-black text-white relative z-10">54</span>
+                                   <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">PHÚT</span>
+                               </div>
+                               <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                               <!-- Second -->
+                               <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                   <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                   <span id="banner-cd-second" class="text-3xl font-black text-yellow-400 relative z-10">11</span>
+                                   <span class="text-xs font-bold mt-1 text-yellow-200/80 relative z-10">GIÂY</span>
+                               </div>
+                           </div>
+                       </div>
+                       
+                       <!-- Buttons -->
+                       <div class="flex flex-row gap-4 w-auto shrink-0 mt-0">
+                           <button class="flex-none bg-[#0f7632] hover:bg-[#0c5c27] text-white px-12 py-5 rounded-xl font-bold text-xl shadow-[0_4px_10px_rgba(15,118,50,0.3)] transition-transform hover:-translate-y-1 flex items-center justify-center gap-2 animate-glow-pulse-emerald relative z-10">
+                               <i class="fa-solid fa-crown text-yellow-300 animate-bounce"></i> <span oninput="document.getElementById('user-banner-btn1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-[#1b5e20] rounded px-1 -mx-1 cursor-text transition-colors">Đăng Ký Mua Gói</span>
+                           </button>
+                           <button class="flex-none bg-white hover:bg-slate-50 text-[#0f7632] border-2 border-[#0f7632] px-12 py-5 rounded-xl font-bold text-xl shadow-sm transition-all hover:-translate-y-1 flex items-center justify-center gap-2 hover:shadow-md animate-glow-pulse-emerald relative z-10">
+                               <i class="fa-solid fa-bell-concierge animate-bounce"></i> <span oninput="document.getElementById('user-banner-btn2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors">Đăng Ký Đặt 1 Bữa</span>
+                           </button>
+                       </div>
+                   </div>
+                   
+                   <!-- Right Images & Badges -->
+                   <div class="w-5/12 relative h-[500px] mt-0 z-10 flex justify-end shrink-0">
+                       <!-- Top Food Image -->
+                       <img src="https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop" alt="Healthy Meal Box" class="absolute top-0 right-0 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white rotate-3 z-20">
+                       
+                       <!-- Bottom Food Image -->
+                       <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop" alt="Healthy Beef Box" class="absolute bottom-0 right-16 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white -rotate-6 z-10">
+                       
+                       <!-- Circle Badge -->
+                       <div class="absolute top-1/4 -right-12 bg-[#165a25] text-white w-36 h-36 rounded-full flex flex-col items-center justify-center shadow-xl border-4 border-[#f3faeb] z-30 transform hover:scale-105 transition-transform animate-[bounce_3s_infinite]">
+                           <span oninput="document.getElementById('user-banner-badge1-line1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-[#1b5e20] rounded px-1 -mx-1 cursor-text transition-colors text-xs font-bold uppercase mb-1 text-emerald-100 tracking-wider">Hiện chỉ còn</span>
+                           <span oninput="document.getElementById('user-banner-badge1-line2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-[#1b5e20] rounded px-1 -mx-1 cursor-text transition-colors text-6xl font-black text-yellow-400 leading-none" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3)">19</span>
+                           <span oninput="document.getElementById('user-banner-badge1-line3').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:bg-[#1b5e20] rounded px-1 -mx-1 cursor-text transition-colors text-sm font-bold mt-1 tracking-widest">SLOT!</span>
+                       </div>
+                       
+                       <!-- Center Banner Badge -->
+                       <div class="absolute top-[45%] -left-16 transform -translate-y-1/2 bg-white rounded-2xl p-5 shadow-xl border border-emerald-100 flex items-center gap-4 z-30 w-[340px]">
+                           <div oninput="document.getElementById('user-banner-badge2-percent').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded cursor-text transition-colors bg-red-600 text-white p-4 font-black text-3xl flex-shrink-0 shadow-inner">
+                               -15%
+                           </div>
+                           <div>
+                               <div oninput="document.getElementById('user-banner-badge2-line1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors font-bold text-slate-800 text-base leading-tight mb-1">Giảm 15% Toàn Menu</div>
+                               <div oninput="document.getElementById('user-banner-badge2-line2').innerHTML = this.innerHTML" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors text-xs text-slate-500 leading-snug">Dành cho <span class="text-[#d97706] font-bold">50 khách</span> đầu tiên.</div>
+                           </div>
+                       </div>
+                   </div>
+               </div>
+               
+               <!-- Decorative Background Leaves (Optional) -->
+               <i class="fa-solid fa-leaf absolute top-10 left-10 text-emerald-200/40 text-4xl -rotate-45 pointer-events-none animate-[pulse_4s_infinite]"></i>
+               <i class="fa-solid fa-leaf absolute bottom-10 left-1/3 text-emerald-200/30 text-5xl rotate-12 pointer-events-none animate-[bounce_5s_infinite]"></i>
+               <i class="fa-solid fa-leaf absolute top-20 right-1/2 text-emerald-200/40 text-3xl rotate-90 pointer-events-none animate-[pulse_3s_infinite]"></i>
+            </div>
+          </div>
+
+          <!-- Script for Banner Countdown Timer -->
+          <script>
+            document.addEventListener("DOMContentLoaded", () => {
+              const dayEl = document.getElementById('banner-cd-day');
+              const hourEl = document.getElementById('banner-cd-hour');
+              const minEl = document.getElementById('banner-cd-minute');
+              const secEl = document.getElementById('banner-cd-second');
+              const openingTextEl = document.getElementById('banner-grand-opening-text');
+              
+              let countdownInterval;
+
+              const startCountdown = () => {
+                if (countdownInterval) clearInterval(countdownInterval);
+                if (!dayEl || !hourEl || !minEl || !secEl || !openingTextEl) return;
+
+                const text = openingTextEl.innerText;
+                const dateMatch = text.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{4}))?/);
+                
+                let targetDate;
+                if (dateMatch) {
+                    const day = parseInt(dateMatch[1]);
+                    const month = parseInt(dateMatch[2]) - 1;
+                    const year = dateMatch[3] ? parseInt(dateMatch[3]) : new Date().getFullYear();
+                    
+                    targetDate = new Date(year, month, day, 0, 0, 0);
+                    targetDate.setDate(targetDate.getDate() - 1);
+                } else {
+                    targetDate = new Date();
+                    targetDate.setDate(targetDate.getDate() + 3);
+                }
+
+                const updateTimer = () => {
+                  const now = new Date();
+                  let diff = Math.floor((targetDate.getTime() - now.getTime()) / 1000);
+                  
+                  if (diff < 0) diff = 0;
+                  
+                  const d = Math.floor(diff / 86400);
+                  const h = Math.floor((diff % 86400) / 3600);
+                  const m = Math.floor((diff % 3600) / 60);
+                  const s = diff % 60;
+                  
+                  const dStr = d.toString().padStart(2, '0');
+                  const hStr = h.toString().padStart(2, '0');
+                  const mStr = m.toString().padStart(2, '0');
+                  const sStr = s.toString().padStart(2, '0');
+                  
+                  const dayEl = document.getElementById('banner-cd-day');
+                  const hourEl = document.getElementById('banner-cd-hour');
+                  const minEl = document.getElementById('banner-cd-minute');
+                  const secEl = document.getElementById('banner-cd-second');
+
+                  const userDayEl = document.getElementById('user-banner-cd-day');
+                  const userHourEl = document.getElementById('user-banner-cd-hour');
+                  const userMinEl = document.getElementById('user-banner-cd-minute');
+                  const userSecEl = document.getElementById('user-banner-cd-second');
+                  
+                  if (dayEl) dayEl.innerText = dStr;
+                  if (hourEl) hourEl.innerText = hStr;
+                  if (minEl) minEl.innerText = mStr;
+                  if (secEl) secEl.innerText = sStr;
+
+                  if (userDayEl) userDayEl.innerText = dStr;
+                  if (userHourEl) userHourEl.innerText = hStr;
+                  if (userMinEl) userMinEl.innerText = mStr;
+                  if (userSecEl) userSecEl.innerText = sStr;
+
+                  if (diff <= 0) {
+                      clearInterval(countdownInterval);
+                  }
+                };
+                
+                updateTimer();
+                countdownInterval = setInterval(updateTimer, 1000);
+              };
+
+              startCountdown();
+
+              if (openingTextEl) {
+                  openingTextEl.addEventListener('input', startCountdown);
+              }
+            });
+          </script>
         </div>
 
         <!-- Tab: Potential Customers -->
@@ -1674,6 +1958,95 @@
                     </div>
                 </div>
                 
+           </div>
+
+           <!-- Gói Theo Mục Tiêu -->
+           <h4 class="font-bold text-slate-800 text-base md:text-lg mb-4">Gói Theo Mục Tiêu Dinh Dưỡng</h4>
+           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch max-w-5xl mx-auto mb-10 text-left">
+               <!-- Gói Trải Nghiệm -->
+               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                   <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
+                       <div>
+                           <div class="flex items-center gap-2 mb-0.5 md:mb-1">
+                               <p oninput="document.getElementById('front-pkg4-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Trải Nghiệm</p>
+                           </div>
+                           <h4 oninput="document.getElementById('front-pkg4-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">5 Ngày</h4>
+                           <div class="flex items-center gap-2 mt-1">
+                               <p oninput="document.getElementById('front-pkg4-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+0.25kg dự kiến</p>
+                           </div>
+                           <p oninput="document.getElementById('front-pkg4-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 6% mục tiêu</p>
+                       </div>
+                   </div>
+                   
+                   <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Menu AI thiết kế riêng</span></li>
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg4-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Giao hàng tận nơi</span></li>
+                   </ul>
+
+                   <button type="button" onclick="openPricingModal('5', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                       <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                   </button>
+                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                       [Chọn gói]
+                   </div>
+               </div>
+
+               <!-- Gói Chuyển Đổi -->
+               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                   <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
+                       <div>
+                           <div class="flex items-center gap-2 mb-0.5 md:mb-1">
+                               <p oninput="document.getElementById('front-pkg5-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Chuyển Đổi</p>
+                           </div>
+                           <h4 oninput="document.getElementById('front-pkg5-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">10 Ngày</h4>
+                           <div class="flex items-center gap-2 mt-1">
+                               <p oninput="document.getElementById('front-pkg5-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+0.55kg dự kiến</p>
+                           </div>
+                           <p oninput="document.getElementById('front-pkg5-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 14% mục tiêu</p>
+                       </div>
+                   </div>
+                   
+                   <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao từ 2 đơn</span></li>
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg5-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
+                   </ul>
+
+                   <button type="button" onclick="openPricingModal('10', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                       <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                   </button>
+                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                       [Chọn gói]
+                   </div>
+               </div>
+
+               <!-- Gói Bứt Phá -->
+               <div class="h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                   <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
+                       <div>
+                           <div class="flex items-center gap-2 mb-0.5 md:mb-1">
+                               <p oninput="document.getElementById('front-pkg6-subtitle').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal cursor-text transition-colors duration-200">Bứt Phá</p>
+                           </div>
+                           <h4 oninput="document.getElementById('front-pkg6-title').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight cursor-text transition-colors duration-200">20 Ngày</h4>
+                           <div class="flex items-center gap-2 mt-1">
+                               <p oninput="document.getElementById('front-pkg6-expected').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] font-bold text-[13px] md:text-sm cursor-text transition-colors duration-200">+1.1kg dự kiến</p>
+                           </div>
+                           <p oninput="document.getElementById('front-pkg6-target').innerText = this.innerText" contenteditable="true" spellcheck="false" class="focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 text-[#10B981] opacity-80 text-xs font-medium mt-0.5 cursor-text transition-colors duration-200">Đạt 28% mục tiêu</p>
+                       </div>
+                   </div>
+                   
+                   <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b1').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Miễn phí giao hàng</span></li>
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b2').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Chuyên gia theo dõi 1:1</span></li>
+                       <li class="flex items-start gap-2.5 text-[13px] md:text-sm text-slate-600"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span oninput="document.getElementById('front-pkg6-b3').innerText = this.innerText" contenteditable="true" spellcheck="false" class="flex-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 cursor-text transition-colors duration-200">Đổi món linh hoạt</span></li>
+                   </ul>
+
+                   <button type="button" onclick="openPricingModal('20', true)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10">
+                       <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                   </button>
+                   <div class="cursor-not-allowed w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-400 font-bold text-sm bg-slate-50 transition-all duration-300 mt-auto relative z-10">
+                       [Chọn gói]
+                   </div>
+               </div>
            </div>
         </div>
 
@@ -2428,7 +2801,7 @@
                       <div class="relative">
                         <input
                           type="number"
-                          id="calc-target-weight"
+                          id="calc-target-weight" oninput="if(document.getElementById('use-medical-time').checked) toggleMedicalTime()"
                           min="30"
                           max="200"
                           step="0.1"
@@ -2443,7 +2816,7 @@
                     <div>
                       <label
                         class="block text-[11px] font-bold text-slate-500 mb-1 uppercase tracking-wide"
-                        >Thời gian dự kiến</label
+                        >Thời gian mong muốn</label
                       >
                       <div class="relative">
                         <input
@@ -2451,13 +2824,21 @@
                           id="calc-duration"
                           min="1"
                           max="100"
-                          class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-2.5 px-3 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-sm"
+                          class="w-full rounded-xl border-2 border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 dark:text-white py-2.5 px-3 focus:bg-white dark:focus:bg-slate-800 focus:border-[#10B981] focus:ring-0 outline-none transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Không bắt buộc"
                         /><span
                           class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold"
                           >tuần</span
                         >
                       </div>
+                    </div>
+                    
+                    <div class="col-span-2">
+                        <label class="flex items-center gap-2 cursor-pointer w-max">
+                            <input type="checkbox" id="use-medical-time" class="rounded text-[#10B981] focus:ring-[#10B981] bg-slate-100 border-slate-300 w-4 h-4 transition-all" onchange="toggleMedicalTime()">
+                            <span class="text-[13px] font-semibold text-slate-600 dark:text-slate-300">Tính theo thời gian chuẩn y khoa</span>
+                        </label>
+                        <div id="medical-time-msg" class="text-xs text-[#10B981] font-medium mt-1.5 hidden"><i class="fa-solid fa-stethoscope mr-1"></i> <span id="medical-time-text"></span></div>
                     </div>
                   </div>
 
@@ -2664,58 +3045,58 @@
                   <h3 class="font-bold text-slate-800 dark:text-white text-base md:text-lg mb-6 text-center md:text-left">
                     Phân Bổ Dinh Dưỡng Mục Tiêu (Macros)
                   </h3>
-                  <div class="flex flex-row items-center justify-between gap-4 sm:gap-8 lg:gap-12 w-full">
+                  <div class="flex flex-row items-center gap-3 sm:gap-8 w-full">
                       <!-- Donut Chart -->
-                      <div class="w-2/5 sm:w-1/2 max-w-[140px] md:max-w-[200px] relative aspect-square shrink-0">
+                      <div class="w-[100px] sm:w-[140px] md:w-[200px] relative aspect-square shrink-0">
                           <canvas id="macroDistributionChart"></canvas>
                           <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                               <div class="text-center mt-1">
                                   <div class="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-medium">Mục tiêu</div>
-                                  <div class="text-lg md:text-xl font-black text-slate-800 dark:text-white tracking-tight leading-none mt-1 items-center gap-1" id="macro-total-cal">--</div>
+                                  <div class="text-base md:text-xl font-black text-slate-800 dark:text-white tracking-tight leading-none mt-1 items-center gap-1" id="macro-total-cal">--</div>
                                   <div class="text-[8px] md:text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 md:mt-1 uppercase tracking-widest font-semibold flex justify-center items-center gap-1"><i class="fa-solid fa-fire text-orange-400"></i> Kcal/Ngày</div>
                               </div>
                           </div>
                       </div>
                       
                       <!-- Legend / Values -->
-                      <div class="w-3/5 sm:w-1/2 lg:w-auto flex-1 grid grid-cols-1 gap-2 md:gap-4">
+                      <div class="flex-1 min-w-0 grid grid-cols-1 gap-2 md:gap-4">
                           <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-red-50/40 dark:bg-red-900/10 hover:bg-red-50 dark:hover:bg-red-900/20 border border-red-100/50 dark:border-red-900/30 rounded-xl transition-colors">
-                              <div class="flex items-center gap-2 md:gap-3">
-                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 shrink-0">
-                                  <i class="fa-solid fa-drumstick-bite text-[10px] md:text-sm"></i>
+                              <div class="flex items-center gap-1.5 md:gap-3">
+                                <div class="w-6 h-6 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-red-100 dark:border-red-900/50 flex items-center justify-center text-red-500 shrink-0">
+                                  <i class="fa-solid fa-drumstick-bite text-[9px] md:text-sm"></i>
                                 </div>
                                 <div class="text-left">
                                  <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Protein</div>
                                  <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Xây dựng cơ</div>
                                 </div>
                               </div>
-                              <div class="text-sm md:text-lg font-black text-red-600 dark:text-red-400 text-right tracking-tight" id="macro-protein">--g</div>
+                              <div class="text-sm md:text-lg font-black text-red-600 dark:text-red-400 text-right tracking-tight truncate" id="macro-protein">--g</div>
                           </div>
                           
                           <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-amber-50/40 dark:bg-amber-900/10 hover:bg-amber-50 dark:hover:bg-amber-900/20 border border-amber-100/50 dark:border-amber-900/30 rounded-xl transition-colors">
-                              <div class="flex items-center gap-2 md:gap-3">
-                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-amber-100 dark:border-amber-900/50 flex items-center justify-center text-amber-500 shrink-0">
-                                  <i class="fa-solid fa-wheat-awn text-[10px] md:text-sm"></i>
+                              <div class="flex items-center gap-1.5 md:gap-3">
+                                <div class="w-6 h-6 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-amber-100 dark:border-amber-900/50 flex items-center justify-center text-amber-500 shrink-0">
+                                  <i class="fa-solid fa-wheat-awn text-[9px] md:text-sm"></i>
                                 </div>
                                 <div class="text-left">
                                  <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Carb</div>
                                  <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Năng lượng</div>
                                 </div>
                               </div>
-                              <div class="text-sm md:text-lg font-black text-amber-600 dark:text-amber-400 text-right tracking-tight" id="macro-carb">--g</div>
+                              <div class="text-sm md:text-lg font-black text-amber-600 dark:text-amber-400 text-right tracking-tight truncate" id="macro-carb">--g</div>
                           </div>
                           
                           <div class="flex items-center justify-between gap-2 md:gap-4 p-2 md:p-4 bg-sky-50/40 dark:bg-sky-900/10 hover:bg-sky-50 dark:hover:bg-sky-900/20 border border-sky-100/50 dark:border-sky-900/30 rounded-xl transition-colors">
-                              <div class="flex items-center gap-2 md:gap-3">
-                                <div class="w-7 h-7 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-sky-100 dark:border-sky-900/50 flex items-center justify-center text-sky-500 shrink-0 text-sm">
-                                  <i class="fa-solid fa-droplet text-[10px] md:text-sm"></i>
+                              <div class="flex items-center gap-1.5 md:gap-3">
+                                <div class="w-6 h-6 md:w-10 md:h-10 rounded-full bg-white dark:bg-[#0f172a] shadow-sm border border-sky-100 dark:border-sky-900/50 flex items-center justify-center text-sky-500 shrink-0 text-sm">
+                                  <i class="fa-solid fa-droplet text-[9px] md:text-sm"></i>
                                 </div>
                                 <div class="text-left">
                                  <div class="text-[9px] md:text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wide">Fat</div>
                                  <div class="hidden sm:block text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">Nội tiết tố</div>
                                 </div>
                               </div>
-                              <div class="text-sm md:text-lg font-black text-sky-600 dark:text-sky-400 text-right tracking-tight" id="macro-fat">--g</div>
+                              <div class="text-sm md:text-lg font-black text-sky-600 dark:text-sky-400 text-right tracking-tight truncate" id="macro-fat">--g</div>
                           </div>
                       </div>
                   </div>
@@ -3901,7 +4282,7 @@
           <!-- AI Chatbot Window -->
           <div
             id="chatbot-window"
-            class="fixed bottom-0 sm:bottom-24 left-0 right-0 sm:left-auto sm:right-6 z-[100] w-full sm:w-[380px] bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 hidden flex-col overflow-hidden transition-all transform origin-bottom sm:origin-bottom-right h-[85dvh] sm:h-[500px] sm:max-h-[calc(100dvh-7rem)]"
+            class="fixed top-0 bottom-0 sm:top-auto sm:bottom-24 left-0 right-0 sm:left-auto sm:right-6 z-[100] w-full sm:w-[380px] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 hidden flex-col transition-all transform origin-bottom sm:origin-bottom-right sm:h-[500px] sm:max-h-[calc(100dvh-7rem)]"
           >
             <!-- Header -->
             <div
@@ -5569,9 +5950,11 @@
               // Update customer chat messages UI if visible
               const chatbotMessages = document.getElementById("chatbot-messages");
               if (chatbotMessages && typeof window.renderCustomerChatMessages === 'function') {
-                  const oldScroll = chatbotMessages.scrollTop;
+                  const isAtBottom = chatbotMessages.scrollHeight - chatbotMessages.scrollTop <= chatbotMessages.clientHeight + 50;
                   window.renderCustomerChatMessages();
-                  chatbotMessages.scrollTop = oldScroll;
+                  if (isAtBottom) {
+                      chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+                  }
               } else if (chatbotMessages && !document.getElementById("chatbot-window").classList.contains("hidden")) {
                   // Fallback: we can re-render it simply if window.renderCustomerChatMessages doesn't exist
                   const history = allChats[customerDeviceId]?.history || chatHistory || [];
@@ -9235,6 +9618,36 @@
       function nextDietStep(current) {
         if (!validateDietStep(current)) return;
         playStepSound(true);
+        
+        if (current === 2) {
+           const goal = document.querySelector('input[name="goal"]:checked')?.value;
+           const targetWeightInput = document.getElementById("calc-target-weight");
+           const durationInput = document.getElementById("calc-duration");
+           if (goal === "loss" || goal === "gain") {
+               targetWeightInput.required = true;
+               targetWeightInput.placeholder = "Bắt buộc (kg)";
+               durationInput.required = true;
+               durationInput.placeholder = "Bắt buộc (tuần)";
+               
+               // Update labels to show mandatory
+               const weightLabel = targetWeightInput.parentElement.previousElementSibling;
+               if(weightLabel && !weightLabel.innerHTML.includes('*')) weightLabel.innerHTML += ' <span class="text-red-500">*</span>';
+               const durationLabel = durationInput.parentElement.previousElementSibling;
+               if(durationLabel && !durationLabel.innerHTML.includes('*')) durationLabel.innerHTML += ' <span class="text-red-500">*</span>';
+           } else {
+               targetWeightInput.required = false;
+               targetWeightInput.placeholder = "Không bắt buộc";
+               durationInput.required = false;
+               durationInput.placeholder = "Không bắt buộc";
+               
+               // Remove mandatory asterisk
+               const weightLabel = targetWeightInput.parentElement.previousElementSibling;
+               if(weightLabel) weightLabel.innerHTML = weightLabel.innerHTML.replace(' <span class="text-red-500">*</span>', '');
+               const durationLabel = durationInput.parentElement.previousElementSibling;
+               if(durationLabel) durationLabel.innerHTML = durationLabel.innerHTML.replace(' <span class="text-red-500">*</span>', '');
+           }
+        }
+        
         document.getElementById(`diet-step-${current}`).classList.add("hidden");
         document
           .getElementById(`diet-step-${current}`)
@@ -9247,6 +9660,12 @@
           .getElementById(`diet-step-${currentDietStep}`)
           .classList.add("block");
         updateDietProgress(currentDietStep);
+        
+        if (currentDietStep === 4) {
+            if (document.getElementById('use-medical-time') && document.getElementById('use-medical-time').checked) {
+                toggleMedicalTime();
+            }
+        }
       }
 
       function prevDietStep(current) {
@@ -9355,6 +9774,64 @@
         }
       }
 
+      function toggleMedicalTime() {
+        const isChecked = document.getElementById('use-medical-time').checked;
+        const durationInput = document.getElementById('calc-duration');
+        const msgDiv = document.getElementById('medical-time-msg');
+        const textSpan = document.getElementById('medical-time-text');
+        
+        if (isChecked) {
+            durationInput.disabled = true;
+            
+            // Calculate medical time
+            const weight = parseFloat(document.getElementById("calc-weight").value);
+            const targetWeight = parseFloat(document.getElementById("calc-target-weight").value);
+            const height = parseFloat(document.getElementById("calc-height").value);
+            const age = parseInt(document.getElementById("calc-age").value);
+            const goal = document.querySelector('input[name="goal"]:checked')?.value;
+            
+            if (!weight || !targetWeight || !goal) {
+                textSpan.innerText = "Vui lòng điền đủ cân nặng hiện tại và mục tiêu để tính.";
+                msgDiv.classList.remove('hidden');
+                durationInput.value = "";
+                return;
+            }
+            
+            const diffKg = Math.abs(weight - targetWeight);
+            let weeks = 0;
+            
+            if (goal === 'loss' && weight > targetWeight) {
+                let safeWeeklyRate = 0.5;
+                if (height && age) {
+                    const bmi = weight / Math.pow(height / 100, 2);
+                    if (bmi > 30) safeWeeklyRate = 1.0;
+                    else if (bmi > 25) safeWeeklyRate = 0.75;
+                    if (age > 50) safeWeeklyRate *= 0.8;
+                }
+                
+                weeks = Math.ceil(diffKg / safeWeeklyRate);
+                textSpan.innerText = `Theo chuẩn y khoa (giảm ${safeWeeklyRate.toFixed(2)}kg/tuần), thời gian an toàn là ${weeks} tuần.`;
+                durationInput.value = weeks;
+            } else if (goal === 'gain' && weight < targetWeight) {
+                let safeWeeklyRate = 0.5;
+                weeks = Math.ceil(diffKg / safeWeeklyRate);
+                textSpan.innerText = `Theo chuẩn y khoa (tăng ${safeWeeklyRate.toFixed(2)}kg/tuần), thời gian an toàn là ${weeks} tuần.`;
+                durationInput.value = weeks;
+            } else if (goal === 'recomp' || goal === 'maintain') {
+                weeks = 12; // Default for recomp/maintain
+                textSpan.innerText = `Chuẩn y khoa khuyến nghị lộ trình 12 tuần cho mục tiêu này.`;
+                durationInput.value = weeks;
+            } else {
+                textSpan.innerText = "Mục tiêu và cân nặng không khớp.";
+                durationInput.value = "";
+            }
+            msgDiv.classList.remove('hidden');
+        } else {
+            durationInput.disabled = false;
+            msgDiv.classList.add('hidden');
+        }
+      }
+
       function handleAnalysisSubmit(e) {
         e.preventDefault();
         const form = e.target;
@@ -9411,10 +9888,13 @@
           const dailyKcalDiff = (diffKg * 7700) / (wks * 7);
           if (goal === "loss" && weight > tw) {
             targetCal = tdee - dailyKcalDiff;
-            if (targetCal < bmr) {
-              targetCal = bmr;
+            const minSafeCal = gender === "male" ? 1200 : 1000;
+            if (targetCal < minSafeCal) {
+              targetCal = minSafeCal;
               adviceSuffix =
-                " Cảnh báo: Giảm cân quá nhanh! Đã giới hạn calo an toàn ở mức BMR.";
+                " Cảnh báo: Giảm cân quá nhanh! Đã giới hạn calo ở mức tối thiểu an toàn.";
+            } else if (targetCal < bmr) {
+              adviceSuffix = ` Lộ trình: Giảm ${diffKg}kg trong ${wks} tuần (Calo dưới mức BMR, cần chú ý sức khỏe).`;
             } else {
               adviceSuffix = ` Lộ trình: Giảm ${diffKg}kg trong ${wks} tuần.`;
             }
@@ -9667,26 +10147,9 @@
             ? JSON.parse(savedSettings).zalo
             : "https://zalo.me";
 
-        container.innerHTML = `
+        let htmlToRender = `
                 <div id="dynamic-lunch-container">${window.renderMealSectionHTML(lunchOptions, "lunch")}</div>
                 <div id="dynamic-dinner-container">${window.renderMealSectionHTML(dinnerOptions, "dinner")}</div>
-                
-                <!-- CTA: Đặt món dùng thử -->
-                <div class="mt-8 mb-12 text-center animate-fade-in border-t border-slate-200 pt-10">
-                    <h4 class="text-lg font-bold text-[#0F172A] mb-3">Chỉ muốn thử trước món ăn hôm nay?</h4>
-                    <p class="text-sm text-slate-500 mb-6 max-w-md mx-auto">Trải nghiệm ngay hương vị thực đơn AI gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
-                    <button type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
-                        <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
-                    </button>
-                </div>
-
-                <!-- Zalo Button -->
-                <div class="mt-8 text-center animate-fade-in">
-                    <p class="text-sm text-slate-600 font-medium mb-3">Bạn cần chuyên gia tư vấn kỹ hơn?</p>
-                    <a href="${zaloUrl}" target="_blank" class="inline-flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0054cc] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all mx-auto transform hover:-translate-y-1 hover:shadow-lg">
-                        <i class="fa-solid fa-comment-dots"></i> Nhắn tin Zalo nhận ưu đãi
-                    </a>
-                </div>
                 
                 <!-- Bố cục Đăng ký Gói theo thiết kế Premium mới -->
                 <style>
@@ -9743,40 +10206,179 @@
                             padding-bottom: 14px !important;
                         }
                     }
+                    
+                    /* Target Packages Active State */
+                    @media (min-width: 768px) {
+                        .pkg-label.active-pkg {
+                            transform: scale(1.05);
+                            z-index: 10;
+                        }
+                    }
                 </style>
-                <div class="mt-16 mb-8 text-center animate-fade-in border-t border-slate-200 pt-12">
+                `;
+                
+                let extraHtml = "";
+                const showBanner = document.getElementById('toggle-grand-opening-banner')?.checked ?? true;
+                if (showBanner) {
+                    extraHtml += `
+                <!-- USER GRAND OPENING BANNER MODAL -->
+                <div id="user-grand-opening-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 opacity-0 pointer-events-none transition-opacity duration-500" onclick="if(event.target === this) window.closeGrandOpeningPopup()">
+                    <div class="relative w-full max-w-[1152px] mx-4 sm:mx-6 flex items-center justify-center transform scale-90 translate-y-8 transition-all duration-500" id="user-grand-opening-modal-content">
+                        <!-- Close Button -->
+                        <button type="button" id="close-user-grand-opening-modal" class="absolute -top-4 -right-4 md:-top-6 md:-right-6 w-10 h-10 md:w-12 md:h-12 bg-white rounded-full flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 shadow-xl z-[60] border-2 border-slate-200 transition-colors text-xl md:text-2xl" onclick="window.closeGrandOpeningPopup()">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+
+                        <div class="banner-scale-wrapper w-full relative">
+                            <div id="user-grand-opening-banner-container" class="banner-scale bg-[#f3faeb] rounded-3xl overflow-hidden shadow-sm border border-emerald-100 flex flex-col z-0">
+                        <!-- Main Content Area -->
+                        <div class="flex flex-row items-center p-12 pb-12 z-10 h-full overflow-visible">
+                            <!-- Left Content -->
+                            <div class="w-7/12 z-10 flex flex-col items-start text-left shrink-0">
+                                <!-- Ribbon -->
+                                <div class="inline-flex items-center bg-red-600 text-white px-6 py-3 rounded-br-2xl rounded-tl-2xl text-2xl font-black uppercase tracking-wide mb-6 transform -skew-x-6 shadow-md animate-[pulse_2s_ease-in-out_infinite]">
+                                    <span class="skew-x-6 flex items-center gap-3">
+                                    <i class="fa-solid fa-party-popper text-yellow-300 animate-bounce"></i> <span id="user-banner-grand-opening-text">GRAND OPENING - 15/11/2026</span>
+                                    </span>
+                                </div>
+                                
+                                <!-- Main Title -->
+                                <h2 class="text-7xl font-black uppercase leading-[1.1] mb-6 tracking-tight">
+                                <span id="user-banner-title1" class="text-[#1b5e20] block">SIÊU ƯU ĐÃI</span>
+                                <span id="user-banner-title2" class="text-slate-900 block drop-shadow-sm">KHAI TRƯƠNG!</span>
+                                </h2>
+                                
+                                <!-- Subtitle -->
+                                <p id="user-banner-subtitle" class="text-slate-700 text-xl font-medium mb-8 max-w-lg leading-relaxed">
+                                Ăn ngon mỗi ngày, vóc dáng chuẩn ngay! Cơ hội trải nghiệm thực đơn chuẩn y khoa với mức giá không tưởng.
+                                </p>
+                                
+                                <!-- Countdown section -->
+                                <div class="mb-10 w-full flex flex-col items-start shrink-0">
+                                    <div class="flex items-center gap-2 text-[#2e7d32] font-bold text-sm mb-4 uppercase tracking-wider">
+                                        <i class="fa-solid fa-leaf text-emerald-500"></i> <span id="user-banner-cd-text">ƯU ĐÃI KẾT THÚC SAU</span> <i class="fa-solid fa-leaf text-emerald-500 transform scale-x-[-1]"></i>
+                                    </div>
+                                    <div class="flex items-center justify-start gap-4">
+                                        <!-- Day -->
+                                        <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                            <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                            <span id="user-banner-cd-day" class="text-3xl font-black text-white relative z-10">03</span>
+                                            <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">NGÀY</span>
+                                        </div>
+                                        <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                                        <!-- Hour -->
+                                        <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                            <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                            <span id="user-banner-cd-hour" class="text-3xl font-black text-white relative z-10">02</span>
+                                            <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">GIỜ</span>
+                                        </div>
+                                        <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                                        <!-- Minute -->
+                                        <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                            <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                            <span id="user-banner-cd-minute" class="text-3xl font-black text-white relative z-10">54</span>
+                                            <span class="text-xs font-bold mt-1 text-emerald-200 relative z-10">PHÚT</span>
+                                        </div>
+                                        <span class="text-3xl font-black text-[#1a3a2a] animate-pulse pb-4">:</span>
+                                        <!-- Second -->
+                                        <div class="bg-[#1a3a2a] text-white rounded-2xl w-20 h-20 flex flex-col items-center justify-center shadow-[0_4px_8px_rgba(26,58,42,0.3)] border border-[#2a4a3a] relative overflow-hidden group">
+                                            <div class="absolute inset-0 bg-white/5 group-hover:bg-white/10 transition-colors"></div>
+                                            <span id="user-banner-cd-second" class="text-3xl font-black text-yellow-400 relative z-10">11</span>
+                                            <span class="text-xs font-bold mt-1 text-yellow-200/80 relative z-10">GIÂY</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Buttons -->
+                                <div class="flex flex-row gap-4 w-auto shrink-0 mt-0">
+                                    <button type="button" onclick="document.getElementById('package-registration-section').scrollIntoView({behavior: 'smooth'})" class="flex-none bg-[#0f7632] hover:bg-[#0c5c27] text-white px-8 py-4 rounded-xl font-bold text-lg shadow-[0_4px_10px_rgba(15,118,50,0.3)] transition-transform hover:-translate-y-1 flex items-center justify-center gap-2 animate-[pulse_2s_infinite]">
+                                        <i class="fa-solid fa-crown text-yellow-300 animate-bounce"></i> <span id="user-banner-btn1">Đăng Ký</span>
+                                    </button>
+                                    <button type="button" class="flex-none bg-white hover:bg-slate-50 text-[#0f7632] border-2 border-[#0f7632] px-8 py-4 rounded-xl font-bold text-lg shadow-sm transition-all hover:-translate-y-1 flex items-center justify-center gap-2 hover:shadow-md">
+                                        <i class="fa-solid fa-bell-concierge transition-transform group-hover:rotate-12"></i> <span id="user-banner-btn2">Đặt 1 Bữa</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Right Images & Badges -->
+                            <div class="w-5/12 relative h-[500px] mt-0 z-10 flex justify-end shrink-0">
+                                <!-- Top Food Image -->
+                                <img src="https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop" alt="Healthy Meal Box" class="absolute top-0 right-0 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white rotate-3 z-20">
+                                
+                                <!-- Bottom Food Image -->
+                                <img src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop" alt="Healthy Beef Box" class="absolute bottom-0 right-16 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white -rotate-6 z-10">
+                                
+                                <!-- Circle Badge -->
+                                <div class="absolute top-1/4 -right-12 bg-[#165a25] text-white w-36 h-36 rounded-full flex flex-col items-center justify-center shadow-xl border-4 border-[#f3faeb] z-30 transform hover:scale-105 transition-transform animate-[bounce_3s_infinite]">
+                                    <span id="user-banner-badge1-line1" class="text-xs font-bold uppercase mb-1 text-emerald-100 tracking-wider">Hiện chỉ còn</span>
+                                    <span id="user-banner-badge1-line2" class="text-6xl font-black text-yellow-400 leading-none" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3)">19</span>
+                                    <span id="user-banner-badge1-line3" class="text-sm font-bold mt-1 tracking-widest">SLOT!</span>
+                                </div>
+                                
+                                <!-- Center Banner Badge -->
+                                <div class="absolute top-[45%] -left-16 transform -translate-y-1/2 bg-white rounded-2xl p-5 shadow-xl border border-emerald-100 flex items-center gap-4 z-30 w-[340px]">
+                                    <div id="user-banner-badge2-percent" class="bg-[#0f7632] text-white rounded-xl p-4 font-black text-3xl flex-shrink-0 shadow-inner">
+                                        -15%
+                                    </div>
+                                    <div>
+                                        <div id="user-banner-badge2-line1" class="font-bold text-slate-800 text-base leading-tight mb-1">Giảm 15% Toàn Menu</div>
+                                        <div id="user-banner-badge2-line2" class="text-xs text-slate-500 leading-snug">Dành cho <span class="text-[#d97706] font-bold">50 khách</span> đầu tiên.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Decorative Background Leaves (Optional) -->
+                        <i class="fa-solid fa-leaf absolute top-10 left-10 text-emerald-200/40 text-4xl -rotate-45 pointer-events-none animate-[pulse_4s_infinite]"></i>
+                        <i class="fa-solid fa-leaf absolute bottom-10 left-1/3 text-emerald-200/30 text-5xl rotate-12 pointer-events-none animate-[bounce_5s_infinite]"></i>
+                        <i class="fa-solid fa-leaf absolute top-20 right-1/2 text-emerald-200/40 text-3xl rotate-90 pointer-events-none animate-[pulse_3s_infinite]"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Floating Icon (hidden initially) -->
+                <div id="floating-grand-opening-icon" class="fixed bottom-24 right-4 md:right-8 z-40 hidden cursor-pointer transform hover:scale-110 transition-transform shadow-xl rounded-full" onclick="window.openGrandOpeningPopup()">
+                    <div class="bg-[#2e7d32] text-white w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl border-2 border-[#f3faeb] shadow-[0_0_15px_rgba(46,125,50,0.5)] relative">
+                        <i class="fa-solid fa-party-popper animate-bounce"></i>
+                        <span class="absolute -top-1 -left-1 bg-red-500 text-white text-[10px] md:text-xs font-bold px-1.5 md:px-2 py-0.5 md:py-1 rounded-full animate-pulse">-15%</span>
+                    </div>
+                </div>
+                `;
+                }
+
+                htmlToRender += extraHtml;
+                htmlToRender += `
+                <div id="package-registration-section" class="mb-8 text-center animate-fade-in border-t border-slate-200 pt-12">
                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-[#10B981] text-xs font-bold mb-4 border border-emerald-300">
                         👑 Lựa Chọn Tốt Nhất
                     </span>
                     <h3 class="text-2xl md:text-4xl font-black text-[#0F172A] mb-4 tracking-tight">Đăng Ký Gói Cá Nhân Hóa</h3>
                     <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">Cam kết đạt mục tiêu với lộ trình được AI tính toán riêng cho bạn.<br>Giao món tận nơi mỗi ngày, không cần suy nghĩ hôm nay ăn gì.</p>
-                </div>
-
-                <!-- Countdown Banner -->
-                <div id="countdown-banner" class="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-4 text-white text-center shadow-lg mt-6 mb-6 animate-pulse hidden max-w-5xl mx-auto">
-                    <div class="font-bold text-lg mb-1"><i class="fa-solid fa-gift mr-2"></i> Ưu đãi độc quyền! Giảm ngay 10%</div>
-                    <div class="text-sm opacity-90 mb-2">Chỉ dành cho bạn khi đăng ký trong hôm nay</div>
-                    <div class="text-2xl font-black tabular-nums tracking-widest" id="offer-countdown">15:00</div>
-                </div>
 
                 <form onsubmit="submitPackage(event)" class="w-full relative z-10 animate-fade-in">
-                    <!-- Pricing Cards Grid -->
+                    <!-- Removed general packages grid -->
+
+                    <!-- Gói Theo Mục Tiêu -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-8 items-stretch max-w-5xl mx-auto mb-10 text-left">
                         
-                        <!-- Gói 7 Ngày -->
-                        <label class="pkg-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 1; view-transition-name: pkg-7;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="7" class="sr-only" required>
+                        <!-- Gói Trải Nghiệm 5 Ngày -->
+                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 1; view-transition-name: pkg-target-5;">
+                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_5" class="sr-only">
                             <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
                             <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
                                 <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
                                 <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg1-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Khởi Động</p>
+                                            <p id="front-pkg4-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Trải Nghiệm</p>
                                             <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
                                         </div>
-                                        <h4 id="front-pkg1-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">7 Ngày</h4>
-                                        <p id="front-pkg1-saving" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm mt-1">Tiết kiệm 5% chi phí</p>
+                                        <h4 id="front-pkg4-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">5 Ngày</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p id="front-pkg4-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+0.25kg dự kiến</p>
+                                        </div>
+                                        <p id="front-pkg4-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 6% mục tiêu</p>
                                     </div>
                                     <div class="md:hidden shrink-0 mt-1">
                                         <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
@@ -9784,66 +10386,38 @@
                                         </div>
                                     </div>
                                 </div>
+                                
                                 <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg1-b1" class="flex-1">Miễn phí giao từ 2 đơn</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg1-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg1-b3" class="flex-1">Đổi món linh hoạt</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg4-b1" class="flex-1">Menu AI thiết kế riêng</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg4-b2" class="flex-1">Giao hàng tận nơi</span></li>
                                 </ul>
+
+                                <button type="button" onclick="openPricingModal('5', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                </button>
                                 <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
                                     Chọn Gói Này
                                 </div>
                             </div>
                         </label>
 
-                        <!-- Gói 30 Ngày (Phổ biến nhất) -->
-                        <label class="pkg-label active-pkg relative block cursor-pointer h-full transition-all duration-500" style="order: 2; view-transition-name: pkg-30;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="30" class="sr-only" checked required>
-                            <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Phổ Biến Nhất</div>
-                            <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
-                                <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
-                                
-                                <div class="flex flex-row md:flex-col justify-between items-start mb-2 md:mb-4 relative z-10 w-full gap-4">
-                                    <div>
-                                        <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg2-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Cam Kết</p>
-                                            <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Phổ Biến</span>
-                                        </div>
-                                        <h4 id="front-pkg2-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">30 Ngày</h4>
-                                        <p id="front-pkg2-saving" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm mt-1">Tiết kiệm đến 15%</p>
-                                    </div>
-                                    <div class="md:hidden shrink-0 mt-1">
-                                        <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
-                                            Đăng Ký
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg2-b1" class="flex-1">Miễn phí giao hàng</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg2-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg2-b3" class="flex-1">Đổi món linh hoạt</span></li>
-                                </ul>
-
-                                <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
-                                    Chọn Gói Này
-                                </div>
-                            </div>
-                        </label>
-
-                        <!-- Gói 10 Ngày -->
-                        <label class="pkg-label relative block cursor-pointer h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-10;">
-                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="10" class="sr-only" required>
+                        <!-- Gói Chuyển Đổi 10 Ngày -->
+                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 2; view-transition-name: pkg-target-10;">
+                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_10" class="sr-only">
                             <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
                             <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
                                 <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
                                 <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
                                     <div>
                                         <div class="flex items-center gap-2 mb-0.5 md:mb-1">
-                                            <p id="front-pkg3-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Duy Trì</p>
+                                            <p id="front-pkg5-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Chuyển Đổi</p>
                                             <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
                                         </div>
-                                        <h4 id="front-pkg3-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">10 Ngày</h4>
-                                        <p id="front-pkg3-saving" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm mt-1">Tiết kiệm 8% chi phí</p>
+                                        <h4 id="front-pkg5-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">10 Ngày</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p id="front-pkg5-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+0.55kg dự kiến</p>
+                                        </div>
+                                        <p id="front-pkg5-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 14% mục tiêu</p>
                                     </div>
                                     <div class="md:hidden shrink-0 mt-1">
                                         <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
@@ -9851,17 +10425,61 @@
                                         </div>
                                     </div>
                                 </div>
+                                
                                 <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg3-b1" class="flex-1">Miễn phí giao từ 2 đơn</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg3-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
-                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg3-b3" class="flex-1">Đổi món linh hoạt</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg5-b1" class="flex-1">Miễn phí giao từ 2 đơn</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg5-b2" class="flex-1">Đổi món linh hoạt</span></li>
                                 </ul>
+
+                                <button type="button" onclick="openPricingModal('10', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                </button>
                                 <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
                                     Chọn Gói Này
                                 </div>
                             </div>
                         </label>
-                        
+
+                        <!-- Gói Bứt Phá 20 Ngày -->
+                        <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-target-20;">
+                            <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_20" class="sr-only">
+                            <div class="pkg-badge hidden md:block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
+                            <div class="pkg-inner h-full bg-white border-2 border-slate-200 rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 hover:border-slate-300 relative overflow-hidden">
+                                <div class="pkg-blur absolute top-0 right-0 w-40 h-40 bg-[#10B981] rounded-full blur-[64px] opacity-0 pointer-events-none transition-opacity duration-500"></div>
+                                <div class="flex flex-row md:flex-col justify-between items-center md:items-start mb-2 md:mb-4 gap-4 relative z-10 w-full">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-0.5 md:mb-1">
+                                            <p id="front-pkg6-subtitle" class="pkg-subtitle text-slate-600 font-bold text-xs md:text-sm uppercase tracking-wider md:normal-case md:tracking-normal transition-colors duration-500">Bứt Phá</p>
+                                            <span class="pkg-badge md:hidden bg-[#10B981] text-white text-[9px] font-black px-2 py-0.5 rounded-sm uppercase tracking-wider opacity-0 transition-opacity duration-500 hidden">Chọn</span>
+                                        </div>
+                                        <h4 id="front-pkg6-title" class="pkg-title text-2xl md:text-3xl font-black text-[#0F172A] tracking-tight transition-colors duration-500">20 Ngày</h4>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <p id="front-pkg6-expected" class="pkg-saving text-[#10B981] font-bold text-[13px] md:text-sm">+1.1kg dự kiến</p>
+                                        </div>
+                                        <p id="front-pkg6-target" class="pkg-saving text-[#10B981] opacity-80 text-xs font-medium mt-0.5">Đạt 28% mục tiêu</p>
+                                    </div>
+                                    <div class="md:hidden shrink-0 mt-1">
+                                        <div class="pkg-btn px-4 py-2 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white shadow-md transition-all text-center">
+                                            Chọn Gói
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <ul class="space-y-2 md:space-y-3 mb-0 md:mb-8 flex-1 relative z-10 mt-1 md:mt-2">
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b1" class="flex-1">Miễn phí giao hàng</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b2" class="flex-1">Chuyên gia theo dõi 1:1</span></li>
+                                    <li class="flex items-start gap-2.5 text-[13px] md:text-sm pkg-list-item text-slate-600 transition-colors duration-500"><i class="fa-solid fa-check text-[#10B981] text-sm mt-1 md:mt-0 max-md:self-start"></i> <span id="front-pkg6-b3" class="flex-1">Đổi món linh hoạt</span></li>
+                                </ul>
+
+                                <button type="button" onclick="openPricingModal('20', false)" class="text-emerald-600 font-semibold text-sm mb-3 hover:underline text-center w-full relative z-10 pkg-list-item transition-colors duration-500">
+                                    <i class="fa-solid fa-tags mr-1"></i> Xem bảng giá chi tiết
+                                </button>
+                                <div class="pkg-btn pkg-btn-desktop hidden md:block w-full text-center py-3 rounded-xl border-2 border-slate-200 text-slate-700 font-bold text-sm bg-white transition-all duration-500 relative z-10 mt-auto">
+                                    Chọn Gói Này
+                                </div>
+                            </div>
+                        </label>
+
                     </div>
 
                     <!-- Form Nhập thông tin -->
@@ -9899,6 +10517,23 @@
                     </div>
                 </form>
 
+                <!-- CTA: Đặt món dùng thử -->
+                <div class="mt-8 mb-12 text-center animate-fade-in border-t border-slate-200 pt-10">
+                    <h4 class="text-lg font-bold text-[#0F172A] mb-3">Chỉ muốn thử trước món ăn hôm nay?</h4>
+                    <p class="text-sm text-slate-500 mb-6 max-w-md mx-auto">Trải nghiệm ngay hương vị thực đơn AI gợi ý. Giao hàng nóng hổi tận nơi trong 30 phút!</p>
+                    <button type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+                        <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
+                    </button>
+                </div>
+
+                <!-- Zalo Button -->
+                <div class="mt-8 text-center animate-fade-in">
+                    <p class="text-sm text-slate-600 font-medium mb-3">Bạn cần chuyên gia tư vấn kỹ hơn?</p>
+                    <a href="${zaloUrl}" target="_blank" class="inline-flex items-center justify-center gap-2 bg-[#0068FF] hover:bg-[#0054cc] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all mx-auto transform hover:-translate-y-1 hover:shadow-lg">
+                        <i class="fa-solid fa-comment-dots"></i> Nhắn tin Zalo nhận ưu đãi
+                    </a>
+                </div>
+                
                 <!-- Review Section -->
                 <div class="mt-16 animate-fade-in w-full overflow-hidden">
                     <div class="flex items-center justify-between mb-8 px-4 md:px-0">
@@ -10000,8 +10635,56 @@
                     <div class="flex items-center gap-2"><i class="fa-solid fa-user-doctor text-2xl"></i> Chuẩn Y khoa</div>
                 </div>
             `;
+            
+        container.innerHTML = htmlToRender;
 
         updatePkgDistricts();
+        
+        // Setup popup trigger
+        if (showBanner && !window.hasShownGrandOpeningPopup) {
+            const dinnerSection = document.getElementById('dynamic-dinner-container');
+            if (dinnerSection) {
+                const observer = new IntersectionObserver((entries) => {
+                    if (entries[0].isIntersecting) {
+                        window.hasShownGrandOpeningPopup = true;
+                        setTimeout(window.openGrandOpeningPopup, 500);
+                        observer.disconnect();
+                    }
+                }, { threshold: 0.2 });
+                observer.observe(dinnerSection);
+            }
+        }
+
+        // Update target packages dynamic text after rendering innerHTML
+        const updatePackage = (id, days) => {
+            const elExp = document.getElementById(`front-pkg${id}-expected`);
+            const elTarget = document.getElementById(`front-pkg${id}-target`);
+            if (!elExp || !elTarget) return;
+
+            if (goal === "loss" || goal === "gain") {
+                const dailyKcalDiffLocal = Math.abs(tdee - targetCal);
+                const weightChange = (dailyKcalDiffLocal * days) / 7700;
+                const sign = goal === "loss" ? "-" : "+";
+                elExp.innerText = `${sign}${weightChange.toFixed(2)}kg dự kiến`;
+                
+                const tw = parseFloat(document.getElementById("calc-target-weight").value);
+                if (tw) {
+                    const diffKgLocal = Math.abs(weight - tw);
+                    const percentage = Math.min(100, Math.round((weightChange / diffKgLocal) * 100));
+                    elTarget.innerText = `Đạt ${percentage}% mục tiêu`;
+                    elTarget.style.display = 'block';
+                } else {
+                    elTarget.style.display = 'none';
+                }
+            } else {
+                elExp.innerText = `Duy trì vóc dáng`;
+                elTarget.style.display = 'none';
+            }
+        };
+
+        updatePackage(4, 5);
+        updatePackage(5, 10);
+        updatePackage(6, 20);
 
         document.getElementById("analysis-empty-state").classList.add("hidden");
         document
@@ -13108,8 +13791,8 @@
 
       function handlePackageChange() {
         const fn = () => {
-          const labels = Array.from(document.querySelectorAll('.pkg-label'));
-          labels.forEach(l => l.classList.remove('active-pkg'));
+          const allLabels = Array.from(document.querySelectorAll('.pkg-label'));
+          allLabels.forEach(l => l.classList.remove('active-pkg'));
           
           const checked = document.querySelector('input[name="pkg_duration"]:checked');
           if(!checked) return;
@@ -13117,14 +13800,16 @@
           const activeItem = checked.closest('.pkg-label');
           activeItem.classList.add('active-pkg');
           
-          const unselected = labels.filter(l => l !== activeItem);
-          
-          // Order: Unselected #1 gets order 1, Active gets order 2, Unselected #2 gets order 3
-          // This keeps the active item always in the center
-          if (unselected.length >= 2) {
-             unselected[0].style.order = 1;
-             activeItem.style.order = 2;
-             unselected[1].style.order = 3;
+          const grid = checked.closest('.grid');
+          if (grid) {
+              const gridLabels = Array.from(grid.querySelectorAll('.pkg-label'));
+              const unselected = gridLabels.filter(l => l !== activeItem);
+              
+              if (gridLabels.length === 3) {
+                 unselected[0].style.order = 1;
+                 activeItem.style.order = 2;
+                 unselected[1].style.order = 3;
+              }
           }
         };
 
@@ -13708,10 +14393,37 @@
           document.getElementById("chatbot-input").focus();
           // Ẩn badge khi mở chat
           badge.classList.add("hidden");
+          
+          document.body.classList.add("overflow-hidden", "sm:overflow-auto");
+          history.pushState({ popup: 'chat' }, '');
+          
+          if (typeof window.renderCustomerChatMessages === 'function') {
+             window.renderCustomerChatMessages();
+             setTimeout(scrollToBottomChat, 50); // slight delay to allow rendering
+          }
         } else {
-          chatWindow.classList.add("hidden");
+          closeChat();
         }
       }
+
+      function closeChat() {
+        const chatWindow = document.getElementById("chatbot-window");
+        if (!chatWindow.classList.contains("hidden")) {
+          chatWindow.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden", "sm:overflow-auto");
+          if (history.state && history.state.popup === 'chat') {
+            history.back();
+          }
+        }
+      }
+
+      window.addEventListener('popstate', (e) => {
+        const chatWindow = document.getElementById("chatbot-window");
+        if (chatWindow && !chatWindow.classList.contains("hidden")) {
+           chatWindow.classList.add("hidden");
+           document.body.classList.remove("overflow-hidden", "sm:overflow-auto");
+        }
+      });
 
       async function fetchGeminiChatAPI(userMessage) {
         // Append new user message to history
@@ -13854,6 +14566,58 @@
         loadingEl.classList.add("hidden");
         appendMessageUI("model", aiResponse);
       }
+
+      window.renderCustomerChatMessages = function() {
+          const messagesContainer = document.getElementById("chatbot-messages");
+          // Clear and add greeting
+          messagesContainer.innerHTML = `
+              <div class="flex gap-2.5 w-max max-w-[85%] animate-fade-in mt-2">
+                <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm border border-emerald-200">
+                  <i class="fa-solid fa-robot"></i>
+                </div>
+                <div id="chatbot-greeting-msg" class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-700 shadow-sm leading-relaxed">
+                  Chào bạn! Mình là chuyên gia dinh dưỡng ảo của NutriAdmin. 👋<br><br>Mình có thể giúp bạn giải đáp các thắc mắc về calo, gợi ý món ăn, hoặc tư vấn lộ trình giảm cân. Bạn cần hỗ trợ gì ạ?
+                </div>
+              </div>
+          `;
+          
+          if (!chatHistory || chatHistory.length === 0) return;
+          
+          chatHistory.forEach(msg => {
+              if (!msg) return;
+              let textContent = "";
+              if (msg.parts && msg.parts.length > 0 && msg.parts[0] && msg.parts[0].text) {
+                  textContent = msg.parts[0].text;
+              } else if (msg.text) {
+                  textContent = msg.text;
+              }
+              if (!textContent) return;
+              
+              const msgDiv = document.createElement("div");
+              let formattedText = textContent
+                  .replace(/\*\*(.*?)\*\*/g, '<b class="text-slate-800">$1</b>')
+                  .replace(/\*(.*?)\*/g, "<i>$1</i>")
+                  .replace(/\n/g, "<br>");
+                  
+              if (msg.role === "user") {
+                  msgDiv.className = "flex gap-2.5 w-max max-w-[85%] self-end flex-row-reverse animate-fade-in mt-4";
+                  msgDiv.innerHTML = `
+                      <div class="bg-slate-800 text-white p-3 rounded-2xl rounded-tr-none text-sm shadow-sm leading-relaxed">
+                          ${formattedText}
+                      </div>
+                  `;
+              } else {
+                  msgDiv.className = "flex gap-2.5 w-max max-w-[85%] animate-fade-in mt-4";
+                  msgDiv.innerHTML = `
+                      <div class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0 text-xs shadow-sm border border-emerald-200"><i class="fa-solid fa-robot"></i></div>
+                      <div class="bg-white p-3 rounded-2xl rounded-tl-none border border-slate-100 text-sm text-slate-700 shadow-sm leading-relaxed">
+                          ${formattedText}
+                      </div>
+                  `;
+              }
+              messagesContainer.appendChild(msgDiv);
+          });
+      };
 
       function appendMessageUI(role, text) {
         const messagesContainer = document.getElementById("chatbot-messages");
@@ -14559,6 +15323,335 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
           }
         });
       };
+    </script>
+    <!-- Pricing Modal -->
+    <div id="pricing-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div id="pricing-modal-content" class="bg-[#FFFDF5] rounded-3xl w-full max-w-5xl shadow-2xl transform scale-95 transition-all duration-300 flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+            
+            <!-- Header -->
+            <div class="p-6 md:p-8 text-center relative border-b border-slate-200 bg-white rounded-t-3xl">
+                <h2 class="text-3xl md:text-4xl font-black text-[#15803D] uppercase tracking-tight pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 transition-colors duration-200" id="pricing-title">Bảng Giá Tiết Kiệm</h2>
+                <p class="text-slate-600 font-medium mt-2 pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 transition-colors duration-200" id="pricing-subtitle">Chỉ từ 64k/bữa - Giao hàng tận nơi mỗi ngày</p>
+                <button onclick="closePricingModal()" class="absolute top-4 right-4 md:top-6 md:right-6 w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition-colors focus:outline-none">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-6 md:p-8 overflow-y-auto flex-1 custom-scrollbar">
+                
+                <!-- Gói 5 Ngày -->
+                <div id="pricing-tab-5" class="pricing-tab hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-black text-[#0F172A] pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 inline-block" id="p-5-title">Gói 5 Ngày</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                        <!-- Size Cơ Bản -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-5-c1-title">Size Cơ Bản</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-1-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-1-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-5-1-1-p">350</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-1-1-u">70</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-1-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-1-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-1-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-5-1-2-p">680</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-1-2-u">68</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-1-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Size Lớn -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-5-c2-title">Size Lớn</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-2-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-2-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-5-2-1-p">450</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-2-1-u">90</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-2-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-2-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-5-2-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-5-2-2-p">880</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-2-2-u">88</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-5-2-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gói 10 Ngày -->
+                <div id="pricing-tab-10" class="pricing-tab hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-black text-[#0F172A] pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 inline-block" id="p-10-title">Gói 10 Ngày</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                        <!-- Size Cơ Bản -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-10-c1-title">Size Cơ Bản</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-1-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-1-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-10-1-1-p">680</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-1-1-u">68</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-1-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-1-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-1-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-10-1-2-p">1.320</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-1-2-u">66</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-1-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Size Lớn -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-10-c2-title">Size Lớn</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-2-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-2-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-10-2-1-p">900</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-2-1-u">90</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-2-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-2-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-10-2-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-10-2-2-p">1.760</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-2-2-u">88</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-10-2-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gói 20 Ngày -->
+                <div id="pricing-tab-20" class="pricing-tab hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-black text-[#0F172A] pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 inline-block" id="p-20-title">Gói 20 Ngày</h3>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                        <!-- Size Cơ Bản -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-20-c1-title">Size Cơ Bản</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-1-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-1-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-20-1-1-p">1.320</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-1-1-u">66</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-1-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-1-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-1-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-20-1-2-p">2.560</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-1-2-u">64</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-1-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Size Lớn -->
+                        <div class="flex flex-col">
+                            <div class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200" id="p-20-c2-title">Size Lớn</div>
+                            <div class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative">
+                                <!-- 1 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-2-1-c">1</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-2-1-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-20-2-1-p">1.800</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-2-1-u">90</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-2-1-ul">/bữa</span>
+                                    </div>
+                                </div>
+                                <!-- 2 Bữa -->
+                                <div class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1">
+                                    <div class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative">
+                                        <span class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-2-2-c">2</span>
+                                        <span class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200" id="p-20-2-2-l">BỮA</span>
+                                    </div>
+                                    <div class="flex-1 bg-white flex items-center justify-center z-10">
+                                        <span class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200" id="p-20-2-2-p">3.520</span>
+                                    </div>
+                                    <div class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                        <div class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"></div>
+                                        <span class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-2-2-u">88</span>
+                                        <span class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200" id="p-20-2-2-ul">/bữa</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Notes -->
+                <div class="mt-8 bg-white border-2 border-emerald-100 rounded-3xl p-6 md:p-8 shadow-sm">
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-4">
+                            <i class="fa-solid fa-leaf text-[#15803D] mt-1 text-lg shrink-0"></i>
+                            <span class="text-slate-700 font-semibold text-sm md:text-base pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 transition-colors duration-200" id="pricing-note1">Bảng giá trên là giá niêm yết chưa bao gồm phí vận chuyển</span>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <i class="fa-solid fa-leaf text-[#15803D] mt-1 text-lg shrink-0"></i>
+                            <span class="text-slate-700 font-semibold text-sm md:text-base pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 transition-colors duration-200" id="pricing-note2">em.fresh phục vụ thứ 2 - thứ 6 hàng tuần</span>
+                        </li>
+                        <li class="flex items-start gap-4">
+                            <i class="fa-solid fa-leaf text-[#15803D] mt-1 text-lg shrink-0"></i>
+                            <span class="text-slate-700 font-semibold text-sm md:text-base pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 -mx-1 transition-colors duration-200" id="pricing-note3">Đơn vị tính: nghìn đồng</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openPricingModal(pkgDays, isEditMode) {
+            // Hide all tabs first
+            document.querySelectorAll('.pricing-tab').forEach(tab => tab.classList.add('hidden'));
+            // Show the selected tab
+            const selectedTab = document.getElementById('pricing-tab-' + pkgDays);
+            if (selectedTab) selectedTab.classList.remove('hidden');
+            const modal = document.getElementById("pricing-modal");
+            const content = document.getElementById("pricing-modal-content");
+            const editables = modal.querySelectorAll('.pricing-editable');
+            
+            editables.forEach(el => {
+                if (isEditMode) {
+                    el.setAttribute('contenteditable', 'true');
+                    el.classList.add('cursor-text');
+                } else {
+                    el.removeAttribute('contenteditable');
+                    el.classList.remove('cursor-text');
+                }
+            });
+
+            modal.classList.remove("hidden");
+            // Trigger reflow
+            void modal.offsetWidth;
+            modal.classList.remove("opacity-0");
+            modal.classList.add("opacity-100");
+            content.classList.remove("scale-95");
+            content.classList.add("scale-100");
+        }
+
+        function closePricingModal() {
+            const modal = document.getElementById("pricing-modal");
+            const content = document.getElementById("pricing-modal-content");
+            
+            modal.classList.remove("opacity-100");
+            modal.classList.add("opacity-0");
+            content.classList.remove("scale-100");
+            content.classList.add("scale-95");
+            
+            setTimeout(() => {
+                modal.classList.add("hidden");
+            }, 300);
+        }
+
+        // Close when clicking outside
+        document.getElementById('pricing-modal').addEventListener('click', closePricingModal);
     </script>
   </body>
 </html>
