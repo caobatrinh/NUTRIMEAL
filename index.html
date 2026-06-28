@@ -49,6 +49,13 @@
     <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"></script>
 
     <script>
+      window.onerror = function(msg, url, line, col, err) {
+        fetch("/api/state", { method: "POST", body: JSON.stringify({ errorLog: msg + " " + (err?err.stack:"") + " line: " + line }) });
+      };
+      window.addEventListener('unhandledrejection', function(event) {
+        fetch("/api/state", { method: "POST", body: JSON.stringify({ errorLog: "Unhandled Promise: " + (event.reason?event.reason.stack:event.reason) }) });
+      });
+      
       tailwind.config = {
         darkMode: "class",
         theme: {
@@ -2458,6 +2465,11 @@
                     'user-grand-opening-banner-container',
                   );
                   if (el) el.classList.toggle('hidden', !this.checked);
+                  const savedSettings = localStorage.getItem('nutriadmin_settings');
+                  let settings = savedSettings ? JSON.parse(savedSettings) : {};
+                  settings.bannerGrandOpeningEnabled = this.checked;
+                  localStorage.setItem('nutriadmin_settings', JSON.stringify(settings));
+                  if (typeof syncStateToServer === 'function') syncStateToServer();
                 "
               />
               <div
@@ -3002,6 +3014,7 @@
                       <th class="p-4">KHÁCH HÀNG</th>
                       <th class="p-4">ĐỊA CHỈ</th>
                       <th class="p-4">GÓI</th>
+                      <th class="p-4">GIẢI THƯỞNG</th>
                       <th class="p-4">NGÀY ĐK</th>
                     </tr>
                   </thead>
@@ -5561,7 +5574,6 @@
               <div class="lg:col-span-5">
                 <form
                   id="submit-order-form"
-                  onsubmit="submitOrder(event)"
                   class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden sticky top-24"
                 >
                   <div class="p-6 border-b border-slate-100 bg-slate-50/50">
@@ -5647,7 +5659,7 @@
                         type="tel"
                         id="cust-phone"
                         required
-                        oninput="updateTransferContent()"
+                        oninput="checkSubmitButtonState(); updateTransferContent();"
                         class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors"
                         placeholder="Số điện thoại *"
                       />
@@ -5677,6 +5689,7 @@
                       <select
                         id="cust-city"
                         required
+                        oninput="checkSubmitButtonState()"
                         class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors bg-slate-100 pointer-events-none"
                       >
                         <option value="TP. Hồ Chí Minh" selected>
@@ -5686,6 +5699,7 @@
                       <select
                         id="cust-district"
                         required
+                        oninput="checkSubmitButtonState()"
                         class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors"
                         onchange="updateWards()"
                       >
@@ -5696,6 +5710,7 @@
                       <select
                         id="cust-ward"
                         required
+                        oninput="checkSubmitButtonState()"
                         disabled
                         class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors disabled:bg-slate-50 disabled:text-slate-400"
                       >
@@ -5707,6 +5722,7 @@
                         type="text"
                         id="cust-street"
                         required
+                        oninput="checkSubmitButtonState()"
                         class="w-full rounded-lg border border-slate-300 py-2.5 px-3 focus:border-primary focus:ring-1 focus:ring-primary text-sm transition-colors"
                         placeholder="Số nhà, Tên đường cụ thể *"
                       />
@@ -5779,7 +5795,8 @@
                       </button>
                     </div>
                     <button
-                      type="submit"
+                      type="button"
+                      onclick="submitOrder(event)"
                       id="btn-submit-order"
                       disabled
                       class="w-full mt-2 bg-orange-500 lg:hover:bg-orange-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white py-3.5 rounded-xl font-bold text-lg shadow-md transition-all lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex justify-center items-center gap-2"
@@ -7333,7 +7350,7 @@
     <!-- AI Chatbot Window -->
     <div
       id="chatbot-window"
-      class="fixed inset-0 h-[100dvh] max-h-[100dvh] sm:top-auto sm:left-auto sm:bottom-24 sm:right-6 z-[100] sm:w-[380px] sm:h-[500px] sm:max-h-[calc(100vh-7rem)] bg-white sm:rounded-2xl shadow-2xl border-0 sm:border border-slate-200 hidden flex-col transition-all transform origin-bottom sm:origin-bottom-right"
+      class="fixed bottom-24 left-4 right-4 sm:left-auto sm:right-6 z-[100] sm:w-[380px] h-[65dvh] sm:h-[500px] max-h-[calc(100dvh-8rem)] bg-white rounded-2xl shadow-2xl border border-slate-200 hidden flex-col transition-all transform origin-bottom-right"
     >
       <!-- Header -->
       <div
@@ -9044,12 +9061,12 @@
       let confirmActionCallback = null;
       let latestAIAssignments = [];
       let cart = [];
-      let currentUser =
-        JSON.parse(localStorage.getItem("nutriadmin_current_user")) || null;
-      let allChats =
-        JSON.parse(localStorage.getItem("nutriadmin_all_chats")) || {};
-      let allReviews =
-        JSON.parse(localStorage.getItem("nutriadmin_all_reviews")) || {};
+      let currentUser = null;
+      let allChats = {};
+      let allReviews = {};
+      try { currentUser = JSON.parse(localStorage.getItem("nutriadmin_current_user")) || null; } catch (e) {}
+      try { allChats = JSON.parse(localStorage.getItem("nutriadmin_all_chats")) || {}; } catch (e) {}
+      try { allReviews = JSON.parse(localStorage.getItem("nutriadmin_all_reviews")) || {}; } catch (e) {}
       let chatHistory = [];
       let currentAdminChatId = null;
       let revenueChartInst, statusChartInst, topDishesChartInst;
@@ -9245,11 +9262,37 @@
           if (typeof loadSettings === "function") loadSettings();
         }
         if (serverState.allReviews) {
+          const prevReviewsCount = Object.keys(allReviews || {}).length;
           allReviews = serverState.allReviews;
           localStorage.setItem(
             "nutriadmin_all_reviews",
             JSON.stringify(allReviews),
           );
+          
+          if (allReviews && Object.keys(allReviews).length > prevReviewsCount) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mode") !== "landing") {
+              const sortedReviews = Object.values(allReviews).sort((a,b) => b.timestamp - a.timestamp);
+              const latestReview = sortedReviews[0];
+              if (latestReview && typeof triggerRealtimeNotification === "function") {
+                let cName = "Khách hàng";
+                try { if (orders) { const f = orders.find(o => o.id === latestReview.orderId); if (f) cName = f.customerName; } } catch(e) {}
+                triggerRealtimeNotification(
+                  "review",
+                  "Đánh giá mới!",
+                  `Khách <b>${cName}</b> vừa gửi đánh giá ${latestReview.rating} sao.`,
+                  "Xem",
+                  () => {
+                    switchView("messages");
+                    switchMessagesTab("reviews");
+                    openAdminReview(latestReview.orderId);
+                  }
+                );
+              }
+              if (typeof updateMessagesNavBadge === "function") updateMessagesNavBadge();
+            }
+          }
+
           if (
             document.getElementById("view-messages") &&
             !document
@@ -9265,7 +9308,8 @@
         }
 
         if (serverState.orders) {
-          const prevCount = orders.length;
+          let prevCount = 0;
+          try { prevCount = orders ? orders.length : 0; } catch (e) {}
           orders = serverState.orders.map((o) => ({
             ...o,
             timestamp: new Date(o.timestamp),
@@ -9308,7 +9352,8 @@
         if (serverState.discountCodes)
           discountCodes = serverState.discountCodes;
         if (serverState.potentialCustomers) {
-          const prevPotCount = potentialCustomers.length;
+          let prevPotCount = 0;
+          try { prevPotCount = potentialCustomers ? potentialCustomers.length : 0; } catch (e) {}
           potentialCustomers = serverState.potentialCustomers;
           if (potentialCustomers.length > prevPotCount) {
             const latestPot = potentialCustomers[0];
@@ -9536,7 +9581,7 @@
       // Start periodic sync
       setInterval(async () => {
         try {
-          const res = await fetch("/api/chats");
+          const res = await fetch("/api/chats?t=" + Date.now(), { cache: "no-store" });
           if (res.ok) {
             const serverChats = await res.json();
             updateLocalChatsFromServer(serverChats);
@@ -9544,7 +9589,7 @@
         } catch (e) {}
 
         try {
-          const resState = await fetch("/api/state");
+          const resState = await fetch("/api/state?t=" + Date.now(), { cache: "no-store" });
           if (resState.ok) {
             const serverState = await resState.json();
             updateLocalStateFromServer(serverState);
@@ -11698,6 +11743,13 @@
           document.getElementById("set-zalo-oa-token").value =
             settings.zaloOaToken || "";
 
+          const bannerToggle = document.getElementById("toggle-grand-opening-banner");
+          if (bannerToggle) {
+            bannerToggle.checked = settings.bannerGrandOpeningEnabled !== false;
+            const el = document.getElementById('user-grand-opening-banner-container');
+            if (el) el.classList.toggle('hidden', !bannerToggle.checked);
+          }
+
           // Restore Package texts
           if (settings.packagesText) {
             Object.entries(settings.packagesText).forEach(([id, text]) => {
@@ -11939,6 +11991,7 @@
           packagesText: packagesText,
           bannerTexts: bannerTexts,
           bannerGrandOpeningText: bannerGrandOpeningText,
+          bannerGrandOpeningEnabled: document.getElementById("toggle-grand-opening-banner")?.checked ?? true,
         };
         localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
         showToast("Đã lưu cấu hình hệ thống!", "success");
@@ -14811,9 +14864,7 @@
         const bannerText =
           parsedSettings.bannerGrandOpeningText || "GRAND OPENING - 15/11/2026";
 
-        const showBanner =
-          document.getElementById("toggle-grand-opening-banner")?.checked ??
-          true;
+        const showBanner = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
         let htmlToRender = `
                 <div id="dynamic-lunch-container">${window.renderMealSectionHTML(lunchOptions, "lunch")}</div>
                 <div id="dynamic-dinner-container">${window.renderMealSectionHTML(dinnerOptions, "dinner")}</div>
@@ -14829,6 +14880,9 @@
                     }
                     
                     /* Active Package Styles */
+                    #package-registration-section .banner-scale-wrapper {
+                        overflow: visible !important;
+                    }
                     @keyframes borderGlow {
                         0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4), 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
                         50% { box-shadow: 0 0 15px 5px rgba(16, 185, 129, 0.2), 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2); }
@@ -14839,8 +14893,15 @@
                         background-color: #0F172A !important;
                         border-color: #10B981 !important;
                         box-shadow: 0 20px 40px rgba(16, 185, 129, 0.3), 0 20px 25px -5px rgba(15, 23, 42, 0.2) !important;
-                        transform: scale(1.05) !important;
                         animation: borderGlow 2s infinite ease-in-out;
+                    }
+                    @media (max-width: 767px) {
+                        .pkg-label.active-pkg .pkg-inner {
+                            transform: none !important;
+                            margin-left: -60px !important;
+                            margin-right: -60px !important;
+                            border-radius: 0 !important;
+                        }
                     }
                     @media (min-width: 768px) {
                         .pkg-label.active-pkg .pkg-inner {
@@ -14851,11 +14912,13 @@
                     }
                     .pkg-label.active-pkg .pkg-blur { opacity: 0.2 !important; }
                     .pkg-label.active-pkg .pkg-badge { opacity: 1 !important; display: block !important; }
-                    .pkg-label.active-pkg .pkg-title { color: white !important; }
-                    .pkg-label.active-pkg .pkg-subtitle { color: #34D399 !important; }
-                    @media (min-width: 768px) {
-                        .pkg-label.active-pkg .pkg-subtitle { color: #CBD5E1 !important; }
-                    }
+                    
+                    /* Change package text to white when selected */
+                    .pkg-label.active-pkg h4,
+                    .pkg-label.active-pkg p,
+                    .pkg-label.active-pkg span { color: white !important; }
+                    .pkg-label.active-pkg .fa-check { color: #10B981 !important; }
+                    
                     .pkg-label.active-pkg .pkg-saving { color: #10B981 !important; }
                     .pkg-label.active-pkg .pkg-list-item { color: #E2E8F0 !important; }
                     
@@ -15190,7 +15253,7 @@
         htmlToRender += extraHtml;
         
         let wheelBannerHTML = "";
-        const showWheel = document.getElementById("toggle-grand-opening-banner")?.checked ?? true;
+        const showWheel = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
         if (showWheel) {
             const savedPrize = localStorage.getItem("nutriadmin_wheel_prize");
             let inlineResultHiddenClass = savedPrize ? "flex" : "hidden";
@@ -15239,7 +15302,7 @@
                     <h3 class="text-2xl md:text-4xl font-black text-[#0F172A] mb-4 tracking-tight">Đăng Ký Gói Cá Nhân Hóa</h3>
                     <p class="text-slate-500 text-sm md:text-base max-w-xl mx-auto leading-relaxed">Cam kết đạt mục tiêu với lộ trình được AI tính toán riêng cho bạn.<br>Giao món tận nơi mỗi ngày, không cần suy nghĩ hôm nay ăn gì.</p>
 
-                <form onsubmit="submitPackage(event)" class="w-full relative z-10 animate-fade-in">
+                <form id="package-registration-form" class="w-full relative z-10 animate-fade-in">
                     <!-- Removed general packages grid -->
 
                     <!-- Gói Theo Mục Tiêu -->
@@ -15524,7 +15587,7 @@
                                 <select id="pkg-ward" required disabled class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm disabled:bg-slate-100 disabled:text-slate-400 focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white"><option value="">Phường/Xã *</option></select>
                             </div>
                             <input type="text" id="pkg-street" required placeholder="Số nhà, Tên đường cụ thể *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
-                            <button type="submit" class="w-full bg-[linear-gradient(135deg,#15803D,#10B981)] lg:hover:bg-[linear-gradient(135deg,#166534,#059669)] text-white font-bold py-3.5 rounded-xl transition-all shadow-md lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
+                            <button type="button" onclick="submitPackage(event)" class="w-full bg-[linear-gradient(135deg,#15803D,#10B981)] lg:hover:bg-[linear-gradient(135deg,#166534,#059669)] text-white font-bold py-3.5 rounded-xl transition-all shadow-md lg:hover:shadow-lg lg:hover:-translate-y-1 active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
                                 Xác nhận đăng ký <i class="fa-solid fa-arrow-right"></i>
                             </button>
                             <!-- Trust Badges -->
@@ -16210,9 +16273,7 @@
         totalEl.innerText = formatCurrency(total) + "đ";
         checkSubmitButtonState();
 
-        const showBanner =
-          document.getElementById("toggle-grand-opening-banner")?.checked ??
-          true;
+        const showBanner = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
         if (showBanner) {
           btnSubmit.innerHTML = `Đăng kí đặt món trước <i class="fa-solid fa-arrow-right"></i>`;
         } else {
@@ -16419,18 +16480,28 @@
       }
 
       function submitOrder(e) {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (cart.length === 0) return;
 
-        const fullAddress = `${document.getElementById("cust-street").value}, ${document.getElementById("cust-ward").value}, ${document.getElementById("cust-district").value}, ${document.getElementById("cust-city").value}`;
+        const name = document.getElementById("cust-name").value.trim();
+        const phone = document.getElementById("cust-phone").value.trim();
+        const street = document.getElementById("cust-street").value.trim();
+        const ward = document.getElementById("cust-ward").value;
+        const district = document.getElementById("cust-district").value;
+        const city = document.getElementById("cust-city").value;
+
+        if (!name || !phone || !street || !ward || !district || !city) {
+            showToast("Vui lòng điền đầy đủ thông tin giao hàng", "error");
+            return;
+        }
+
+        const fullAddress = `${street}, ${ward}, ${district}, ${city}`;
         const paymentMethod = document.getElementById("payment-method").value;
         const lat = document.getElementById("cust-lat").value;
         const lng = document.getElementById("cust-lng").value;
         const deliveryTime =
           document.getElementById("cust-delivery-time").value;
-        const showBanner =
-          document.getElementById("toggle-grand-opening-banner")?.checked ??
-          true;
+        const showBanner = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
 
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         let settingsObj = savedSettings ? JSON.parse(savedSettings) : {};
@@ -16470,6 +16541,7 @@
           packageCustomerId: null,
           deviceId: customerDeviceId,
           isGrandOpening: showBanner,
+          wheelPrize: showBanner ? (localStorage.getItem("nutriadmin_wheel_prize") || "") : null,
         };
 
         if (newOrder.lat && newOrder.lng) {
@@ -16532,6 +16604,7 @@
                 ) {
                   renderDashboardMap();
                 }
+                syncStateToServer();
               }
             })
             .catch((e) =>
@@ -19073,6 +19146,7 @@
                     </td>
                     <td class="px-4 py-3 text-xs text-slate-600 max-w-[200px] break-words whitespace-normal">${c.address || ""}</td>
                     <td class="px-4 py-3 text-red-600 font-medium text-xs">Gói ${resolvePackageName(c.package)}</td>
+                    <td class="px-4 py-3 text-amber-600 font-medium text-xs">${c.luckyPrize || ""}</td>
                     <td class="px-4 py-3 text-xs text-slate-500">${new Date(c.date).toLocaleDateString("vi-VN")}</td>
                 </tr>
             `,
@@ -19109,6 +19183,7 @@
                             <p class="font-medium text-sm text-slate-800"><i class="fa-solid fa-user text-slate-400 mr-2 w-4 text-center"></i>${o.customerName}</p>
                             <p class="text-sm text-slate-600 mt-1"><i class="fa-solid fa-phone text-slate-400 mr-2 w-4 text-center"></i>${o.phone}</p>
                             <p class="text-sm text-slate-600 mt-1 flex items-start gap-2"><i class="fa-solid fa-location-dot text-slate-400 mt-0.5 w-4 text-center flex-shrink-0"></i> <span>${o.address}</span></p>
+                            ${o.wheelPrize ? `<p class="text-xs text-amber-700 mt-2 bg-amber-50 p-2 rounded border border-amber-100 font-medium"><i class="fa-solid fa-gift mr-1"></i> Giải thưởng: ${o.wheelPrize}</p>` : ""}
                             ${o.deliveryTime ? `<p class="text-xs text-emerald-700 mt-2 bg-emerald-50 p-2 rounded border border-emerald-100 font-medium"><i class="fa-regular fa-clock mr-1"></i> Giao lúc: ${o.deliveryTime}</p>` : ""}
                             ${o.notes ? `<p class="text-xs text-orange-600 mt-2 bg-orange-50 p-2 rounded border border-orange-100">${o.notes}</p>` : ""}
                         </div>
@@ -19715,22 +19790,25 @@
 
       function submitPackage(e) {
         try {
-          e.preventDefault();
+          if (e) e.preventDefault();
           const p = document.getElementById("pkg-name")?.value || "";
+          const phoneVal = document.getElementById("pkg-phone")?.value || "";
+          const streetVal = document.getElementById("pkg-street")?.value || "";
+          const wardVal = document.getElementById("pkg-ward")?.value || "";
+          const districtVal = document.getElementById("pkg-district")?.value || "";
+          
+          if (!p || !phoneVal || !streetVal || !wardVal || !districtVal) {
+             showToast("Vui lòng điền đầy đủ thông tin giao hàng", "error");
+             return;
+          }
 
           // Lấy utm_source từ URL nếu có
           const urlParams = new URLSearchParams(window.location.search);
           const source = urlParams.get("utm_source") || "organic";
 
-          const showBanner =
-            document.getElementById("toggle-grand-opening-banner")?.checked ??
-            true;
+          const showBanner = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}").bannerGrandOpeningEnabled !== false;
 
           const nameVal = p || "Khách hàng";
-          const phoneVal = document.getElementById("pkg-phone")?.value || "";
-          const streetVal = document.getElementById("pkg-street")?.value || "";
-          const wardVal = document.getElementById("pkg-ward")?.value || "";
-          const districtVal = document.getElementById("pkg-district")?.value || "";
           
           let addressVal = "Chưa cung cấp";
           if (streetVal || wardVal || districtVal) {
@@ -20440,18 +20518,14 @@
         const chatWindow = document.getElementById("chatbot-window");
         if (!chatWindow || chatWindow.classList.contains("hidden")) return;
 
-        if (window.innerWidth < 640) {
-          if (window.visualViewport) {
-            const vv = window.visualViewport;
-            chatWindow.style.height = `${vv.height}px`;
-            chatWindow.style.top = `${vv.offsetTop}px`;
-            chatWindow.style.bottom = "auto";
-            chatWindow.style.maxHeight = `${vv.height}px`;
+        if (window.visualViewport) {
+          const vv = window.visualViewport;
+          // When keyboard is open, vv.height is less than window.innerHeight
+          if (vv.height < window.innerHeight - 50 && window.innerWidth < 640) {
+             chatWindow.style.bottom = `${window.innerHeight - vv.height + 10}px`;
+             chatWindow.style.maxHeight = `${vv.height - 20}px`;
           } else {
-            chatWindow.style.height = "100%";
-            chatWindow.style.top = "0px";
-            chatWindow.style.bottom = "0px";
-            chatWindow.style.maxHeight = "100%";
+             resetChatbotStyles();
           }
         } else {
           resetChatbotStyles();
@@ -20815,112 +20889,7 @@
                 if (incomingStr !== cloudStateString) {
                   cloudStateString = incomingStr;
 
-                  // Convert string timestamps back to Date for Orders mapping
-                  if (data.state.orders) {
-                    const previousOrdersCount =
-                      typeof orders !== "undefined" ? orders.length : 0;
-                    orders = data.state.orders.map((o) => ({
-                      ...o,
-                      timestamp: new Date(o.timestamp),
-                    }));
-
-                    if (orders.length > previousOrdersCount) {
-                      // A new order came from the cloud (another device)
-                      const latestOrder = orders[0];
-                      const urlParams = new URLSearchParams(
-                        window.location.search,
-                      );
-                      const isUrlLandingMode =
-                        urlParams.get("mode") === "landing";
-
-                      if (
-                        !isUrlLandingMode &&
-                        typeof showNewOrderPopup === "function"
-                      ) {
-                        showNewOrderPopup(latestOrder);
-                        const badge = document.getElementById("order-badge");
-                        const mobileBadge =
-                          document.getElementById("mobile-order-badge");
-                        if (
-                          badge &&
-                          (!document.getElementById("view-orders") ||
-                            !document
-                              .getElementById("view-orders")
-                              .classList.contains("block"))
-                        ) {
-                          badge.innerText =
-                            (parseInt(badge.innerText) || 0) +
-                            (orders.length - previousOrdersCount);
-                          badge.classList.remove("hidden");
-                          if (mobileBadge) {
-                            mobileBadge.innerText = badge.innerText;
-                            mobileBadge.classList.remove("hidden");
-                          }
-                        }
-                      }
-                    }
-                  }
-                  if (data.state.dishes) dishes = data.state.dishes;
-                  if (data.state.inventory) inventory = data.state.inventory;
-                  if (data.state.trackingSources)
-                    trackingSources = data.state.trackingSources;
-                  if (data.state.discountCodes)
-                    discountCodes = data.state.discountCodes;
-                  if (data.state.potentialCustomers)
-                    potentialCustomers = data.state.potentialCustomers;
-                  if (data.state.purchasedCustomers)
-                    purchasedCustomers = data.state.purchasedCustomers;
-                  if (data.state.shippers) shippers = data.state.shippers;
-                  if (data.state.allReviews) {
-                    allReviews = data.state.allReviews;
-                    localStorage.setItem(
-                      "nutriadmin_all_reviews",
-                      JSON.stringify(allReviews),
-                    );
-                  }
-                  if (data.state.allChats) {
-                    updateLocalChatsFromServer(data.state.allChats);
-                  }
-
-                  if (data.state.settings) {
-                    localStorage.setItem(
-                      "nutriadmin_settings",
-                      JSON.stringify(data.state.settings),
-                    );
-                    loadSettings();
-                  }
-
-                  // Re-render UI selectively to prevent breaking active states, but simple is ok here.
-                  try {
-                    renderCategories();
-                  } catch (e) {}
-                  try {
-                    renderDishes();
-                  } catch (e) {}
-                  try {
-                    renderInventory();
-                  } catch (e) {}
-                  try {
-                    renderOrdersAdmin();
-                  } catch (e) {}
-                  try {
-                    renderShippers();
-                  } catch (e) {}
-                  try {
-                    updateMarketingStatsUI();
-                  } catch (e) {} // Usually called inside renderMarketingDashboard
-                  try {
-                    renderDashboard();
-                  } catch (e) {}
-                  try {
-                    renderDiscountCodes();
-                  } catch (e) {}
-                  try {
-                    renderPotentialCustomers();
-                  } catch (e) {}
-                  try {
-                    renderPurchasedCustomers();
-                  } catch (e) {}
+                  updateLocalStateFromServer(data.state);
                   try {
                     renderGrandOpeningCustomers();
                   } catch (e) {}
