@@ -73,6 +73,9 @@
       .animate-fade-in {
         animation: fadeIn 0.3s ease-in-out;
       }
+      .animate-slide-in {
+        animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -81,6 +84,16 @@
         to {
           opacity: 1;
           transform: translateY(0);
+        }
+      }
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateX(100%);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
         }
       }
 
@@ -278,6 +291,25 @@
       }
       .animate-glow-pulse-emerald {
         animation: glowPulseEmerald 2s infinite ease-in-out;
+      }
+      @keyframes attentionGlowShake {
+        0%, 100% {
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.4), 0 0 20px rgba(16, 185, 129, 0.2);
+          transform: scale(1) translateX(0);
+        }
+        25% {
+          transform: scale(1.02) translateX(-2px) rotate(-0.5deg);
+        }
+        50% {
+          box-shadow: 0 0 25px rgba(16, 185, 129, 0.8), 0 0 45px rgba(16, 185, 129, 0.4);
+          transform: scale(1.04) translateX(2px) rotate(0.5deg);
+        }
+        75% {
+          transform: scale(1.02) translateX(-1px) rotate(-0.2deg);
+        }
+      }
+      .animate-attention-glow-shake {
+        animation: attentionGlowShake 1.5s infinite ease-in-out;
       }
       .custom-scrollbar::-webkit-scrollbar {
         width: 6px;
@@ -493,6 +525,30 @@
             }, 300);
           }
         }
+      };
+
+      window.handleBannerPkgClick = function() {
+        window.closeGrandOpeningPopup();
+        setTimeout(() => {
+          const el = document.getElementById("package-registration-section");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }, 300);
+      };
+
+      window.handleBannerOrderClick = function() {
+        window.closeGrandOpeningPopup();
+        setTimeout(() => {
+          const el = document.getElementById("cta-order-now-btn");
+          if (el) {
+            el.scrollIntoView({ behavior: "smooth", block: "center" });
+            el.classList.add("ring-4", "ring-orange-400", "scale-105");
+            setTimeout(() => {
+              el.classList.remove("ring-4", "ring-orange-400", "scale-105");
+            }, 2000);
+          }
+        }, 300);
       };
 
       document.addEventListener("DOMContentLoaded", () => {
@@ -8779,6 +8835,33 @@
         </div>
     </div>
 
+    <!-- Modal: Wheel Cooldown -->
+    <div id="wheel-cooldown-modal" class="fixed inset-0 z-[210] hidden items-center justify-center bg-slate-900/90 backdrop-blur-md p-4 animate-fade-in" onclick="if(event.target === this) closeCooldownModal()">
+        <div class="relative w-full max-w-sm bg-slate-950 rounded-3xl border border-slate-800 p-6 shadow-2xl flex flex-col items-center text-center">
+            <!-- Close button -->
+            <button onclick="closeCooldownModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors text-xl">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="w-16 h-16 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 text-3xl mb-4 animate-pulse">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+            </div>
+            
+            <h3 class="text-xl font-black text-white mb-2 uppercase tracking-wide">Đang Trong Thời Gian Chờ</h3>
+            <p class="text-sm text-slate-400 mb-6 leading-relaxed">Mỗi thiết bị chỉ được tham gia vòng quay may mắn <span class="text-emerald-400 font-bold">1 lần mỗi 1 giờ</span> để đảm bảo tính công bằng.</p>
+            
+            <!-- Countdown Display -->
+            <div class="bg-slate-900 rounded-2xl border border-slate-800/80 px-6 py-4 w-full mb-6">
+                <span class="text-xs text-slate-500 font-bold uppercase tracking-wider block mb-1">Thời gian còn lại</span>
+                <span id="cooldown-timer-display" class="text-3xl font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300 tracking-widest drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]">00:00:00</span>
+            </div>
+            
+            <button onclick="closeCooldownModal()" class="w-full bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-xl font-bold transition-colors">
+                Xác Nhận
+            </button>
+        </div>
+    </div>
+
     <div
       id="toast-container"
       class="fixed bottom-5 right-5 z-[80] flex flex-col gap-2 pointer-events-none"
@@ -9122,6 +9205,15 @@
           if (currentStr === lastStateStr) return;
           lastStateStr = currentStr;
 
+          // Sync back up locally in case of refresh or offline mode
+          try {
+            localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+            localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+            localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+          } catch (storageErr) {
+            console.error("Local storage sync error:", storageErr);
+          }
+
           const res = await fetch("/api/state", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -9182,10 +9274,22 @@
             const latestOrder = orders[0];
             const urlParams = new URLSearchParams(window.location.search);
             if (
-              urlParams.get("mode") !== "landing" &&
-              typeof showNewOrderPopup === "function"
+              urlParams.get("mode") !== "landing"
             ) {
-              showNewOrderPopup(latestOrder);
+              if (typeof triggerRealtimeNotification === "function") {
+                triggerRealtimeNotification(
+                  "order",
+                  "Có đơn hàng mới!",
+                  `Khách <b>${latestOrder.customerName}</b> vừa đặt đơn hàng trị giá ${formatCurrency(latestOrder.total)}đ.`,
+                  "Xem đơn",
+                  () => {
+                    switchView("orders");
+                  }
+                );
+              }
+              if (typeof showNewOrderPopup === "function") {
+                showNewOrderPopup(latestOrder);
+              }
               const badge = document.getElementById("order-badge");
               if (badge) {
                 badge.innerText =
@@ -9203,10 +9307,40 @@
           trackingSources = serverState.trackingSources;
         if (serverState.discountCodes)
           discountCodes = serverState.discountCodes;
-        if (serverState.potentialCustomers)
+        if (serverState.potentialCustomers) {
+          const prevPotCount = potentialCustomers.length;
           potentialCustomers = serverState.potentialCustomers;
-        if (serverState.purchasedCustomers)
-          purchasedCustomers = serverState.purchasedCustomers;
+          if (potentialCustomers.length > prevPotCount) {
+            const latestPot = potentialCustomers[0];
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mode") !== "landing") {
+              if (typeof triggerRealtimeNotification === "function") {
+                triggerRealtimeNotification(
+                  "registration",
+                  "Khách hàng đăng ký mới!",
+                  `Khách <b>${latestPot.name}</b> (${latestPot.phone}) vừa đăng ký lộ trình mới thành công.`,
+                  "Xem ngay",
+                  () => {
+                    switchView("customers");
+                    switchCustomerTab("potential");
+                  }
+                );
+              }
+              const badge = document.getElementById("nav-customers-badge");
+              const mobileBadge = document.getElementById("nav-mobile-customers-badge");
+              if (badge) {
+                badge.innerText = (parseInt(badge.innerText) || 0) + (potentialCustomers.length - prevPotCount);
+                badge.classList.remove("hidden");
+              }
+              if (mobileBadge && badge) {
+                mobileBadge.innerText = badge.innerText;
+                mobileBadge.classList.remove("hidden");
+              }
+            }
+          }
+          updatedUI = true;
+        }
+        if (serverState.purchasedCustomers) purchasedCustomers = serverState.purchasedCustomers;
         if (serverState.shippers) shippers = serverState.shippers;
 
         if (updatedUI) {
@@ -9250,11 +9384,23 @@
 
       function updateLocalChatsFromServer(serverChats) {
         let updated = false;
+        let newCustomerMsg = null;
         for (let key in serverChats) {
           if (!serverChats[key]) continue;
           if (!allChats[key]) {
             allChats[key] = serverChats[key];
             updated = true;
+            const hist = serverChats[key].history || [];
+            if (hist.length > 0) {
+              const lastMsg = hist[hist.length - 1];
+              if (lastMsg.sender === "customer" || lastMsg.role === "user") {
+                newCustomerMsg = {
+                  senderName: serverChats[key].name || "Khách hàng ẩn danh",
+                  text: lastMsg.text || lastMsg.content || "Gửi tin nhắn mới...",
+                  deviceId: key
+                };
+              }
+            }
           } else {
             const sHistoryLen = serverChats[key].history?.length || 0;
             const cHistoryLen = allChats[key]?.history?.length || 0;
@@ -9262,8 +9408,23 @@
               sHistoryLen > cHistoryLen ||
               serverChats[key].lastUpdated > (allChats[key]?.lastUpdated || 0)
             ) {
+              const prevHistLen = allChats[key]?.history?.length || 0;
               allChats[key] = serverChats[key];
               updated = true;
+              
+              const hist = serverChats[key].history || [];
+              if (hist.length > prevHistLen) {
+                for (let i = prevHistLen; i < hist.length; i++) {
+                  const m = hist[i];
+                  if (m.sender === "customer" || m.role === "user") {
+                    newCustomerMsg = {
+                      senderName: serverChats[key].name || "Khách hàng ẩn danh",
+                      text: m.text || m.content || "Gửi tin nhắn mới...",
+                      deviceId: key
+                    };
+                  }
+                }
+              }
             }
           }
         }
@@ -9282,6 +9443,26 @@
             renderMessagesList();
             if (currentAdminChatId) {
               renderAdminChatMessages(currentAdminChatId);
+            }
+          }
+
+          if (newCustomerMsg) {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get("mode") !== "landing") {
+              if (typeof triggerRealtimeNotification === "function") {
+                triggerRealtimeNotification(
+                  "chat",
+                  `Tin nhắn mới từ ${newCustomerMsg.senderName}`,
+                  newCustomerMsg.text,
+                  "Trả lời",
+                  () => {
+                    switchView("messages");
+                    if (typeof openAdminChat === "function") {
+                      openAdminChat(newCustomerMsg.deviceId);
+                    }
+                  }
+                );
+              }
             }
           }
           // Update customer chat messages UI if visible
@@ -9474,6 +9655,87 @@
         // Đánh 2 nốt nhạc nhanh tạo hiệu ứng "ting-ting"
         notificationSynth.triggerAttackRelease("E5", "8n", now);
         notificationSynth.triggerAttackRelease("G5", "8n", now + 0.15);
+      }
+
+      function triggerRealtimeNotification(type, title, message, actionText, onViewClick) {
+        const container = document.getElementById("realtime-notification-container");
+        if (!container) return;
+
+        const notificationId = "notif-" + Date.now() + "-" + Math.floor(Math.random() * 1000);
+        const accentClass = type === 'order' ? 'bg-emerald-500' : type === 'registration' ? 'bg-blue-500' : 'bg-purple-500';
+        const pingClass = type === 'order' ? 'bg-emerald-400' : type === 'registration' ? 'bg-blue-400' : 'bg-purple-400';
+        const dotClass = type === 'order' ? 'bg-emerald-500' : type === 'registration' ? 'bg-blue-500' : 'bg-purple-500';
+        const typeLabel = type === 'order' ? 'Đơn hàng mới' : type === 'registration' ? 'Đăng ký mới' : 'Tin nhắn mới';
+
+        const notificationHtml = `
+          <div id="${notificationId}" class="pointer-events-auto bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-700 p-4 flex items-start gap-3 transform translate-x-full transition-all duration-300 ease-out animate-slide-in relative overflow-hidden">
+            <!-- Left accent bar -->
+            <div class="absolute left-0 top-0 bottom-0 w-1.5 ${accentClass}"></div>
+            
+            <div class="flex-1 pl-1">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="flex h-2 w-2 relative">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full ${pingClass} opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 ${dotClass}"></span>
+                </span>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  ${typeLabel}
+                </span>
+              </div>
+              <h4 class="font-bold text-slate-800 dark:text-white text-sm leading-tight">${title}</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-300 mt-1">${message}</p>
+              
+              <div class="flex gap-2 mt-3">
+                <button onclick="const el = document.getElementById('${notificationId}'); if (el) { el.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => el.remove(), 300); }" class="text-xs font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 py-1 rounded transition-colors cursor-pointer">
+                  Bỏ qua
+                </button>
+                <button id="${notificationId}-action" class="text-xs font-semibold text-[#15803D] hover:text-[#166534] dark:text-[#4ade80] dark:hover:text-[#22c55e] px-2.5 py-1 bg-slate-50 dark:bg-slate-700/50 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-all flex items-center gap-1 cursor-pointer">
+                  ${actionText} <i class="fa-solid fa-chevron-right text-[8px]"></i>
+                </button>
+              </div>
+            </div>
+            
+            <button onclick="const el = document.getElementById('${notificationId}'); if (el) { el.classList.add('translate-x-full', 'opacity-0'); setTimeout(() => el.remove(), 300); }" class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition-colors cursor-pointer">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        `;
+
+        container.insertAdjacentHTML("beforeend", notificationHtml);
+        const card = document.getElementById(notificationId);
+        
+        // Trigger enter animation
+        setTimeout(() => {
+          if (card) card.classList.remove("translate-x-full");
+        }, 10);
+
+        // Bind action click
+        const actionBtn = document.getElementById(`${notificationId}-action`);
+        if (actionBtn) {
+          actionBtn.addEventListener("click", () => {
+            if (typeof onViewClick === "function") onViewClick();
+            if (card) {
+              card.classList.add("translate-x-full", "opacity-0");
+              setTimeout(() => card.remove(), 300);
+            }
+          });
+        }
+
+        // Play alert sound if applicable
+        try {
+          playNotificationSound();
+        } catch (e) {
+          console.error("Failed to play notification sound", e);
+        }
+
+        // Auto remove after 8 seconds
+        setTimeout(() => {
+          const checkCard = document.getElementById(notificationId);
+          if (checkCard) {
+            checkCard.classList.add("translate-x-full", "opacity-0");
+            setTimeout(() => checkCard.remove(), 300);
+          }
+        }, 8000);
       }
 
       const categories = [
@@ -9681,61 +9943,84 @@
         },
       ];
 
-      let potentialCustomers = [
-        {
-          id: 1,
-          name: "Trần Thị B",
-          phone: "0987654321",
-          package: "10",
-          address: "Quận 1, TP. HCM",
-          source: "shopeefood",
-          date: new Date(Date.now() - 86400000),
-        },
-        {
-          id: 2,
-          name: "Phạm Văn D",
-          phone: "0977665544",
-          package: "7",
-          address: "Quận 3, TP. HCM",
-          source: "facebook",
-          date: new Date(Date.now() - 172800000),
-        },
-        {
-          id: 3,
-          name: "Lê Hoàng E",
-          phone: "0966554433",
-          package: "30",
-          address: "Bình Thạnh, TP. HCM",
-          source: "tiktok",
-          date: new Date(Date.now() - 259200000),
-        },
-        {
-          id: 4,
-          name: "Nguyễn Thị F",
-          phone: "0955443322",
-          package: "10",
-          address: "Gò Vấp, TP. HCM",
-          source: "qr_hopcom",
-          date: new Date(Date.now() - 345600000),
-        },
-      ];
+      let potentialCustomers = [];
+      try {
+        const localPot = localStorage.getItem("nutriadmin_potential_customers");
+        if (localPot) {
+          potentialCustomers = JSON.parse(localPot).map(c => ({
+            ...c,
+            date: c.date ? new Date(c.date) : new Date()
+          }));
+        } else {
+          potentialCustomers = [
+            {
+              id: 1,
+              name: "Trần Thị B",
+              phone: "0987654321",
+              package: "10",
+              address: "Quận 1, TP. HCM",
+              source: "shopeefood",
+              date: new Date(Date.now() - 86400000),
+            },
+            {
+              id: 2,
+              name: "Phạm Văn D",
+              phone: "0977665544",
+              package: "7",
+              address: "Quận 3, TP. HCM",
+              source: "facebook",
+              date: new Date(Date.now() - 172800000),
+            },
+            {
+              id: 3,
+              name: "Lê Hoàng E",
+              phone: "0966554433",
+              package: "30",
+              address: "Bình Thạnh, TP. HCM",
+              source: "tiktok",
+              date: new Date(Date.now() - 259200000),
+            },
+            {
+              id: 4,
+              name: "Nguyễn Thị F",
+              phone: "0955443322",
+              package: "10",
+              address: "Gò Vấp, TP. HCM",
+              source: "qr_hopcom",
+              date: new Date(Date.now() - 345600000),
+            },
+          ];
+        }
+      } catch (e) {
+        console.error("Failed to parse potentialCustomers:", e);
+      }
 
-      let purchasedCustomers = [
-        {
-          id: 1,
-          name: "Lê Văn C",
-          phone: "0912345678",
-          package: "30",
-          startDate: "2024-05-01",
-          district: "Quận 1",
-          ward: "Phường Bến Nghé",
-          street: "123 Lê Lợi",
-          address: "123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-          lat: 10.776,
-          lng: 106.701,
-          weeklyMenu: {},
-        },
-      ];
+      let purchasedCustomers = [];
+      try {
+        const localPur = localStorage.getItem("nutriadmin_purchased_customers");
+        if (localPur) {
+          purchasedCustomers = JSON.parse(localPur);
+        } else {
+          purchasedCustomers = [
+            {
+              id: 1,
+              name: "Lê Văn C",
+              phone: "0912345678",
+              package: "30",
+              startDate: "2024-05-01",
+              district: "Quận 1",
+              ward: "Phường Bến Nghé",
+              street: "123 Lê Lợi",
+              address: "123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+              lat: 10.776,
+              lng: 106.701,
+              weeklyMenu: {},
+            },
+          ];
+        }
+      } catch (e) {
+        console.error("Failed to parse purchasedCustomers:", e);
+      }
 
       let shippers = [
         {
@@ -10119,88 +10404,101 @@
         },
       };
 
-      let orders = [
-        {
-          id: "ORD1023",
-          customerName: "Nguyễn Văn A",
-          phone: "0901234567",
-          address: "123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
-          lat: 10.7744,
-          lng: 106.7024,
-          notes: "",
-          items: [
+      let orders = [];
+      try {
+        const localOrd = localStorage.getItem("nutriadmin_orders");
+        if (localOrd) {
+          orders = JSON.parse(localOrd).map(o => ({
+            ...o,
+            timestamp: o.timestamp ? new Date(o.timestamp) : new Date()
+          }));
+        } else {
+          orders = [
             {
-              dishId: 1,
-              name: "Salad Thăn Nội Bò Úc",
-              sizeKey: "standard",
-              sizeLabel: "Cơ bản",
-              price: 55000,
-              qty: 2,
-            },
-          ],
-          total: 110000,
-          status: "completed",
-          timestamp: new Date(Date.now() - 86400000 * 2),
-          shipperId: 1,
-          isPackageOrder: false,
-        },
-        {
-          id: "ORD1024",
-          customerName: "Trần Thị B",
-          phone: "0909876543",
-          address: "456 Võ Văn Tần, Phường 5, Quận 3, TP. Hồ Chí Minh",
-          lat: 10.7725,
-          lng: 106.6881,
-          notes: "Giao giờ hành chính",
-          items: [
-            {
-              dishId: 2,
-              name: "Bít Tết Thăn Nội Khoai Lang",
-              sizeKey: "large",
-              sizeLabel: "Lớn",
-              price: 75000,
-              qty: 1,
+              id: "ORD1023",
+              customerName: "Nguyễn Văn A",
+              phone: "0901234567",
+              address: "123 Lê Lợi, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+              lat: 10.7744,
+              lng: 106.7024,
+              notes: "",
+              items: [
+                {
+                  dishId: 1,
+                  name: "Salad Thăn Nội Bò Úc",
+                  sizeKey: "standard",
+                  sizeLabel: "Cơ bản",
+                  price: 55000,
+                  qty: 2,
+                },
+              ],
+              total: 110000,
+              status: "completed",
+              timestamp: new Date(Date.now() - 86400000 * 2),
+              shipperId: 1,
+              isPackageOrder: false,
             },
             {
-              dishId: 6,
-              name: "Ức Gà Nướng Thảo Mộc",
-              sizeKey: "standard",
-              sizeLabel: "Cơ bản",
-              price: 55000,
-              qty: 1,
+              id: "ORD1024",
+              customerName: "Trần Thị B",
+              phone: "0909876543",
+              address: "456 Võ Văn Tần, Phường 5, Quận 3, TP. Hồ Chí Minh",
+              lat: 10.7725,
+              lng: 106.6881,
+              notes: "Giao giờ hành chính",
+              items: [
+                {
+                  dishId: 2,
+                  name: "Bít Tết Thăn Nội Khoai Lang",
+                  sizeKey: "large",
+                  sizeLabel: "Lớn",
+                  price: 75000,
+                  qty: 1,
+                },
+                {
+                  dishId: 6,
+                  name: "Ức Gà Nướng Thảo Mộc",
+                  sizeKey: "standard",
+                  sizeLabel: "Cơ bản",
+                  price: 55000,
+                  qty: 1,
+                },
+              ],
+              total: 130000,
+              status: "delivering",
+              timestamp: new Date(),
+              shipperId: 2,
+              isPackageOrder: false,
             },
-          ],
-          total: 130000,
-          status: "delivering",
-          timestamp: new Date(),
-          shipperId: 2,
-          isPackageOrder: false,
-        },
-        {
-          id: "ORD1025",
-          customerName: "Lê Văn C",
-          phone: "0912345678",
-          address: "789 Nguyễn Đình Chiểu, Phường 6, Quận 3, TP. Hồ Chí Minh",
-          lat: 10.777,
-          lng: 106.6912,
-          notes: "",
-          items: [
             {
-              dishId: 11,
-              name: "Bún Nưa Thăn Heo",
-              sizeKey: "standard",
-              sizeLabel: "Cơ bản",
-              price: 55000,
-              qty: 3,
+              id: "ORD1025",
+              customerName: "Lê Văn C",
+              phone: "0912345678",
+              address: "789 Nguyễn Đình Chiểu, Phường 6, Quận 3, TP. Hồ Chí Minh",
+              lat: 10.777,
+              lng: 106.6912,
+              notes: "",
+              items: [
+                {
+                  dishId: 11,
+                  name: "Bún Nưa Thăn Heo",
+                  sizeKey: "standard",
+                  sizeLabel: "Cơ bản",
+                  price: 55000,
+                  qty: 3,
+                },
+              ],
+              total: 165000,
+              status: "pending",
+              timestamp: new Date(),
+              shipperId: null,
+              isPackageOrder: false,
             },
-          ],
-          total: 165000,
-          status: "pending",
-          timestamp: new Date(),
-          shipperId: null,
-          isPackageOrder: false,
-        },
-      ];
+          ];
+        }
+      } catch (e) {
+        console.error("Failed to parse orders:", e);
+      }
 
       // ==========================================
       // 2. UTILITY FUNCTIONS (Toasts, Modals, API)
@@ -14761,6 +15059,7 @@
                   <!-- Buttons -->
                   <div class="flex flex-row gap-4 w-auto shrink-0 mt-0">
                     <button
+                      onclick="window.handleBannerPkgClick()"
                       class="flex-none bg-[#0f7632] hover:bg-[#0c5c27] text-white px-12 py-5 rounded-xl font-bold text-xl shadow-[0_4px_10px_rgba(15,118,50,0.3)] transition-transform hover:-translate-y-1 flex items-center justify-center gap-2 animate-glow-pulse-emerald relative z-10"
                     >
                       <i
@@ -14774,6 +15073,7 @@
                       >
                     </button>
                     <button
+                      onclick="window.handleBannerOrderClick()"
                       class="flex-none bg-white hover:bg-slate-50 text-[#0f7632] border-2 border-[#0f7632] px-12 py-5 rounded-xl font-bold text-xl shadow-sm transition-all hover:-translate-y-1 flex items-center justify-center gap-2 hover:shadow-md animate-glow-pulse-emerald relative z-10"
                     >
                       <i class="fa-solid fa-bell-concierge animate-bounce"></i>
@@ -14893,8 +15193,12 @@
         let wheelBannerHTML = "";
         const showWheel = document.getElementById("toggle-grand-opening-banner")?.checked ?? true;
         if (showWheel) {
+            const savedPrize = localStorage.getItem("nutriadmin_wheel_prize");
+            let inlineResultHiddenClass = savedPrize ? "flex" : "hidden";
+            let inlinePrizeTextVal = savedPrize || "";
+
             wheelBannerHTML = `
-                <div class="max-w-xl mx-auto bg-slate-900 p-4 md:p-6 rounded-3xl shadow-xl border border-slate-800 mb-8 animate-fade-in flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform relative overflow-hidden group" onclick="openWheelPopup()">
+                <div class="max-w-xl mx-auto bg-slate-900 p-4 md:p-6 rounded-3xl shadow-xl border border-slate-800 mb-4 animate-fade-in flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform relative overflow-hidden group" onclick="openWheelPopup()">
                     <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     <div class="relative z-10 flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-[0_0_15px_rgba(16,185,129,0.5)] group-hover:animate-pulse">
@@ -14907,6 +15211,21 @@
                     </div>
                     <div class="relative z-10 text-slate-500 group-hover:text-emerald-400 transition-colors">
                         <i class="fa-solid fa-chevron-right text-xl"></i>
+                    </div>
+                </div>
+
+                <!-- Glow and Shake Result Container -->
+                <div id="inline-wheel-result-container" class="max-w-xl mx-auto bg-slate-950 p-5 rounded-3xl border-2 border-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.6)] mb-8 flex-col items-center justify-center text-center relative overflow-hidden ${inlineResultHiddenClass} animate-attention-glow-shake">
+                    <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 opacity-40"></div>
+                    <div class="relative z-10">
+                         <span class="inline-block bg-gradient-to-r from-amber-500 to-yellow-400 text-slate-950 font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md mb-3 animate-bounce">MÃ GIẢM GIÁ QUÀ TẶNG</span>
+                         <p class="text-slate-300 font-bold text-sm mb-1 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-gift text-yellow-400"></i> Chúc mừng bạn đã trúng thưởng!
+                         </p>
+                         <p id="inline-wheel-prize-text" class="text-2xl md:text-3xl font-black text-emerald-400 uppercase tracking-widest my-2 drop-shadow-[0_0_10px_rgba(52,211,153,0.5)]">${inlinePrizeTextVal}</p>
+                         <p class="text-slate-400 text-xs mt-2 leading-relaxed">
+                            Hệ thống đã tự động áp dụng mã này vào đăng ký gói bên dưới!
+                         </p>
                     </div>
                 </div>
             `;
@@ -15087,8 +15406,8 @@
 
                                 </label>
 
-                                <label class="pkg-label pkg-target-label relative block cursor-pointer group h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-target-20;">
-                                    <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_20" class="sr-only">
+                                <label class="pkg-label pkg-target-label active-pkg relative block cursor-pointer group h-full transition-all duration-500" style="order: 3; view-transition-name: pkg-target-20;">
+                                    <input type="radio" onchange="handlePackageChange()" name="pkg_duration" value="target_20" checked class="sr-only">
                                     <div class="pkg-badge block absolute -top-3 left-1/2 -translate-x-1/2 bg-[#10B981] text-white text-[11px] font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-md z-20 whitespace-nowrap opacity-0 transition-opacity duration-500">Đang Chọn</div>
                                     <!-- Gói Bứt Phá -->
             <div class="pkg-inner h-full bg-white border-[3px] border-[#0F766E]  rounded-2xl md:rounded-3xl p-4 sm:p-5 lg:p-8 flex flex-col transition-all duration-500 relative overflow-hidden shadow-lg shadow-emerald-900/5">
@@ -15190,7 +15509,7 @@
                         </div>
                     </div>
                     
-                    <input type="hidden" id="pkg-lucky-prize" value="">
+                    <input type="hidden" id="pkg-lucky-prize" value="${localStorage.getItem('nutriadmin_wheel_prize') || ''}">
                     
                 <!-- Form Nhập thông tin -->
 
@@ -15235,12 +15554,12 @@
                     ${
                       showBanner
                         ? `
-<button type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+<button id="cta-order-now-btn" type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
     <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
 </button>
 `
                         : `
-<button type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+<button id="cta-order-now-btn" type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
     <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
 </button>
 `
@@ -16236,6 +16555,8 @@
         togglePaymentQR();
         updateDistricts();
         renderCart();
+
+        playSuccessSound();
 
         const successModal = document.getElementById("order-success-modal");
         if (successModal) {
@@ -19363,62 +19684,133 @@
         }
       }
 
-      function submitPackage(e) {
-        e.preventDefault();
-        const p = document.getElementById("pkg-name").value;
-
-        // Lấy utm_source từ URL nếu có
-        const urlParams = new URLSearchParams(window.location.search);
-        const source = urlParams.get("utm_source") || "organic";
-
-        const showBanner =
-          document.getElementById("toggle-grand-opening-banner")?.checked ??
-          true;
-
-        potentialCustomers.unshift({
-          id: Date.now(),
-          name: p,
-          phone: document.getElementById("pkg-phone").value,
-          address: `${document.getElementById("pkg-street").value}, ${document.getElementById("pkg-ward").value}, ${document.getElementById("pkg-district").value}, HCM`,
-          package: document.querySelector('input[name="pkg_duration"]:checked')
-            .value,
-          source: source,
-          date: new Date(),
-          isGrandOpening: showBanner,
-          luckyPrize: document.getElementById("pkg-lucky-prize")?.value || "",
-        });
-
-        syncStateToServer();
-
-        // Hiện overlay thông báo đăng ký
-        const overlay = document.getElementById("success-overlay");
-        const content = document.getElementById("success-overlay-content");
-
-        // Kích hoạt hiệu ứng Confetti khi đăng ký thành công
-        if (typeof confetti === "function") {
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.5 },
-            colors: ["#10B981", "#34D399", "#FCD34D", "#F87171"],
+      function playSuccessSound() {
+        try {
+          const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          
+          // Beautiful elegant chime: C5 -> E5 -> G5 -> C6
+          const notes = [523.25, 659.25, 783.99, 1046.50];
+          let startTime = audioCtx.currentTime;
+          
+          notes.forEach((freq, index) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, startTime + index * 0.08);
+            
+            // Gain envelope
+            gain.gain.setValueAtTime(0.3, startTime + index * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, startTime + index * 0.08 + 0.35);
+            
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            
+            osc.start(startTime + index * 0.08);
+            osc.stop(startTime + index * 0.08 + 0.4);
           });
+        } catch (e) {
+          console.error("Failed to play synthesized success sound:", e);
         }
+      }
 
-        overlay.classList.remove("opacity-0", "pointer-events-none");
-        overlay.classList.add("opacity-100", "pointer-events-auto");
-        content.classList.remove("scale-95");
-        content.classList.add("scale-100");
+      function submitPackage(e) {
+        try {
+          e.preventDefault();
+          const p = document.getElementById("pkg-name")?.value || "";
 
-        // Ẩn overlay sau 2 giây
-        setTimeout(() => {
-          overlay.classList.remove("opacity-100", "pointer-events-auto");
-          overlay.classList.add("opacity-0", "pointer-events-none");
-          content.classList.remove("scale-100");
-          content.classList.add("scale-95");
-        }, 2000);
+          // Lấy utm_source từ URL nếu có
+          const urlParams = new URLSearchParams(window.location.search);
+          const source = urlParams.get("utm_source") || "organic";
 
-        e.target.reset();
-        renderPotentialCustomers();
+          const showBanner =
+            document.getElementById("toggle-grand-opening-banner")?.checked ??
+            true;
+
+          const nameVal = p || "Khách hàng";
+          const phoneVal = document.getElementById("pkg-phone")?.value || "";
+          const streetVal = document.getElementById("pkg-street")?.value || "";
+          const wardVal = document.getElementById("pkg-ward")?.value || "";
+          const districtVal = document.getElementById("pkg-district")?.value || "";
+          
+          let addressVal = "Chưa cung cấp";
+          if (streetVal || wardVal || districtVal) {
+            addressVal = `${streetVal}${wardVal ? ', ' + wardVal : ''}${districtVal ? ', ' + districtVal : ''}, HCM`;
+          }
+
+          const checkedPkg = document.querySelector('input[name="pkg_duration"]:checked');
+          const pkgValue = checkedPkg ? checkedPkg.value : "target_20";
+
+          const newLead = {
+            id: Date.now(),
+            name: nameVal,
+            phone: phoneVal,
+            address: addressVal,
+            package: pkgValue,
+            source: source,
+            date: new Date(),
+            isGrandOpening: showBanner,
+            luckyPrize: document.getElementById("pkg-lucky-prize")?.value || "",
+          };
+
+          potentialCustomers.unshift(newLead);
+          
+          // Save to local storage immediately so it works perfectly in client-side SPA mode
+          try {
+            localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+          } catch (storageErr) {
+            console.error("Local storage save error:", storageErr);
+          }
+
+          syncStateToServer();
+          playSuccessSound();
+          try {
+            showToast("Đăng ký lộ trình thành công! NutriAdmin sẽ liên hệ bạn sớm.", "success");
+          } catch (err) {}
+
+          // Hiện overlay thông báo đăng ký
+          const overlay = document.getElementById("success-overlay");
+          const content = document.getElementById("success-overlay-content");
+
+          if (overlay && content) {
+            // Kích hoạt hiệu ứng Confetti khi đăng ký thành công
+            if (typeof confetti === "function") {
+              confetti({
+                particleCount: 150,
+                spread: 80,
+                origin: { y: 0.5 },
+                colors: ["#10B981", "#34D399", "#FCD34D", "#F87171"],
+              });
+            }
+
+            overlay.classList.remove("opacity-0", "pointer-events-none");
+            overlay.classList.add("opacity-100", "pointer-events-auto");
+            content.classList.remove("scale-95");
+            content.classList.add("scale-100");
+
+            // Ẩn overlay sau 2 giây
+            setTimeout(() => {
+              overlay.classList.remove("opacity-100", "pointer-events-auto");
+              overlay.classList.add("opacity-0", "pointer-events-none");
+              content.classList.remove("scale-100");
+              content.classList.add("scale-95");
+            }, 2000);
+          }
+
+          const formElement = e.target || document.querySelector('form[onsubmit="submitPackage(event)"]');
+          if (formElement && typeof formElement.reset === "function") {
+            formElement.reset();
+          }
+          
+          if (typeof renderPotentialCustomers === "function") {
+            renderPotentialCustomers();
+          }
+        } catch (error) {
+          console.error("Error in submitPackage:", error);
+          try {
+            showToast("Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại!", "error");
+          } catch (tErr) {}
+        }
       }
 
       // ==========================================
@@ -21082,7 +21474,82 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
           }
       }
 
+      window.checkWheelCooldown = function() {
+          const lastSpinTime = localStorage.getItem("nutriadmin_last_spin_time");
+          if (!lastSpinTime) {
+              localStorage.removeItem("nutriadmin_wheel_prize");
+              return { active: false, remainingMs: 0 };
+          }
+          const timeDiff = Date.now() - parseInt(lastSpinTime);
+          const cooldownMs = 60 * 60 * 1000; // 1 hour
+          if (timeDiff >= cooldownMs) {
+              localStorage.removeItem("nutriadmin_last_spin_time");
+              localStorage.removeItem("nutriadmin_wheel_prize");
+              return { active: false, remainingMs: 0 };
+          }
+          return { active: true, remainingMs: cooldownMs - timeDiff };
+      };
+
+      let cooldownInterval = null;
+      window.showCooldownModal = function(remainingMs) {
+          window.closeNeonWheelModal();
+          
+          const modal = document.getElementById("wheel-cooldown-modal");
+          if (!modal) return;
+          
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          
+          if (cooldownInterval) clearInterval(cooldownInterval);
+          
+          let msLeft = remainingMs;
+          
+          function updateTimerDisplay() {
+              if (msLeft <= 0) {
+                  clearInterval(cooldownInterval);
+                  modal.classList.add("hidden");
+                  modal.classList.remove("flex");
+                  localStorage.removeItem("nutriadmin_last_spin_time");
+                  localStorage.removeItem("nutriadmin_wheel_prize");
+                  return;
+              }
+              
+              const hrs = Math.floor(msLeft / (3600 * 1000));
+              const mins = Math.floor((msLeft % (3600 * 1000)) / (60 * 1000));
+              const secs = Math.floor((msLeft % (60 * 1000)) / 1000);
+              
+              const hStr = String(hrs).padStart(2, '0');
+              const mStr = String(mins).padStart(2, '0');
+              const sStr = String(secs).padStart(2, '0');
+              
+              const display = document.getElementById("cooldown-timer-display");
+              if (display) {
+                  display.innerText = `${hStr}:${mStr}:${sStr}`;
+              }
+              
+              msLeft -= 1000;
+          }
+          
+          updateTimerDisplay();
+          cooldownInterval = setInterval(updateTimerDisplay, 1000);
+      };
+
+      window.closeCooldownModal = function() {
+          const modal = document.getElementById("wheel-cooldown-modal");
+          if (modal) {
+              modal.classList.add("hidden");
+              modal.classList.remove("flex");
+          }
+          if (cooldownInterval) clearInterval(cooldownInterval);
+      };
+
       window.openWheelPopup = function() {
+          const cooldownStatus = window.checkWheelCooldown();
+          if (cooldownStatus.active) {
+              window.showCooldownModal(cooldownStatus.remainingMs);
+              return;
+          }
+          
           renderCustomerNeonWheel();
           document.getElementById('neon-wheel-modal').classList.remove('hidden');
           document.getElementById('neon-wheel-modal').classList.add('flex');
@@ -21138,6 +21605,14 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
 
       window.spinNeonWheel = function() {
           if (isWheeling) return;
+          
+          const cooldownStatus = window.checkWheelCooldown();
+          if (cooldownStatus.active) {
+              window.showCooldownModal(cooldownStatus.remainingMs);
+              return;
+          }
+          
+          localStorage.setItem("nutriadmin_last_spin_time", Date.now().toString());
           isWheeling = true;
           
           if (wheelAudioTick) {
@@ -21208,11 +21683,23 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
               }
               
               const wonText = wheelConfig[prizeIndex].text;
+              localStorage.setItem("nutriadmin_wheel_prize", wonText);
+              
               prizeTextEl.innerText = wonText;
               resultEl.classList.remove('opacity-0');
               resultEl.classList.add('opacity-100');
               applyBtn.classList.remove('hidden');
               if (prizeInput) prizeInput.value = wonText;
+
+              // Display the inline result under the wheel banner immediately!
+              const inlineResultContainer = document.getElementById("inline-wheel-result-container");
+              const inlinePrizeText = document.getElementById("inline-wheel-prize-text");
+              if (inlineResultContainer && inlinePrizeText) {
+                  inlinePrizeText.innerText = wonText;
+                  inlineResultContainer.classList.remove("hidden");
+                  inlineResultContainer.classList.add("flex");
+                  inlineResultContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+              }
 
           }, 5000);
       };
@@ -22099,5 +22586,7 @@ Không cần ghi tiêu đề, trả lời trực tiếp bằng tiếng Việt, c
         .getElementById("pricing-modal")
         .addEventListener("click", closePricingModal);
     </script>
+    <!-- Real-time Admin Notification Container -->
+    <div id="realtime-notification-container" class="fixed top-6 right-6 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
   </body>
 </html>
