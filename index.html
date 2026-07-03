@@ -6800,9 +6800,10 @@
                   id="mascot-time-prev"
                   class="text-[10px] font-bold text-slate-400 mb-2"
                 ></span>
+                <div id="personal-mascot-prev-svg" class="w-24 h-24 flex items-center justify-center"></div>
                 <img
                   id="personal-mascot-prev"
-                  class="w-24 h-24 object-contain opacity-50 transition-all duration-300"
+                  class="w-24 h-24 object-contain opacity-50 transition-all duration-300 hidden"
                   alt="Mascot trước"
                 />
               </div>
@@ -6811,9 +6812,10 @@
                   id="mascot-time-curr"
                   class="text-xs font-bold text-emerald-600 mb-2"
                 ></span>
+                <div id="personal-mascot-img-svg" class="w-[384px] h-[384px] flex items-center justify-center"></div>
                 <img
                   id="personal-mascot-img"
-                  class="w-48 h-48 object-contain drop-shadow-xl transition-all duration-300"
+                  class="w-[384px] h-[384px] object-contain drop-shadow-xl transition-all duration-300 hidden"
                   alt="Mascot hiện tại"
                 />
               </div>
@@ -6822,9 +6824,10 @@
                   id="mascot-time-next"
                   class="text-[10px] font-bold text-slate-400 mb-2"
                 ></span>
+                <div id="personal-mascot-next-svg" class="w-24 h-24 flex items-center justify-center"></div>
                 <img
                   id="personal-mascot-next"
-                  class="w-24 h-24 object-contain opacity-50 transition-all duration-300"
+                  class="w-24 h-24 object-contain opacity-50 transition-all duration-300 hidden"
                   alt="Mascot tiếp theo"
                 />
               </div>
@@ -11334,6 +11337,7 @@
               "nutriadmin_purchased_customers",
               JSON.stringify(purchasedCustomers),
             );
+            localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
           } catch (storageErr) {
             console.error("Local storage sync error:", storageErr);
           }
@@ -11503,7 +11507,10 @@
           updatedUI = true;
         }
         if (serverState.dishes) dishes = serverState.dishes;
-        if (serverState.inventory) inventory = serverState.inventory;
+        if (serverState.inventory) {
+          inventory = serverState.inventory;
+          localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
+        }
         if (serverState.trackingSources)
           trackingSources = serverState.trackingSources;
         if (serverState.discountCodes)
@@ -11998,27 +12005,58 @@
         { id: "sauce", name: "Nước sốt" },
       ];
 
-      let inventory = [
-        { id: 1, name: "Thịt Bò", category: "Thịt", unit: "kg", stock: 15.5 },
-        { id: 2, name: "Thịt Gà", category: "Thịt", unit: "kg", stock: 20 },
-        { id: 3, name: "Thịt Heo", category: "Thịt", unit: "kg", stock: 12 },
-        { id: 4, name: "Xà Lách", category: "Rau củ", unit: "kg", stock: 5 },
-        {
-          id: 5,
-          name: "Khoai Lang",
-          category: "Rau củ",
-          unit: "kg",
-          stock: 10,
-        },
-        {
-          id: 6,
-          name: "Cơm Gạo Lứt",
-          category: "Tinh bột",
-          unit: "kg",
-          stock: 8,
-        },
-        { id: 7, name: "Hải Sản", category: "Thủy Sản", unit: "kg", stock: 6 },
-      ];
+      function getNormalizedCategory(cat) {
+        if (!cat) return "Khác";
+        const c = cat.toLowerCase();
+        if (c === "đạm" || c === "thịt" || c === "thủy sản") return "Đạm";
+        if (c === "tinh bột") return "Tinh bột";
+        if (c === "rau củ") return "Rau củ";
+        if (c === "nước sốt" || c === "gia vị") return "Nước sốt";
+        return "Khác";
+      }
+
+      let inventory = [];
+      try {
+        const localInv = localStorage.getItem("nutriadmin_inventory");
+        if (localInv) {
+          inventory = JSON.parse(localInv);
+        } else {
+          inventory = [
+            // Đạm
+            { id: 1, name: "Thịt Bò", category: "Đạm", unit: "kg", stock: 15.5 },
+            { id: 2, name: "Thịt Heo", category: "Đạm", unit: "kg", stock: 12.0 },
+            { id: 3, name: "Thịt Gà", category: "Đạm", unit: "kg", stock: 20.0 },
+            { id: 4, name: "Tôm", category: "Đạm", unit: "kg", stock: 8.5 },
+            { id: 5, name: "Cá", category: "Đạm", unit: "kg", stock: 10.0 },
+            { id: 6, name: "Trứng", category: "Đạm", unit: "quả", stock: 150 },
+
+            // Tinh bột
+            { id: 7, name: "Gạo Lứt", category: "Tinh bột", unit: "kg", stock: 15.0 },
+            { id: 8, name: "Gạo Trắng", category: "Tinh bột", unit: "kg", stock: 20.0 },
+            { id: 9, name: "Nui", category: "Tinh bột", unit: "kg", stock: 10.0 },
+            { id: 10, name: "Mỳ Ý", category: "Tinh bột", unit: "kg", stock: 12.0 },
+
+            // Rau củ
+            { id: 11, name: "Bông Cải Xanh", category: "Rau củ", unit: "kg", stock: 8.0 },
+            { id: 12, name: "Cà Rốt", category: "Rau củ", unit: "kg", stock: 10.0 },
+            { id: 13, name: "Bắp Mỹ", category: "Rau củ", unit: "kg", stock: 7.5 },
+            { id: 14, name: "Đậu Que", category: "Rau củ", unit: "kg", stock: 6.0 },
+            { id: 15, name: "Cải Bó Xôi", category: "Rau củ", unit: "kg", stock: 5.0 },
+            { id: 16, name: "Xà Lách Romanie", category: "Rau củ", unit: "kg", stock: 9.0 },
+            { id: 17, name: "Cà Chua Bi", category: "Rau củ", unit: "kg", stock: 6.5 },
+            { id: 18, name: "Ớt Chuông", category: "Rau củ", unit: "kg", stock: 7.0 },
+
+            // Nước sốt
+            { id: 19, name: "Tiêu Đen", category: "Nước sốt", unit: "lít", stock: 5.0 },
+            { id: 20, name: "Teriyaki", category: "Nước sốt", unit: "lít", stock: 4.5 },
+            { id: 21, name: "Soy Giner", category: "Nước sốt", unit: "lít", stock: 5.0 },
+            { id: 22, name: "Tỏi Thảo Mộc", category: "Nước sốt", unit: "lít", stock: 6.0 },
+            { id: 23, name: "Chua Ngọt", category: "Nước sốt", unit: "lít", stock: 5.5 }
+          ];
+        }
+      } catch (e) {
+        console.error("Failed to parse inventory:", e);
+      }
 
       // Giả định định lượng khi làm món (kg/món)
       const dishIngredients = {
@@ -14724,8 +14762,11 @@
         }
 
         // Suggestions
+        const hiddenKeywordsSug = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+          dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+        );
         const suggestedDishes = [...dishes]
-          .filter((d) => d.isActive)
+          .filter((d) => d.isActive !== false && d.sizes && !d.isCustom && (!hiddenKeywordsSug.some(kw => d.name.includes(kw) || (d.ingredients && d.ingredients.includes(kw)))))
           .sort(() => 0.5 - Math.random())
           .slice(0, 4);
         const sugContainer = document.getElementById("profile-suggestions");
@@ -14807,8 +14848,12 @@
 
       function updatePersonalMascot() {
         const mascotImg = document.getElementById("personal-mascot-img");
+        const mascotImgSvg = document.getElementById("personal-mascot-img-svg");
         const mascotPrevImg = document.getElementById("personal-mascot-prev");
+        const mascotPrevImgSvg = document.getElementById("personal-mascot-prev-svg");
         const mascotNextImg = document.getElementById("personal-mascot-next");
+        const mascotNextImgSvg = document.getElementById("personal-mascot-next-svg");
+
         if (!mascotImg) return;
 
         const timePrevStr = document.getElementById("mascot-time-prev");
@@ -14876,7 +14921,11 @@
         if (window.personalMascotInterval)
           clearInterval(window.personalMascotInterval);
 
-        function setupMascot(imgElement, slot) {
+        // ALWAYS prefer activeMascotId if set, so user's manual selection (e.g. ngac_nhien) takes effect
+        const currentSlotId = activeMascotId || currentSlot.id;
+        const currentSlotObj = { id: currentSlotId, label: currentSlot.label };
+
+        function setupMascot(imgElement, svgElement, slot) {
           if (!imgElement) return null;
           let frames = [];
           if (
@@ -14894,29 +14943,70 @@
           }
 
           if (frames.length > 0) {
+            if (svgElement) svgElement.classList.add("hidden");
             imgElement.classList.remove("hidden");
             imgElement.src = frames[0];
-            return frames;
+            return { type: "img", frames: frames };
           } else {
             imgElement.classList.add("hidden");
-            return null;
+            if (svgElement) svgElement.classList.remove("hidden");
+            return { type: "svg", expressionId: slot.id };
           }
         }
 
-        const currFrames = setupMascot(mascotImg, currentSlot);
-        const prevFrames = setupMascot(mascotPrevImg, prevSlot);
-        const nextFrames = setupMascot(mascotNextImg, nextSlot);
+        const currObj = setupMascot(mascotImg, mascotImgSvg, currentSlotObj);
+        const prevObj = setupMascot(mascotPrevImg, mascotPrevImgSvg, prevSlot);
+        const nextObj = setupMascot(mascotNextImg, mascotNextImgSvg, nextSlot);
 
         let frameIdx = 0;
+        const updateAllFrames = () => {
+          // Current
+          if (currObj) {
+            if (currObj.type === "img") {
+              mascotImg.src = currObj.frames[frameIdx % currObj.frames.length];
+            } else if (currObj.type === "svg" && typeof drawMascotSVG === "function") {
+              let svgStr = drawMascotSVG(currObj.expressionId, frameIdx);
+              svgStr = svgStr.replace(
+                'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+                'class="w-full h-full drop-shadow-xl"'
+              );
+              mascotImgSvg.innerHTML = svgStr;
+            }
+          }
+          // Prev
+          if (prevObj) {
+            if (prevObj.type === "img") {
+              mascotPrevImg.src = prevObj.frames[frameIdx % prevObj.frames.length];
+            } else if (prevObj.type === "svg" && typeof drawMascotSVG === "function") {
+              let svgStr = drawMascotSVG(prevObj.expressionId, frameIdx);
+              svgStr = svgStr.replace(
+                'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+                'class="w-full h-full opacity-50"'
+              );
+              mascotPrevImgSvg.innerHTML = svgStr;
+            }
+          }
+          // Next
+          if (nextObj) {
+            if (nextObj.type === "img") {
+              mascotNextImg.src = nextObj.frames[frameIdx % nextObj.frames.length];
+            } else if (nextObj.type === "svg" && typeof drawMascotSVG === "function") {
+              let svgStr = drawMascotSVG(nextObj.expressionId, frameIdx);
+              svgStr = svgStr.replace(
+                'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+                'class="w-full h-full opacity-50"'
+              );
+              mascotNextImgSvg.innerHTML = svgStr;
+            }
+          }
+        };
+
+        updateAllFrames();
+
         window.personalMascotInterval = setInterval(
           () => {
             frameIdx++;
-            if (currFrames)
-              mascotImg.src = currFrames[frameIdx % currFrames.length];
-            if (prevFrames)
-              mascotPrevImg.src = prevFrames[frameIdx % prevFrames.length];
-            if (nextFrames)
-              mascotNextImg.src = nextFrames[frameIdx % nextFrames.length];
+            updateAllFrames();
           },
           1000 / (typeof mascotFps !== "undefined" ? mascotFps : 12),
         );
@@ -17524,7 +17614,7 @@
         if (subContainer) {
           if (currentFilter === "complete") {
             subContainer.classList.remove("hidden");
-            const proteins = dishes.filter((d) => d.category === "protein");
+            const proteins = dishes.filter((d) => d.category === "protein" && d.isActive !== false);
             const subCats = [{ id: "all", name: "Tất cả" }].concat(
               proteins.map((p) => ({ id: p.id.toString(), name: p.name })),
             );
@@ -17863,13 +17953,161 @@
             lastStateStr = "";
             syncStateToServer();
           }
-          closeMethodEditModal();
+          window.recalculateCompleteDishes(); closeMethodEditModal();
           openCookingMethodModal(dishId);
         }
       }
 
       function closeCookingMethodModal() {
         document.getElementById("cooking-method-modal").classList.add("hidden");
+      }
+
+      function openCookingMethodModal(id) {
+        const dish = dishes.find((d) => d.id === id);
+        if (!dish || !dish.methods) return;
+
+        document.getElementById("cooking-modal-ingredient-name").innerText = dish.name;
+        
+        const listContainer = document.getElementById("cooking-methods-list");
+        listContainer.innerHTML = dish.methods.map((method, index) => {
+          const hasSImage = method.image && method.image.trim() !== "";
+          const standardPrice = (method.sizes && method.sizes.standard && method.sizes.standard.price) || 0;
+          const standardKcal = (method.sizes && method.sizes.standard && method.sizes.standard.kcal) || 0;
+          const standardProtein = (method.sizes && method.sizes.standard && method.sizes.standard.protein) || 0;
+          const standardCarbs = (method.sizes && method.sizes.standard && method.sizes.standard.carbs) || 0;
+          const standardFat = (method.sizes && method.sizes.standard && method.sizes.standard.fat) || 0;
+          const standardQty = method.sizes && method.sizes.standard && method.sizes.standard.mainIngredientQty;
+
+          const largePrice = (method.sizes && method.sizes.large && method.sizes.large.price) || 0;
+          const largeKcal = (method.sizes && method.sizes.large && method.sizes.large.kcal) || 0;
+          const largeProtein = (method.sizes && method.sizes.large && method.sizes.large.protein) || 0;
+          const largeCarbs = (method.sizes && method.sizes.large && method.sizes.large.carbs) || 0;
+          const largeFat = (method.sizes && method.sizes.large && method.sizes.large.fat) || 0;
+          const largeQty = method.sizes && method.sizes.large && method.sizes.large.mainIngredientQty;
+
+          return `
+            <div class="bg-white rounded-xl border border-slate-200 p-4 relative flex flex-col ${method.isHidden ? 'opacity-50' : ''}">
+                <div class="flex justify-between items-start mb-3 border-b border-emerald-100 pb-2">
+                    <div class="flex items-center gap-3">
+                        ${hasSImage ? `<img src="${method.image}" class="w-10 h-10 rounded-full object-cover border border-slate-200" />` : ''}
+                        <div>
+                            <h4 class="font-bold text-lg text-emerald-700 ${method.isHidden ? 'line-through text-slate-400' : ''}">
+                                ${!hasSImage ? '<i class="fa-solid fa-utensils mr-2 opacity-50"></i>' : ''}
+                                ${method.name}
+                            </h4>
+                            ${method.ingredients ? `<p class="text-xs text-slate-500 mt-0.5 line-clamp-1">${method.ingredients}</p>` : ''}
+                        </div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <button onclick="toggleCookingMethodVisibility(${id}, ${index})" class="text-slate-400 hover:text-amber-500 transition-colors cursor-pointer" title="${method.isHidden ? 'Hiện' : 'Tạm ẩn'}">
+                            <i class="fa-solid ${method.isHidden ? 'fa-eye' : 'fa-eye-slash'}"></i>
+                        </button>
+                        <button onclick="editCookingMethod(${id}, ${index})" class="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer" title="Sửa">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="space-y-3">
+                    <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-bold text-slate-700">Cơ bản <span class="text-emerald-600 font-medium ml-1">${formatCurrency(standardPrice)}đ</span></span>
+                            <span class="text-xs font-bold text-primary">${standardKcal} Kcal</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
+                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${standardProtein}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${standardCarbs}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${standardFat}g</p></div>
+                        </div>
+                        ${standardQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${standardQty} kg</p></div>` : ''}
+                    </div>
+                    <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-bold text-slate-700">Lớn <span class="text-amber-600 font-medium ml-1">${formatCurrency(largePrice)}đ</span></span>
+                            <span class="text-xs font-bold text-amber-600">${largeKcal} Kcal</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
+                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${largeProtein}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${largeCarbs}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${largeFat}g</p></div>
+                        </div>
+                        ${largeQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${largeQty} kg</p></div>` : ''}
+                    </div>
+                </div>
+            </div>
+          `;
+        }).join("");
+
+        document.getElementById("cooking-method-modal").classList.remove("hidden");
+      }
+
+      function toggleCookingMethodVisibility(dishId, methodIndex) {
+        const dish = dishes.find((d) => d.id === dishId);
+        if (dish && dish.methods && dish.methods[methodIndex]) {
+          dish.methods[methodIndex].isHidden = !dish.methods[methodIndex].isHidden;
+          if (typeof syncStateToServer === "function") {
+            lastStateStr = "";
+            syncStateToServer();
+          }
+          openCookingMethodModal(dishId);
+        }
+      }
+
+      function editCookingMethod(dishId, methodIndex) {
+        const dish = dishes.find((d) => d.id === dishId);
+        if (dish && dish.methods && dish.methods[methodIndex]) {
+          const method = dish.methods[methodIndex];
+          document.getElementById('method-edit-dish-id').value = dishId;
+          document.getElementById('method-edit-index').value = methodIndex;
+          
+          document.getElementById('me-name').value = method.name || "";
+          document.getElementById('me-image').value = method.image || "";
+          
+          const imgPreview = document.getElementById('me-image-preview');
+          if (imgPreview) {
+            if (method.image) {
+              imgPreview.src = method.image;
+              imgPreview.classList.remove('hidden');
+            } else {
+              imgPreview.classList.add('hidden');
+            }
+          }
+          
+          document.getElementById('me-ingredients').value = method.ingredients || "";
+          
+          if (method.sizes && method.sizes.standard) {
+            document.getElementById('me-s-price').value = method.sizes.standard.price || 0;
+            document.getElementById('me-s-kcal').value = method.sizes.standard.kcal || 0;
+            document.getElementById('me-s-protein').value = method.sizes.standard.protein || 0;
+            document.getElementById('me-s-carbs').value = method.sizes.standard.carbs || 0;
+            document.getElementById('me-s-fat').value = method.sizes.standard.fat || 0;
+            document.getElementById('me-s-main-qty').value = method.sizes.standard.mainIngredientQty || "";
+          } else {
+            ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
+              const el = document.getElementById('me-s-' + k);
+              if (el) el.value = 0;
+            });
+            const qEl = document.getElementById('me-s-main-qty');
+            if (qEl) qEl.value = "";
+          }
+          
+          if (method.sizes && method.sizes.large) {
+            document.getElementById('me-l-price').value = method.sizes.large.price || 0;
+            document.getElementById('me-l-kcal').value = method.sizes.large.kcal || 0;
+            document.getElementById('me-l-protein').value = method.sizes.large.protein || 0;
+            document.getElementById('me-l-carbs').value = method.sizes.large.carbs || 0;
+            document.getElementById('me-l-fat').value = method.sizes.large.fat || 0;
+            document.getElementById('me-l-main-qty').value = method.sizes.large.mainIngredientQty || "";
+          } else {
+            ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
+              const el = document.getElementById('me-l-' + k);
+              if (el) el.value = 0;
+            });
+            const qEl = document.getElementById('me-l-main-qty');
+            if (qEl) qEl.value = "";
+          }
+          
+          document.getElementById('method-edit-modal').classList.remove('hidden');
+        }
       }
 
       function compressMascotImage(
@@ -18045,6 +18283,7 @@
           dishes.unshift(dishData);
           showToast("Thêm nguyên liệu mới thành công!");
         }
+        window.recalculateCompleteDishes();
         closeModal();
         renderDishes();
       }
@@ -18609,8 +18848,12 @@
           defaultAdvice,
         );
 
+        const hiddenKeywordsAI = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+          dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+        );
         const activeDishes = dishes.filter(
-          (d) => d.isActive && !d.isCustom && d.sizes,
+          (d) => d.isActive !== false && !d.isCustom && d.sizes && 
+          (!hiddenKeywordsAI.some(kw => d.name.includes(kw) || (d.ingredients && d.ingredients.includes(kw))))
         );
         let pRatio, cRatio, fRatio;
 
@@ -20198,13 +20441,17 @@
         const container = document.getElementById("customer-menu-list");
         if (!container) return;
 
+        const hiddenKeywords = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+          dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+        );
         let activeDishes = dishes.filter(
           (d) =>
-            d.isActive &&
+            d.isActive !== false &&
             !d.isCustom &&
             d.sizes &&
             (currentCustomerFilter === "all" ||
-              d.category === currentCustomerFilter),
+              d.category === currentCustomerFilter) &&
+            (!hiddenKeywords.some(kw => d.name.includes(kw) || (d.ingredients && d.ingredients.includes(kw))))
         );
 
         if (currentCustomerFilter === "complete" && currentCustomerSubFilter !== "all") {
@@ -20333,6 +20580,10 @@
         let subtotal = 0;
         container.innerHTML = cart
           .map((item, index) => {
+            const dishObj = dishes.find(d => d.id === item.dishId);
+            if (dishObj && dishObj.sizes && dishObj.sizes[item.sizeKey]) {
+                item.price = dishObj.sizes[item.sizeKey].price || item.price;
+            }
             subtotal += item.price * item.qty;
             return `
                       <div class="flex justify-between items-start border-b border-slate-200 pb-2 mb-2">
@@ -21593,9 +21844,37 @@
         const container = document.getElementById("inventory-list");
         if (!container) return;
 
-        container.innerHTML = inventory
-          .map((item) => {
-            let stockClass = "text-slate-800";
+        const cats = ["Đạm", "Tinh bột", "Rau củ", "Nước sốt", "Khác"];
+        const catIcons = {
+          "Đạm": `<i class="fa-solid fa-egg text-rose-500 mr-2"></i>`,
+          "Tinh bột": `<i class="fa-solid fa-wheat-awn text-amber-500 mr-2"></i>`,
+          "Rau củ": `<i class="fa-solid fa-carrot text-emerald-500 mr-2"></i>`,
+          "Nước sốt": `<i class="fa-solid fa-jar text-blue-500 mr-2"></i>`,
+          "Khác": `<i class="fa-solid fa-box text-slate-500 mr-2"></i>`
+        };
+
+        let html = "";
+
+        cats.forEach((catName) => {
+          const items = inventory.filter(item => getNormalizedCategory(item.category) === catName);
+          if (items.length === 0) return;
+
+          // Category header row
+          html += `
+            <tr class="bg-slate-50/50">
+              <td colspan="3" class="p-3 pl-4 text-xs font-bold uppercase tracking-wider text-slate-600 border-y border-slate-100">
+                <div class="flex items-center">
+                  ${catIcons[catName] || ""}
+                  <span>Nhóm ${catName}</span>
+                  <span class="ml-2 bg-slate-200/60 text-slate-600 text-[10px] px-1.5 py-0.5 rounded-full font-medium">${items.length} nguyên liệu</span>
+                </div>
+              </td>
+            </tr>
+          `;
+
+          // Items rows
+          items.forEach((item) => {
+            let stockClass = "text-slate-800 font-medium";
             let alertTrigger = "";
             if (item.stock < 5) {
               stockClass = "text-red-500 font-bold";
@@ -21603,20 +21882,28 @@
             } else if (item.stock < 10) {
               stockClass = "text-amber-500 font-bold";
             }
-            return `
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="p-4 font-medium text-slate-800">${item.name} ${alertTrigger}</td>
-                    <td class="p-4"><span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg">${item.category}</span></td>
-                    <td class="p-4 text-right ${stockClass}">
-                      <div class="flex items-center justify-end gap-3">
-                        <span>${item.stock.toFixed(2)} ${item.unit}</span>
-                        <button onclick="editInventoryStock(${item.id})" class="text-slate-400 hover:text-indigo-600 transition-colors" title="Cập nhật tồn kho"><i class="fa-solid fa-pen-to-square"></i></button>
-                      </div>
-                    </td>
-                  </tr>
-                `;
-          })
-          .join("");
+            html += `
+              <tr class="hover:bg-slate-50/30 transition-colors">
+                <td class="p-3 pl-6 font-medium text-slate-800 text-sm">
+                  <div class="flex items-center gap-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span>
+                    <span>${item.name}</span>
+                    ${alertTrigger}
+                  </div>
+                </td>
+                <td class="p-3"><span class="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-lg">${item.category}</span></td>
+                <td class="p-3 text-right ${stockClass}">
+                  <div class="flex items-center justify-end gap-3">
+                    <span class="font-mono text-sm">${item.stock.toFixed(2)} ${item.unit}</span>
+                    <button onclick="editInventoryStock(${item.id})" class="text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer" title="Cập nhật tồn kho"><i class="fa-solid fa-pen-to-square"></i></button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+        });
+
+        container.innerHTML = html;
       }
 
       function generateGroceryList() {
@@ -22075,6 +22362,126 @@
         }
       }
 
+      function deductStockForOrder(o) {
+        if (!o || o.deductedStock) return; // already deducted
+        o.items.forEach((item) => {
+          const dish = dishes.find((d) => d.id === item.dishId);
+          if (!dish) return;
+          const isLarge = item.sizeKey === "large";
+          const qtyMultiplier = item.qty || 1;
+          const sk = item.sizeKey || "standard";
+          
+          if (dish.category === "complete") {
+            const comps = dish.components || {};
+            // 1. Protein
+            const pId = comps.proteinId || dish.proteinId || 1;
+            const proteinItem = dishes.find(d => d.id === pId);
+            if (proteinItem) {
+              const invItem = inventory.find(inv => inv.id === proteinItem.id || inv.name.toLowerCase() === proteinItem.name.toLowerCase());
+              if (invItem) {
+                let mainQty = isLarge ? 0.25 : 0.15;
+                if (comps.methodName && proteinItem.methods) {
+                   const mObj = proteinItem.methods.find(m => m.name === comps.methodName);
+                   if (mObj && mObj.sizes && mObj.sizes[sk] && mObj.sizes[sk].mainIngredientQty) {
+                      mainQty = mObj.sizes[sk].mainIngredientQty;
+                   }
+                } else if (proteinItem.sizes && proteinItem.sizes[sk] && proteinItem.sizes[sk].mainIngredientQty) {
+                   mainQty = proteinItem.sizes[sk].mainIngredientQty;
+                }
+                invItem.stock -= mainQty * 1.1 * qtyMultiplier;
+                if (invItem.stock < 0) invItem.stock = 0;
+              }
+            }
+            // 2. Carb
+            const cId = comps.carbId || dish.carbId || 7;
+            const carbItem = dishes.find(d => d.id === cId);
+            if (carbItem) {
+              const invItem = inventory.find(inv => inv.id === carbItem.id || inv.name.toLowerCase() === carbItem.name.toLowerCase());
+              if (invItem) {
+                let mainQty = isLarge ? 0.25 : 0.15;
+                if (carbItem.sizes && carbItem.sizes[sk] && carbItem.sizes[sk].mainIngredientQty) {
+                   mainQty = carbItem.sizes[sk].mainIngredientQty;
+                }
+                invItem.stock -= mainQty * 1.1 * qtyMultiplier;
+                if (invItem.stock < 0) invItem.stock = 0;
+              }
+            }
+            // 3. Veggies
+            const vIds = comps.vegIds || dish.vegIds || [];
+            if (vIds.length > 0) {
+              vIds.forEach(vegId => {
+                const vegItem = dishes.find(d => d.id === vegId);
+                if (vegItem) {
+                  const invItem = inventory.find(inv => inv.id === vegItem.id || inv.name.toLowerCase() === vegItem.name.toLowerCase());
+                  if (invItem) {
+                    let mainQty = isLarge ? 0.08 : 0.05;
+                    if (vegItem.sizes && vegItem.sizes[sk] && vegItem.sizes[sk].mainIngredientQty) {
+                       mainQty = vegItem.sizes[sk].mainIngredientQty;
+                    }
+                    invItem.stock -= mainQty * 1.1 * qtyMultiplier;
+                    if (invItem.stock < 0) invItem.stock = 0;
+                  }
+                }
+              });
+            } else {
+              dishes.filter(d => d.category === "veggies").forEach(veg => {
+                if (dish.ingredients && dish.ingredients.toLowerCase().includes(veg.name.toLowerCase())) {
+                  const invItem = inventory.find(inv => inv.id === veg.id || inv.name.toLowerCase() === veg.name.toLowerCase());
+                  if (invItem) {
+                    let mainQty = isLarge ? 0.08 : 0.05;
+                    if (veg.sizes && veg.sizes[sk] && veg.sizes[sk].mainIngredientQty) {
+                       mainQty = veg.sizes[sk].mainIngredientQty;
+                    }
+                    invItem.stock -= mainQty * 1.1 * qtyMultiplier;
+                    if (invItem.stock < 0) invItem.stock = 0;
+                  }
+                }
+              });
+            }
+            // 4. Sauce
+            const sId = comps.sauceId || dish.sauceId || 19;
+            const sauceItem = dishes.find(d => d.id === sId);
+            if (sauceItem) {
+              const invItem = inventory.find(inv => inv.id === sauceItem.id || inv.name.toLowerCase() === sauceItem.name.toLowerCase());
+              if (invItem) {
+                let mainQty = isLarge ? 0.05 : 0.03;
+                if (sauceItem.sizes && sauceItem.sizes[sk] && sauceItem.sizes[sk].mainIngredientQty) {
+                   mainQty = sauceItem.sizes[sk].mainIngredientQty;
+                }
+                invItem.stock -= mainQty * 1.1 * qtyMultiplier;
+                if (invItem.stock < 0) invItem.stock = 0;
+              }
+            }
+          } else {
+            // Direct menu component ordered
+            const invItem = inventory.find(inv => inv.id === dish.id || inv.name.toLowerCase() === dish.name.toLowerCase());
+            if (invItem) {
+              let qty = isLarge ? 0.25 : 0.15;
+              if (dish.category === "veggies") {
+                qty = isLarge ? 0.15 : 0.10;
+              } else if (dish.category === "sauce") {
+                qty = isLarge ? 0.05 : 0.03;
+              }
+              if (dish.sizes && dish.sizes[sk] && dish.sizes[sk].mainIngredientQty) {
+                 qty = dish.sizes[sk].mainIngredientQty;
+              } else if (dish.methods && dish.methods.length > 0 && dish.methods[0].sizes && dish.methods[0].sizes[sk] && dish.methods[0].sizes[sk].mainIngredientQty) {
+                 qty = dish.methods[0].sizes[sk].mainIngredientQty;
+              }
+              invItem.stock -= qty * 1.1 * qtyMultiplier;
+              if (invItem.stock < 0) invItem.stock = 0;
+            }
+          }
+        });
+        o.deductedStock = true;
+        syncStateToServer();
+        if (
+          document.getElementById("view-inventory") &&
+          !document.getElementById("view-inventory").classList.contains("hidden")
+        ) {
+          renderInventory();
+        }
+      }
+
       function updateOrderStatus(id, s) {
         const o = orders.find((x) => x.id === id);
         if (o) {
@@ -22085,7 +22492,11 @@
             sendZaloNotification(o, s);
           }
 
-          // Trừ tồn kho và cộng điểm nếu trạng thái là completed và trước đó chưa completed
+          // Trừ tồn kho và cộng điểm nếu trạng thái chuyển sang delivering hoặc completed
+          if (s === "delivering" || s === "completed") {
+            deductStockForOrder(o);
+          }
+
           if (s === "completed" && oldStatus !== "completed") {
             // Cộng điểm cho customer
             const customer =
@@ -22104,42 +22515,6 @@
                   JSON.stringify(currentUser),
                 );
               }
-            }
-
-            o.items.forEach((item) => {
-              const dish = dishes.find((d) => d.id === item.dishId);
-              if (dish && dishIngredients[dish.category]) {
-                dishIngredients[dish.category].forEach((ing, index) => {
-                  let finalQty = ing.qty;
-                  if (index === 0) {
-                    if (
-                      item.sizeKey === "standard" &&
-                      dish.sizes.standard.mainIngredientQty
-                    ) {
-                      finalQty = dish.sizes.standard.mainIngredientQty;
-                    } else if (
-                      item.sizeKey === "large" &&
-                      dish.sizes.large.mainIngredientQty
-                    ) {
-                      finalQty = dish.sizes.large.mainIngredientQty;
-                    }
-                  }
-
-                  const invItem = inventory.find((inv) => inv.id === ing.id);
-                  if (invItem) {
-                    invItem.stock -= finalQty * item.qty;
-                    if (invItem.stock < 0) invItem.stock = 0;
-                  }
-                });
-              }
-            });
-            if (
-              document.getElementById("view-inventory") &&
-              !document
-                .getElementById("view-inventory")
-                .classList.contains("hidden")
-            ) {
-              renderInventory();
             }
           }
 
@@ -22189,38 +22564,13 @@
           const orderId = cb.value;
           const o = orders.find((x) => x.id === orderId);
           if (o && o.status !== newStatus) {
-            const oldStatus = o.status;
             o.status = newStatus;
 
-            if (newStatus === "completed" && oldStatus !== "completed") {
-              o.items.forEach((item) => {
-                const dish = dishes.find((d) => d.id === item.dishId);
-                if (dish && dishIngredients[dish.category]) {
-                  dishIngredients[dish.category].forEach((ing, index) => {
-                    let finalQty = ing.qty;
-                    if (index === 0) {
-                      if (
-                        item.sizeKey === "standard" &&
-                        dish.sizes.standard.mainIngredientQty
-                      ) {
-                        finalQty = dish.sizes.standard.mainIngredientQty;
-                      } else if (
-                        item.sizeKey === "large" &&
-                        dish.sizes.large.mainIngredientQty
-                      ) {
-                        finalQty = dish.sizes.large.mainIngredientQty;
-                      }
-                    }
-
-                    const invItem = inventory.find((inv) => inv.id === ing.id);
-                    if (invItem) {
-                      invItem.stock -= finalQty * item.qty;
-                      if (invItem.stock < 0) invItem.stock = 0;
-                    }
-                  });
-                }
-              });
+            // Deduct inventory when switching to delivering or completed
+            if (newStatus === "delivering" || newStatus === "completed") {
+              deductStockForOrder(o);
             }
+
             updatedCount++;
           }
         });
@@ -24364,7 +24714,12 @@
           `Khách hàng: ${customerName} • Size mặc định gói: ${customerSize === "large" ? "Lớn" : "Cơ bản"}`;
 
         // Build categories
-        const activeDishes = dishes.filter((x) => x.isActive && !x.isCustom);
+        const hiddenKeywordsPicker = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+          dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+        );
+        const activeDishes = dishes.filter((x) => x.isActive !== false && !x.isCustom && 
+          (!hiddenKeywordsPicker.some(kw => x.name.includes(kw) || (x.ingredients && x.ingredients.includes(kw))))
+        );
         const categories = ["all"];
         activeDishes.forEach((d) => {
           if (d.category && !categories.includes(d.category)) {
@@ -24409,7 +24764,12 @@
         const catsContainer = document.getElementById("dish-picker-categories");
         if (catsContainer) {
           const buttons = catsContainer.querySelectorAll("button");
-          const activeDishes = dishes.filter((x) => x.isActive && !x.isCustom);
+          const hiddenKeywordsPicker = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+            dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+          );
+          const activeDishes = dishes.filter((x) => x.isActive !== false && !x.isCustom && 
+            (!hiddenKeywordsPicker.some(kw => x.name.includes(kw) || (x.ingredients && x.ingredients.includes(kw))))
+          );
           const categories = ["all"];
           activeDishes.forEach((d) => {
             if (d.category && !categories.includes(d.category)) {
@@ -24437,7 +24797,12 @@
         if (!grid) return;
 
         // Filter dishes
-        const activeDishes = dishes.filter((x) => x.isActive && !x.isCustom);
+        const hiddenKeywordsPicker = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+            dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+          );
+          const activeDishes = dishes.filter((x) => x.isActive !== false && !x.isCustom && 
+            (!hiddenKeywordsPicker.some(kw => x.name.includes(kw) || (x.ingredients && x.ingredients.includes(kw))))
+          );
         const filteredDishes =
           currentCategoryFilter === "all"
             ? activeDishes
@@ -24588,8 +24953,12 @@
         if (dishSelect) {
           let dishOpts = '<option value="">-- Chọn món ăn --</option>';
           if (typeof dishes !== "undefined" && Array.isArray(dishes)) {
+            const hiddenKeywordsQO = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
+              dishes.flatMap(d => (d.methods || []).filter(m => m.isHidden).map(m => m.name)).filter(Boolean)
+            );
             const activeDishes = dishes.filter(
-              (d) => d.isActive && !d.isCustom && d.sizes,
+              (d) => d.isActive !== false && !d.isCustom && d.sizes &&
+              (!hiddenKeywordsQO.some(kw => d.name.includes(kw) || (d.ingredients && d.ingredients.includes(kw))))
             );
             activeDishes.forEach((d) => {
               dishOpts += `<option value="${d.id}">${d.name}</option>`;
@@ -29068,6 +29437,7 @@
           }
         });
 
+        if (typeof window.recalculateCompleteDishes === "function") window.recalculateCompleteDishes();
         renderDishes();
         initLocationDropdowns();
         renderLandingAuth();
@@ -30548,7 +30918,7 @@
 
         if (createDishStep === 1) {
           // Select protein, cooking method, and size
-          const proteins = dishes.filter((d) => d.category === "protein");
+          const proteins = dishes.filter((d) => d.category === "protein" && d.isActive !== false);
           html = `
             <div class="space-y-6">
               <div>
@@ -30627,7 +30997,7 @@
           `;
         } else if (createDishStep === 2) {
           // Select carb
-          const carbs = dishes.filter((d) => d.category === "carbs");
+          const carbs = dishes.filter((d) => d.category === "carbs" && d.isActive !== false);
           html = `
             <div class="space-y-4 animate-fadeIn">
               <div>
@@ -30663,7 +31033,7 @@
           `;
         } else if (createDishStep === 3) {
           // Select veggie
-          const veggies = dishes.filter((d) => d.category === "veggies");
+          const veggies = dishes.filter((d) => d.category === "veggies" && d.isActive !== false);
           const vegsLength = createDishData.vegs
             ? createDishData.vegs.length
             : 0;
@@ -30706,7 +31076,7 @@
           `;
         } else if (createDishStep === 4) {
           // Select sauce and customize name/preview
-          const sauces = dishes.filter((d) => d.category === "sauce");
+          const sauces = dishes.filter((d) => d.category === "sauce" && d.isActive !== false);
 
           // Generate default name
           const pName = createDishData.protein
@@ -30853,6 +31223,87 @@
         container.innerHTML = html;
       };
 
+      
+      window.recalculateCompleteDishes = function() {
+        if (typeof dishes === "undefined" || !Array.isArray(dishes)) return;
+        let changed = false;
+        dishes.filter(d => d.category === "complete" && d.components).forEach(d => {
+          let sumStandard = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumLarge = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          const comps = d.components;
+          
+          const addMacros = (sourceSizes) => {
+            if (sourceSizes.standard) {
+              sumStandard.kcal += sourceSizes.standard.kcal || 0;
+              sumStandard.protein += sourceSizes.standard.protein || 0;
+              sumStandard.carbs += sourceSizes.standard.carbs || 0;
+              sumStandard.fat += sourceSizes.standard.fat || 0;
+              sumStandard.price += sourceSizes.standard.price || 0;
+            }
+            if (sourceSizes.large) {
+              sumLarge.kcal += sourceSizes.large.kcal || 0;
+              sumLarge.protein += sourceSizes.large.protein || 0;
+              sumLarge.carbs += sourceSizes.large.carbs || 0;
+              sumLarge.fat += sourceSizes.large.fat || 0;
+              sumLarge.price += sourceSizes.large.price || 0;
+            }
+          };
+
+          // Protein & Method
+          const protein = dishes.find(x => x.id === comps.proteinId);
+          if (protein && protein.methods) {
+            const methodObj = protein.methods.find(m => m.name === comps.methodName);
+            if (methodObj && methodObj.sizes) {
+              addMacros(methodObj.sizes);
+            }
+          }
+          
+          // Carb
+          const carb = dishes.find(x => x.id === comps.carbId);
+          if (carb && carb.sizes) {
+            addMacros(carb.sizes);
+          }
+
+          // Vegs
+          if (comps.vegIds && Array.isArray(comps.vegIds)) {
+            comps.vegIds.forEach(vId => {
+              const veg = dishes.find(x => x.id === vId);
+              if (veg && veg.sizes) {
+                addMacros(veg.sizes);
+              }
+            });
+          }
+
+          // Sauce
+          const sauce = dishes.find(x => x.id === comps.sauceId);
+          if (sauce && sauce.sizes) {
+            addMacros(sauce.sizes);
+          }
+
+          if (!d.sizes) d.sizes = {};
+          if (!d.sizes.standard) d.sizes.standard = {};
+          if (!d.sizes.large) d.sizes.large = {};
+          
+          d.sizes.standard.kcal = sumStandard.kcal;
+          d.sizes.standard.protein = sumStandard.protein;
+          d.sizes.standard.carbs = sumStandard.carbs;
+          d.sizes.standard.fat = sumStandard.fat;
+          d.sizes.standard.price = sumStandard.price;
+
+          d.sizes.large.kcal = sumLarge.kcal;
+          d.sizes.large.protein = sumLarge.protein;
+          d.sizes.large.carbs = sumLarge.carbs;
+          d.sizes.large.fat = sumLarge.fat;
+          d.sizes.large.price = sumLarge.price;
+          
+          changed = true;
+        });
+        
+        if (changed && typeof syncStateToServer === "function") {
+          lastStateStr = "";
+          syncStateToServer();
+        }
+      };
       function getMacrosSum(sizeKey) {
         let sum = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
         if (createDishData.protein && createDishData.method) {
@@ -31001,6 +31452,13 @@
             ? createDishData.protein.image
             : "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80",
           ingredients: `${createDishData.protein.name} (${createDishData.method}), ${createDishData.carb.name}, ${vegsIngredients}, sốt ${createDishData.sauce.name}`,
+          components: {
+            proteinId: createDishData.protein ? createDishData.protein.id : null,
+            methodName: createDishData.method,
+            carbId: createDishData.carb ? createDishData.carb.id : null,
+            vegIds: createDishData.vegs ? createDishData.vegs.map(v => v.id) : [],
+            sauceId: createDishData.sauce ? createDishData.sauce.id : null
+          },
           sizes: {
             standard: {
               kcal: sumStandard.kcal,
