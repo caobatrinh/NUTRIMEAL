@@ -17753,9 +17753,10 @@
                                       `
                                       }
                                   </div>
-                                  <div class="mt-5 grid grid-cols-2 gap-2">
-                                      <button onclick="toggleDishStatus(${dish.id})" class="py-2 border border-slate-200 rounded-lg text-sm font-medium ${dish.isActive ? "text-amber-600 hover:bg-amber-50" : "text-primary hover:bg-emerald-50"} transition-colors"><i class="fa-solid ${dish.isActive ? "fa-eye-slash" : "fa-eye"} mr-1"></i> ${dish.isActive ? "Tạm ẩn" : "Hiện lại"}</button>
-                                      <button onclick="openModal('edit', ${dish.id})" class="py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa</button>
+                                  <div class="mt-4 grid grid-cols-3 gap-1">
+                                      <button onclick="toggleDishStatus(${dish.id})" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium ${dish.isActive ? "text-amber-600 hover:bg-amber-50" : "text-primary hover:bg-emerald-50"} transition-colors"><i class="fa-solid ${dish.isActive ? "fa-eye-slash" : "fa-eye"} mr-1"></i> ${dish.isActive ? "Ẩn" : "Hiện"}</button>
+                                      <button onclick="openModal('edit', ${dish.id})" class="py-1.5 border border-slate-200 rounded-lg text-[13px] font-medium text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-pen-to-square mr-1"></i> Sửa</button>
+                                      <button onclick="deleteDish(${dish.id})" class="py-1.5 border border-red-200 rounded-lg text-[13px] font-medium text-red-600 hover:bg-red-50 transition-colors"><i class="fa-solid fa-trash mr-1"></i> Xóa</button>
                                   </div>
                               </div>
                           </div>`,
@@ -18005,6 +18006,9 @@
                         <button onclick="editCookingMethod(${id}, ${index})" class="text-slate-400 hover:text-blue-500 transition-colors cursor-pointer" title="Sửa">
                             <i class="fa-solid fa-pen"></i>
                         </button>
+                        <button onclick="deleteCookingMethod(${id}, ${index})" class="text-slate-400 hover:text-red-500 transition-colors cursor-pointer" title="Xóa">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="space-y-3">
@@ -18052,6 +18056,25 @@
         }
       }
 
+      
+      window.deleteCookingMethod = function(dishId, methodIndex) {
+        if(confirm("Bạn có chắc chắn muốn xóa cách chế biến này?")) {
+           const dish = dishes.find(d => d.id === dishId);
+           if (dish && dish.methods && dish.methods.length > methodIndex) {
+             dish.methods.splice(methodIndex, 1);
+             if (typeof window.recalculateCompleteDishes === "function") {
+               window.recalculateCompleteDishes();
+             }
+             openCookingMethodModal(dishId);
+             if (typeof syncStateToServer === "function") {
+               lastStateStr = "";
+               syncStateToServer();
+             }
+             showToast("Đã xóa cách chế biến!");
+           }
+        }
+      };
+      
       function editCookingMethod(dishId, methodIndex) {
         const dish = dishes.find((d) => d.id === dishId);
         if (dish && dish.methods && dish.methods[methodIndex]) {
@@ -18288,6 +18311,22 @@
         renderDishes();
       }
 
+      
+      window.deleteDish = function(id) {
+        if(confirm("Bạn có chắc chắn muốn xóa món/nguyên liệu này?")) {
+           const idx = dishes.findIndex(d => d.id === id);
+           if (idx !== -1) {
+             dishes.splice(idx, 1);
+             if (typeof window.recalculateCompleteDishes === "function") {
+               window.recalculateCompleteDishes();
+             }
+             renderDishes();
+             if (typeof syncStateToServer === "function") syncStateToServer();
+             showToast("Đã xóa thành công!");
+           }
+        }
+      };
+      
       function toggleDishStatus(id) {
         const dish = dishes.find((d) => d.id === id);
         if (dish) {
