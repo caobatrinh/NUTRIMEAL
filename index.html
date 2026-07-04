@@ -1546,7 +1546,7 @@
           ></div>
         </div>
         <div
-          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6"
           id="dish-grid"
         ></div>
       </div>
@@ -2016,7 +2016,7 @@
                     Hãy tải lên mã QR nhận tiền của bạn.
                   </p>
 
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- MOMO -->
                     <div
                       class="border border-slate-200 rounded-xl p-4 bg-slate-50"
@@ -7334,7 +7334,7 @@
           </div>
 
           <div
-            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             id="admin-orders-container"
           ></div>
         </div>
@@ -7431,6 +7431,9 @@
               </p>
             </div>
             <div class="flex items-center gap-2">
+              <button onclick="openKitchenCalculator()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 px-3 py-2 rounded-lg text-sm font-medium transition-colors hidden md:block">
+                <i class="fa-solid fa-calculator mr-1"></i> Tính nguyên liệu
+              </button>
               <span class="text-sm font-semibold text-slate-600"
                 >Lọc theo TG giao:</span
               >
@@ -7717,6 +7720,73 @@
         }
       }
     </style>
+
+    
+    <!-- Modal: Kitchen Calculator -->
+    <div
+      id="kitchen-calc-modal"
+      class="fixed inset-0 z-50 hidden"
+      aria-labelledby="kitchen-calc-title"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm"
+        onclick="closeKitchenCalculator()"
+      ></div>
+      <div class="fixed inset-0 z-10 overflow-y-auto">
+        <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0 pointer-events-none">
+          <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-4xl pointer-events-auto">
+            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100">
+              <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <i class="fa-solid fa-calculator text-indigo-600 text-lg"></i>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left flex-1">
+                  <h3 class="text-xl font-bold leading-6 text-slate-900" id="kitchen-calc-title">
+                    Thống kê nguyên liệu / cách chế biến
+                  </h3>
+                  <div class="mt-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <!-- Todo -->
+                      <div class="border border-rose-200 rounded-xl bg-rose-50/30 overflow-hidden">
+                        <div class="bg-rose-100/50 px-3 py-2 border-b border-rose-200 text-rose-800 font-bold text-center">
+                          Cần làm
+                        </div>
+                        <div class="p-3" id="calc-todo-content"></div>
+                      </div>
+                      <!-- Cooking -->
+                      <div class="border border-amber-200 rounded-xl bg-amber-50/30 overflow-hidden">
+                        <div class="bg-amber-100/50 px-3 py-2 border-b border-amber-200 text-amber-800 font-bold text-center">
+                          Đang nấu
+                        </div>
+                        <div class="p-3" id="calc-cooking-content"></div>
+                      </div>
+                      <!-- Done -->
+                      <div class="border border-emerald-200 rounded-xl bg-emerald-50/30 overflow-hidden">
+                        <div class="bg-emerald-100/50 px-3 py-2 border-b border-emerald-200 text-emerald-800 font-bold text-center">
+                          Chờ lấy/giao
+                        </div>
+                        <div class="p-3" id="calc-done-content"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <button
+                type="button"
+                onclick="closeKitchenCalculator()"
+                class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-medium text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Modal: Custom Prompt -->
     <div
@@ -8919,14 +8989,14 @@
                         dinh dưỡng theo Size
                       </h4>
                     </div>
-                    <div class="p-4 grid gap-4 sm:grid-cols-2">
+                    <div class="p-4 grid gap-4 sm:grid-cols-3">
                       <div
                         class="bg-white border border-slate-200 rounded-lg p-3"
                       >
                         <p
                           class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
                         >
-                          Size Tiêu chuẩn
+                          Size Lean (S)
                         </p>
                         <div class="mb-3">
                           <label class="text-xs text-slate-700 font-bold"
@@ -8998,7 +9068,79 @@
                         <p
                           class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
                         >
-                          Size Lớn
+                          Size Balance (M)
+                        </p>
+                        <div class="mb-3">
+                          <label class="text-xs text-slate-700 font-bold"
+                            >Giá bán (VNĐ)
+                            <span class="text-red-500">*</span></label
+                          >
+                          <input
+                            type="number"
+                            id="m-price"
+                            required
+                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                          />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <label class="text-xs text-slate-500">Kcal</label
+                            ><input
+                              type="number"
+                              id="m-kcal"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500">Đạm (g)</label
+                            ><input
+                              type="number"
+                              id="m-protein"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500"
+                              >Tinh bột (g)</label
+                            ><input
+                              type="number"
+                              id="m-carbs"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500">Béo (g)</label
+                            ><input
+                              type="number"
+                              id="m-fat"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div class="mb-3 border-t pt-3 mt-3">
+                          <label class="text-xs text-slate-700 font-bold"
+                            >Định lượng nguyên liệu chính (kg)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            id="m-main-ingQty"
+                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                            placeholder="VD: 0.15"
+                          />
+                        </div>
+                      </div>
+                      <div
+                        class="bg-white border border-slate-200 rounded-lg p-3"
+                      >
+                        <p
+                          class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
+                        >
+                          Size Power (L)
                         </p>
                         <div class="mb-3">
                           <label class="text-xs text-slate-700 font-bold"
@@ -9065,6 +9207,18 @@
                         </div>
                       </div>
                     </div>
+                  </div>
+                  <div class="flex items-center mt-4 hidden" id="apply-to-all-methods-wrapper">
+                    <input
+                      type="checkbox"
+                      id="apply-to-all-methods"
+                      class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    />
+                    <label
+                      for="apply-to-all-methods"
+                      class="ml-2 block text-sm text-slate-700 cursor-pointer font-medium text-emerald-700"
+                      >Áp dụng chỉ số dinh dưỡng này cho toàn bộ cách chế biến (áp chảo, luộc,...)</label
+                    >
                   </div>
                   <div class="flex items-center mt-4">
                     <input
@@ -9191,7 +9345,7 @@
                       <i class="fa-solid fa-scale-balanced"></i> Chỉ số dinh
                       dưỡng theo Size
                     </h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <!-- Standard Size -->
                       <div
                         class="bg-white border border-slate-200 rounded-lg p-3"
@@ -9199,7 +9353,7 @@
                         <p
                           class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
                         >
-                          Size Tiêu chuẩn
+                          Size Lean (S)
                         </p>
                         <div class="mb-3">
                           <label class="text-xs text-slate-700 font-bold"
@@ -9265,6 +9419,78 @@
                           />
                         </div>
                       </div>
+                      <div
+                        class="bg-white border border-slate-200 rounded-lg p-3"
+                      >
+                        <p
+                          class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
+                        >
+                          Size Balance (M)
+                        </p>
+                        <div class="mb-3">
+                          <label class="text-xs text-slate-700 font-bold"
+                            >Giá bán (VNĐ)
+                            <span class="text-red-500">*</span></label
+                          >
+                          <input
+                            type="number"
+                            id="me-m-price"
+                            required
+                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                          />
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <label class="text-xs text-slate-500">Kcal</label
+                            ><input
+                              type="number"
+                              id="me-m-kcal"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500">Đạm (g)</label
+                            ><input
+                              type="number"
+                              id="me-m-protein"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500"
+                              >Tinh bột (g)</label
+                            ><input
+                              type="number"
+                              id="me-m-carbs"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-500">Béo (g)</label
+                            ><input
+                              type="number"
+                              id="me-m-fat"
+                              required
+                              class="w-full border rounded px-2 py-1 mt-1"
+                            />
+                          </div>
+                        </div>
+                        <div class="mb-3 border-t pt-3 mt-3">
+                          <label class="text-xs text-slate-700 font-bold"
+                            >Định lượng nguyên liệu chính (kg)</label
+                          >
+                          <input
+                            type="number"
+                            step="0.01"
+                            id="me-m-main-qty"
+                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
+                            placeholder="VD: 0.15"
+                          />
+                        </div>
+                      </div>
                       <!-- Large Size -->
                       <div
                         class="bg-white border border-slate-200 rounded-lg p-3"
@@ -9272,7 +9498,7 @@
                         <p
                           class="font-medium text-sm text-slate-800 mb-3 border-b pb-2"
                         >
-                          Size Lớn
+                          Size Power (L)
                         </p>
                         <div class="mb-3">
                           <label class="text-xs text-slate-700 font-bold"
@@ -9802,8 +10028,9 @@
                         id="purchased-size"
                         class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
                       >
-                        <option value="standard">Size Cơ Bản</option>
-                        <option value="large">Size Lớn</option>
+                        <option value="lean">Size Lean (S)</option>
+                        <option value="balance">Size Balance (M)</option>
+                        <option value="power">Size Power (L)</option>
                       </select>
                     </div>
                     <div>
@@ -10086,7 +10313,7 @@
             <div class="mb-4">
               <button
                 type="button"
-                onclick="selectDishPickerItem('', 'standard')"
+                onclick="selectDishPickerItem('', 'balance')"
                 class="w-full bg-white border border-dashed border-rose-300 hover:border-rose-500 text-rose-600 hover:bg-rose-50/50 py-3 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
               >
                 <i class="fa-solid fa-ban"></i> -- Bỏ qua bữa này --
@@ -10333,8 +10560,9 @@
                         id="qo-size-select"
                         class="w-full rounded-lg border border-slate-300 py-2 px-3 text-xs focus:ring-1 focus:ring-emerald-500 bg-white"
                       >
-                        <option value="standard">Cơ Bản (CB)</option>
-                        <option value="large">Size Lớn</option>
+                        <option value="lean">Lean (S)</option>
+                        <option value="balance">Balance (M)</option>
+                        <option value="power">Size Power (L)</option>
                       </select>
                     </div>
                     <button
@@ -11338,6 +11566,7 @@
               JSON.stringify(purchasedCustomers),
             );
             localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
+            localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
           } catch (storageErr) {
             console.error("Local storage sync error:", storageErr);
           }
@@ -12092,7 +12321,7 @@
             {
               name: "Nướng",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 250,
                   protein: 25,
                   carbs: 0,
@@ -12111,7 +12340,7 @@
             {
               name: "Áp chảo",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 260,
                   protein: 25,
                   carbs: 0,
@@ -12130,7 +12359,7 @@
             {
               name: "Xào",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 270,
                   protein: 24,
                   carbs: 2,
@@ -12149,7 +12378,7 @@
             {
               name: "Bằm",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 240,
                   protein: 23,
                   carbs: 0,
@@ -12168,7 +12397,7 @@
             {
               name: "Hầm",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 230,
                   protein: 25,
                   carbs: 0,
@@ -12198,7 +12427,7 @@
             {
               name: "Nướng",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 250,
                   protein: 25,
                   carbs: 0,
@@ -12217,7 +12446,7 @@
             {
               name: "Áp chảo",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 260,
                   protein: 25,
                   carbs: 0,
@@ -12236,7 +12465,7 @@
             {
               name: "Xào",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 270,
                   protein: 24,
                   carbs: 2,
@@ -12255,7 +12484,7 @@
             {
               name: "Hầm",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 230,
                   protein: 25,
                   carbs: 0,
@@ -12274,7 +12503,7 @@
             {
               name: "Bằm",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 240,
                   protein: 23,
                   carbs: 0,
@@ -12304,7 +12533,7 @@
             {
               name: "Nướng",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 150,
                   protein: 25,
                   carbs: 0,
@@ -12323,7 +12552,7 @@
             {
               name: "Áp chảo",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 160,
                   protein: 25,
                   carbs: 0,
@@ -12342,7 +12571,7 @@
             {
               name: "Xé",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 140,
                   protein: 24,
                   carbs: 0,
@@ -12361,7 +12590,7 @@
             {
               name: "Hầm",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 145,
                   protein: 25,
                   carbs: 0,
@@ -12391,7 +12620,7 @@
             {
               name: "Nướng",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 110,
                   protein: 20,
                   carbs: 0,
@@ -12410,7 +12639,7 @@
             {
               name: "Xào",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 130,
                   protein: 19,
                   carbs: 1,
@@ -12429,7 +12658,7 @@
             {
               name: "Luộc",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 100,
                   protein: 20,
                   carbs: 0,
@@ -12459,7 +12688,7 @@
             {
               name: "Nướng",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 160,
                   protein: 20,
                   carbs: 0,
@@ -12478,7 +12707,7 @@
             {
               name: "Áp chảo",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 170,
                   protein: 20,
                   carbs: 0,
@@ -12497,7 +12726,7 @@
             {
               name: "Hấp",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 150,
                   protein: 20,
                   carbs: 0,
@@ -12527,7 +12756,7 @@
             {
               name: "Luộc",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 140,
                   protein: 12,
                   carbs: 0,
@@ -12546,7 +12775,7 @@
             {
               name: "Cuộn",
               sizes: {
-                standard: {
+            balance: {
                   kcal: 160,
                   protein: 12,
                   carbs: 1,
@@ -12575,7 +12804,7 @@
             "https://images.unsplash.com/photo-1536304929831-ee1ca9d44906?w=500&q=80",
           ingredients: "Nguồn tinh bột",
           sizes: {
-            standard: {
+            balance: {
               kcal: 150,
               protein: 3,
               carbs: 30,
@@ -12594,7 +12823,7 @@
             "https://images.unsplash.com/photo-1586201375761-83865001e8ac?w=500&q=80",
           ingredients: "Nguồn tinh bột",
           sizes: {
-            standard: {
+            balance: {
               kcal: 150,
               protein: 3,
               carbs: 30,
@@ -12613,7 +12842,7 @@
             "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80",
           ingredients: "Nguồn tinh bột",
           sizes: {
-            standard: {
+            balance: {
               kcal: 150,
               protein: 5,
               carbs: 30,
@@ -12632,7 +12861,7 @@
             "https://images.unsplash.com/photo-1551183053-bf91a1d81141?w=500&q=80",
           ingredients: "Nguồn tinh bột",
           sizes: {
-            standard: {
+            balance: {
               kcal: 150,
               protein: 5,
               carbs: 30,
@@ -12653,7 +12882,7 @@
             "https://images.unsplash.com/photo-1459411621453-7b03977f4bfc?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 30, protein: 2, carbs: 5, fat: 0, price: 10000 },
+            balance: { kcal: 30, protein: 2, carbs: 5, fat: 0, price: 10000 },
             large: { kcal: 45, protein: 3, carbs: 7, fat: 0, price: 15000 },
           },
         },
@@ -12666,7 +12895,7 @@
             "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 30, protein: 1, carbs: 7, fat: 0, price: 10000 },
+            balance: { kcal: 30, protein: 1, carbs: 7, fat: 0, price: 10000 },
             large: { kcal: 45, protein: 1, carbs: 10, fat: 0, price: 15000 },
           },
         },
@@ -12679,7 +12908,7 @@
             "https://images.unsplash.com/photo-1551754655-cd27e38d2076?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 50, protein: 2, carbs: 10, fat: 0, price: 10000 },
+            balance: { kcal: 50, protein: 2, carbs: 10, fat: 0, price: 10000 },
             large: { kcal: 75, protein: 3, carbs: 15, fat: 0, price: 15000 },
           },
         },
@@ -12692,7 +12921,7 @@
             "https://images.unsplash.com/photo-1563283253-29472eec3060?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 20, protein: 1, carbs: 4, fat: 0, price: 10000 },
+            balance: { kcal: 20, protein: 1, carbs: 4, fat: 0, price: 10000 },
             large: { kcal: 30, protein: 1, carbs: 6, fat: 0, price: 15000 },
           },
         },
@@ -12705,7 +12934,7 @@
             "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 15, protein: 1, carbs: 2, fat: 0, price: 10000 },
+            balance: { kcal: 15, protein: 1, carbs: 2, fat: 0, price: 10000 },
             large: { kcal: 20, protein: 2, carbs: 3, fat: 0, price: 15000 },
           },
         },
@@ -12718,7 +12947,7 @@
             "https://images.unsplash.com/photo-1556784860-e8f0003058a9?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 10, protein: 1, carbs: 2, fat: 0, price: 10000 },
+            balance: { kcal: 10, protein: 1, carbs: 2, fat: 0, price: 10000 },
             large: { kcal: 15, protein: 1, carbs: 3, fat: 0, price: 15000 },
           },
         },
@@ -12731,7 +12960,7 @@
             "https://images.unsplash.com/photo-1596199050105-6d5d32222916?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 15, protein: 1, carbs: 3, fat: 0, price: 10000 },
+            balance: { kcal: 15, protein: 1, carbs: 3, fat: 0, price: 10000 },
             large: { kcal: 20, protein: 1, carbs: 4, fat: 0, price: 15000 },
           },
         },
@@ -12744,7 +12973,7 @@
             "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=500&q=80",
           ingredients: "Nguồn rau củ",
           sizes: {
-            standard: { kcal: 20, protein: 1, carbs: 4, fat: 0, price: 10000 },
+            balance: { kcal: 20, protein: 1, carbs: 4, fat: 0, price: 10000 },
             large: { kcal: 30, protein: 1, carbs: 6, fat: 0, price: 15000 },
           },
         },
@@ -12759,7 +12988,7 @@
             "https://images.unsplash.com/photo-1558222218-b7b54eede3f3?w=500&q=80",
           ingredients: "Nước sốt",
           sizes: {
-            standard: { kcal: 20, protein: 0, carbs: 3, fat: 1, price: 5000 },
+            balance: { kcal: 20, protein: 0, carbs: 3, fat: 1, price: 5000 },
             large: { kcal: 30, protein: 0, carbs: 5, fat: 1, price: 5000 },
           },
         },
@@ -12772,7 +13001,7 @@
             "https://images.unsplash.com/photo-1558222218-b7b54eede3f3?w=500&q=80",
           ingredients: "Nước sốt",
           sizes: {
-            standard: { kcal: 40, protein: 1, carbs: 8, fat: 0, price: 5000 },
+            balance: { kcal: 40, protein: 1, carbs: 8, fat: 0, price: 5000 },
             large: { kcal: 60, protein: 1, carbs: 12, fat: 0, price: 5000 },
           },
         },
@@ -12785,7 +13014,7 @@
             "https://images.unsplash.com/photo-1558222218-b7b54eede3f3?w=500&q=80",
           ingredients: "Nước sốt",
           sizes: {
-            standard: { kcal: 30, protein: 1, carbs: 5, fat: 0, price: 5000 },
+            balance: { kcal: 30, protein: 1, carbs: 5, fat: 0, price: 5000 },
             large: { kcal: 45, protein: 1, carbs: 8, fat: 0, price: 5000 },
           },
         },
@@ -12798,7 +13027,7 @@
             "https://images.unsplash.com/photo-1558222218-b7b54eede3f3?w=500&q=80",
           ingredients: "Nước sốt",
           sizes: {
-            standard: { kcal: 50, protein: 0, carbs: 2, fat: 5, price: 5000 },
+            balance: { kcal: 50, protein: 0, carbs: 2, fat: 5, price: 5000 },
             large: { kcal: 75, protein: 0, carbs: 3, fat: 8, price: 5000 },
           },
         },
@@ -12811,11 +13040,21 @@
             "https://images.unsplash.com/photo-1558222218-b7b54eede3f3?w=500&q=80",
           ingredients: "Nước sốt",
           sizes: {
-            standard: { kcal: 40, protein: 0, carbs: 10, fat: 0, price: 5000 },
+            balance: { kcal: 40, protein: 0, carbs: 10, fat: 0, price: 5000 },
             large: { kcal: 60, protein: 0, carbs: 15, fat: 0, price: 5000 },
           },
         },
       ];
+
+
+
+
+      try {
+        const localDishes = localStorage.getItem("nutriadmin_dishes");
+        if (localDishes) {
+            dishes = JSON.parse(localDishes);
+        }
+      } catch(e) {}
 
       let trackingSources = [
         { id: 1, name: "ShopeeFood", code: "shopeefood" },
@@ -13356,8 +13595,8 @@
                 {
                   dishId: 1,
                   name: "Salad Thăn Nội Bò Úc",
-                  sizeKey: "standard",
-                  sizeLabel: "Cơ bản",
+                  sizeKey: "balance",
+                  sizeLabel: "Balance (M)",
                   price: 55000,
                   qty: 2,
                 },
@@ -13380,16 +13619,16 @@
                 {
                   dishId: 2,
                   name: "Bít Tết Thăn Nội Khoai Lang",
-                  sizeKey: "large",
-                  sizeLabel: "Lớn",
+                  sizeKey: "power",
+                  sizeLabel: "Power (L)",
                   price: 75000,
                   qty: 1,
                 },
                 {
                   dishId: 6,
                   name: "Ức Gà Nướng Thảo Mộc",
-                  sizeKey: "standard",
-                  sizeLabel: "Cơ bản",
+                  sizeKey: "balance",
+                  sizeLabel: "Balance (M)",
                   price: 55000,
                   qty: 1,
                 },
@@ -13413,8 +13652,8 @@
                 {
                   dishId: 11,
                   name: "Bún Nưa Thăn Heo",
-                  sizeKey: "standard",
-                  sizeLabel: "Cơ bản",
+                  sizeKey: "balance",
+                  sizeLabel: "Balance (M)",
                   price: 55000,
                   qty: 3,
                 },
@@ -14671,7 +14910,7 @@
                 if (dish) {
                   meals.push({
                     dish: dish,
-                    size: selectedDayMenu.meal1.size || "standard",
+                    size: selectedDayMenu.meal1.size || "balance",
                     label: "Bữa 1",
                   });
                 }
@@ -14683,7 +14922,7 @@
                 if (dish) {
                   meals.push({
                     dish: dish,
-                    size: selectedDayMenu.meal2.size || "standard",
+                    size: selectedDayMenu.meal2.size || "balance",
                     label: "Bữa 2",
                   });
                 }
@@ -14707,7 +14946,7 @@
                                                         fat: 0,
                                                       };
                                                 const sizeLabel =
-                                                  m.size === "standard"
+                                                  m.size === "balance"
                                                     ? "Standard"
                                                     : "Large";
                                                 return `
@@ -15868,7 +16107,7 @@
 
             const btnConfig = {
               theme: "outline",
-              size: "large",
+              size: "power",
               width: "100%",
               text: "continue_with",
             };
@@ -17728,26 +17967,39 @@
                                           </button>
                                       `
                                           : `
+                                      ${dish.sizes.lean ? `
                                       <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                           <div class="flex justify-between items-center mb-1.5">
-                                              <span class="text-xs font-bold text-slate-700">Cơ bản <span class="text-emerald-600 font-medium ml-1">${formatCurrency(dish.sizes.standard.price)}đ</span></span>
-                                              <span class="text-xs font-bold text-primary">${dish.sizes.standard.kcal} Kcal</span>
+                                              <span class="text-xs font-bold text-slate-700">Lean (S) <span class="text-emerald-500 font-medium ml-1">${formatCurrency(dish.sizes.lean.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-primary">${dish.sizes.lean.kcal} Kcal</span>
                                           </div>
                                           <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.standard.protein}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.standard.carbs}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.standard.fat}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.lean.protein}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.lean.carbs}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.lean.fat}g</p></div>
+                                          </div>
+                                      </div>
+                                      ` : ""}
+                                      <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                                          <div class="flex justify-between items-center mb-1.5">
+                                              <span class="text-xs font-bold text-slate-700">Balance (M) <span class="text-emerald-600 font-medium ml-1">${formatCurrency(dish.sizes.balance?.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-primary">${dish.sizes.balance?.kcal} Kcal</span>
+                                          </div>
+                                          <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.balance?.protein}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.balance?.carbs}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.balance?.fat}g</p></div>
                                           </div>
                                       </div>
                                       <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                           <div class="flex justify-between items-center mb-1.5">
-                                              <span class="text-xs font-bold text-slate-700">Lớn <span class="text-amber-600 font-medium ml-1">${formatCurrency(dish.sizes.large.price)}đ</span></span>
-                                              <span class="text-xs font-bold text-amber-600">${dish.sizes.large.kcal} Kcal</span>
+                                              <span class="text-xs font-bold text-slate-700">Power (L) <span class="text-amber-600 font-medium ml-1">${formatCurrency(dish.sizes.power?.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-amber-600">${dish.sizes.power?.kcal} Kcal</span>
                                           </div>
                                           <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.large.protein}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.large.carbs}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.large.fat}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.power?.protein}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.power?.carbs}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.power?.fat}g</p></div>
                                           </div>
                                       </div>
                                       `
@@ -17763,7 +18015,6 @@
           )
           .join("");
       }
-
       function handleCategoryChange() {
         const category = document.getElementById("dish-category").value;
         const ingredientsSection = document.getElementById(
@@ -17780,14 +18031,18 @@
 
         if (category === "protein") {
           if (ingredientsSection) ingredientsSection.classList.add("hidden");
-          if (nutritionSection) nutritionSection.classList.add("hidden");
+          if (nutritionSection) nutritionSection.classList.remove("hidden"); // SHOW nutrition for protein
           if (ratingSection) ratingSection.classList.add("hidden");
+          const applyToAllWrapper = document.getElementById("apply-to-all-methods-wrapper");
+          if (applyToAllWrapper) applyToAllWrapper.classList.remove("hidden");
 
           inputs.forEach((input) => {
             input.removeAttribute("required");
             input.setAttribute("data-was-required", "true");
           });
         } else {
+          const applyToAllWrapper = document.getElementById("apply-to-all-methods-wrapper");
+          if (applyToAllWrapper) applyToAllWrapper.classList.add("hidden");
           if (ingredientsSection) ingredientsSection.classList.remove("hidden");
           if (nutritionSection) nutritionSection.classList.remove("hidden");
           if (ratingSection) ratingSection.classList.remove("hidden");
@@ -17813,6 +18068,8 @@
 
         if (mode === "edit" && id) {
           document.getElementById("modal-title").innerText = "Chỉnh sửa món ăn";
+          const applyToAll = document.getElementById("apply-to-all-methods");
+          if (applyToAll) applyToAll.checked = false;
           const dish = dishes.find((d) => d.id === id);
           if (dish) {
             document.getElementById("dish-id").value = dish.id;
@@ -17835,33 +18092,47 @@
             document.getElementById("dish-ingredients").value =
               dish.ingredients || "";
             document.getElementById("dish-active").checked = dish.isActive;
-            if (dish.sizes && dish.category !== "protein") {
-              document.getElementById("s-price").value =
-                dish.sizes.standard.price || "";
-              document.getElementById("s-kcal").value =
-                dish.sizes.standard.kcal || "";
-              document.getElementById("s-protein").value =
-                dish.sizes.standard.protein || "";
-              document.getElementById("s-carbs").value =
-                dish.sizes.standard.carbs || "";
-              document.getElementById("s-fat").value =
-                dish.sizes.standard.fat || "";
-              document.getElementById("s-main-ingQty").value =
-                dish.sizes.standard.mainIngredientQty || "";
+            if (dish.sizes) {
+              document.getElementById("s-price").value = dish.sizes.lean?.price || "";
+              document.getElementById("s-kcal").value = dish.sizes.lean?.kcal || "";
+              document.getElementById("s-protein").value = dish.sizes.lean?.protein || "";
+              document.getElementById("s-carbs").value = dish.sizes.lean?.carbs || "";
+              document.getElementById("s-fat").value = dish.sizes.lean?.fat || "";
+              document.getElementById("s-main-ingQty").value = dish.sizes.lean?.mainIngredientQty || "";
+
+              document.getElementById("m-price").value =
+                dish.sizes.balance?.price || "";
+              document.getElementById("m-kcal").value =
+                dish.sizes.balance?.kcal || "";
+              document.getElementById("m-protein").value =
+                dish.sizes.balance?.protein || "";
+              document.getElementById("m-carbs").value =
+                dish.sizes.balance?.carbs || "";
+              document.getElementById("m-fat").value =
+                dish.sizes.balance?.fat || "";
+              document.getElementById("m-main-ingQty").value =
+                dish.sizes.balance?.mainIngredientQty || "";
               document.getElementById("l-price").value =
-                dish.sizes.large.price || "";
+                dish.sizes.power?.price || "";
               document.getElementById("l-kcal").value =
-                dish.sizes.large.kcal || "";
+                dish.sizes.power?.kcal || "";
               document.getElementById("l-protein").value =
-                dish.sizes.large.protein || "";
+                dish.sizes.power?.protein || "";
               document.getElementById("l-carbs").value =
-                dish.sizes.large.carbs || "";
+                dish.sizes.power?.carbs || "";
               document.getElementById("l-fat").value =
-                dish.sizes.large.fat || "";
+                dish.sizes.power?.fat || "";
               document.getElementById("l-main-ingQty").value =
-                dish.sizes.large.mainIngredientQty || "";
+                dish.sizes.power?.mainIngredientQty || "";
             } else {
               [
+                "m-price",
+                "m-kcal",
+                "m-protein",
+                "m-carbs",
+                "m-fat",
+                "m-main-ingQty",
+
                 "s-price",
                 "s-kcal",
                 "s-protein",
@@ -17881,6 +18152,8 @@
           }
         } else {
           document.getElementById("modal-title").innerText = "Thêm món ăn mới";
+          const applyToAll = document.getElementById("apply-to-all-methods");
+          if (applyToAll) applyToAll.checked = false;
           document.getElementById("dish-id").value = "";
           document.getElementById("dish-active").checked = true;
           document.getElementById("dish-image-data").value = "";
@@ -17919,36 +18192,52 @@
             .value.trim();
 
           if (!method.sizes) method.sizes = {};
-          if (!method.sizes.standard) method.sizes.standard = {};
-          if (!method.sizes.large) method.sizes.large = {};
+          
+          if (!method.sizes.lean) method.sizes.lean = {};
 
-          method.sizes.standard.price =
+          method.sizes.lean.price =
             parseInt(document.getElementById("me-s-price").value) || 0;
-          method.sizes.standard.kcal =
+          method.sizes.lean.kcal =
             parseInt(document.getElementById("me-s-kcal").value) || 0;
-          method.sizes.standard.protein =
+          method.sizes.lean.protein =
             parseFloat(document.getElementById("me-s-protein").value) || 0;
-          method.sizes.standard.carbs =
+          method.sizes.lean.carbs =
             parseFloat(document.getElementById("me-s-carbs").value) || 0;
-          method.sizes.standard.fat =
+          method.sizes.lean.fat =
             parseFloat(document.getElementById("me-s-fat").value) || 0;
-          const sQty = document.getElementById("me-s-main-qty").value;
-          method.sizes.standard.mainIngredientQty = sQty
+          const meSQty = document.getElementById("me-s-main-qty").value;
+          method.sizes.lean.mainIngredientQty = meSQty ? parseFloat(meSQty) : null;
+
+          if (!method.sizes.balance) method.sizes.balance = {};
+          if (!method.sizes.power) method.sizes.power = {};
+
+          method.sizes.balance.price =
+            parseInt(document.getElementById("me-m-price").value) || 0;
+          method.sizes.balance.kcal =
+            parseInt(document.getElementById("me-m-kcal").value) || 0;
+          method.sizes.balance.protein =
+            parseFloat(document.getElementById("me-m-protein").value) || 0;
+          method.sizes.balance.carbs =
+            parseFloat(document.getElementById("me-m-carbs").value) || 0;
+          method.sizes.balance.fat =
+            parseFloat(document.getElementById("me-m-fat").value) || 0;
+          const sQty = document.getElementById("me-m-main-qty").value;
+          method.sizes.balance.mainIngredientQty = sQty
             ? parseFloat(sQty)
             : null;
 
-          method.sizes.large.price =
+          method.sizes.power.price =
             parseInt(document.getElementById("me-l-price").value) || 0;
-          method.sizes.large.kcal =
+          method.sizes.power.kcal =
             parseInt(document.getElementById("me-l-kcal").value) || 0;
-          method.sizes.large.protein =
+          method.sizes.power.protein =
             parseFloat(document.getElementById("me-l-protein").value) || 0;
-          method.sizes.large.carbs =
+          method.sizes.power.carbs =
             parseFloat(document.getElementById("me-l-carbs").value) || 0;
-          method.sizes.large.fat =
+          method.sizes.power.fat =
             parseFloat(document.getElementById("me-l-fat").value) || 0;
           const lQty = document.getElementById("me-l-main-qty").value;
-          method.sizes.large.mainIngredientQty = lQty ? parseFloat(lQty) : null;
+          method.sizes.power.mainIngredientQty = lQty ? parseFloat(lQty) : null;
 
           if (typeof syncStateToServer === "function") {
             lastStateStr = "";
@@ -17972,19 +18261,19 @@
         const listContainer = document.getElementById("cooking-methods-list");
         listContainer.innerHTML = dish.methods.map((method, index) => {
           const hasSImage = method.image && method.image.trim() !== "";
-          const standardPrice = (method.sizes && method.sizes.standard && method.sizes.standard.price) || 0;
-          const standardKcal = (method.sizes && method.sizes.standard && method.sizes.standard.kcal) || 0;
-          const standardProtein = (method.sizes && method.sizes.standard && method.sizes.standard.protein) || 0;
-          const standardCarbs = (method.sizes && method.sizes.standard && method.sizes.standard.carbs) || 0;
-          const standardFat = (method.sizes && method.sizes.standard && method.sizes.standard.fat) || 0;
-          const standardQty = method.sizes && method.sizes.standard && method.sizes.standard.mainIngredientQty;
+          const balancePrice = (method.sizes && method.sizes.balance && method.sizes.balance.price) || 0;
+          const balanceKcal = (method.sizes && method.sizes.balance && method.sizes.balance.kcal) || 0;
+          const balanceProtein = (method.sizes && method.sizes.balance && method.sizes.balance.protein) || 0;
+          const balanceCarbs = (method.sizes && method.sizes.balance && method.sizes.balance.carbs) || 0;
+          const balanceFat = (method.sizes && method.sizes.balance && method.sizes.balance.fat) || 0;
+          const balanceQty = method.sizes && method.sizes.balance && method.sizes.balance.mainIngredientQty;
 
-          const largePrice = (method.sizes && method.sizes.large && method.sizes.large.price) || 0;
-          const largeKcal = (method.sizes && method.sizes.large && method.sizes.large.kcal) || 0;
-          const largeProtein = (method.sizes && method.sizes.large && method.sizes.large.protein) || 0;
-          const largeCarbs = (method.sizes && method.sizes.large && method.sizes.large.carbs) || 0;
-          const largeFat = (method.sizes && method.sizes.large && method.sizes.large.fat) || 0;
-          const largeQty = method.sizes && method.sizes.large && method.sizes.large.mainIngredientQty;
+          const powerPrice = (method.sizes && method.sizes.power && method.sizes.power.price) || 0;
+          const powerKcal = (method.sizes && method.sizes.power && method.sizes.power.kcal) || 0;
+          const powerProtein = (method.sizes && method.sizes.power && method.sizes.power.protein) || 0;
+          const powerCarbs = (method.sizes && method.sizes.power && method.sizes.power.carbs) || 0;
+          const powerFat = (method.sizes && method.sizes.power && method.sizes.power.fat) || 0;
+          const powerQty = method.sizes && method.sizes.power && method.sizes.power.mainIngredientQty;
 
           return `
             <div class="bg-white rounded-xl border border-slate-200 p-4 relative flex flex-col ${method.isHidden ? 'opacity-50' : ''}">
@@ -18011,30 +18300,43 @@
                         </button>
                     </div>
                 </div>
-                <div class="space-y-3">
+<div class="space-y-3">
+                
                     <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                         <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-xs font-bold text-slate-700">Cơ bản <span class="text-emerald-600 font-medium ml-1">${formatCurrency(standardPrice)}đ</span></span>
-                            <span class="text-xs font-bold text-primary">${standardKcal} Kcal</span>
+                            <span class="text-xs font-bold text-slate-700">Lean (S) <span class="text-emerald-500 font-medium ml-1">${formatCurrency(leanPrice)}đ</span></span>
+                            <span class="text-xs font-bold text-primary">${leanKcal} Kcal</span>
                         </div>
                         <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${standardProtein}g</p></div>
-                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${standardCarbs}g</p></div>
-                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${standardFat}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${leanProtein}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${leanCarbs}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${leanFat}g</p></div>
                         </div>
-                        ${standardQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${standardQty} kg</p></div>` : ''}
+                        ${leanQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${leanQty} kg</p></div>` : ''}
+                    </div>
+                                    <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-xs font-bold text-slate-700">Balance (M) <span class="text-emerald-600 font-medium ml-1">${formatCurrency(balancePrice)}đ</span></span>
+                            <span class="text-xs font-bold text-primary">${balanceKcal} Kcal</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
+                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${balanceProtein}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${balanceCarbs}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${balanceFat}g</p></div>
+                        </div>
+                        ${balanceQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${balanceQty} kg</p></div>` : ''}
                     </div>
                     <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                         <div class="flex justify-between items-center mb-1.5">
-                            <span class="text-xs font-bold text-slate-700">Lớn <span class="text-amber-600 font-medium ml-1">${formatCurrency(largePrice)}đ</span></span>
-                            <span class="text-xs font-bold text-amber-600">${largeKcal} Kcal</span>
+                            <span class="text-xs font-bold text-slate-700">Power (L) <span class="text-amber-600 font-medium ml-1">${formatCurrency(powerPrice)}đ</span></span>
+                            <span class="text-xs font-bold text-amber-600">${powerKcal} Kcal</span>
                         </div>
                         <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${largeProtein}g</p></div>
-                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${largeCarbs}g</p></div>
-                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${largeFat}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${powerProtein}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${powerCarbs}g</p></div>
+                            <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${powerFat}g</p></div>
                         </div>
-                        ${largeQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${largeQty} kg</p></div>` : ''}
+                        ${powerQty ? `<div class="mt-2 pt-2 border-t border-slate-200 text-center"><p class="text-[10px] text-slate-500">Định lượng: ${powerQty} kg</p></div>` : ''}
                     </div>
                 </div>
             </div>
@@ -18097,29 +18399,41 @@
           
           document.getElementById('me-ingredients').value = method.ingredients || "";
           
-          if (method.sizes && method.sizes.standard) {
-            document.getElementById('me-s-price').value = method.sizes.standard.price || 0;
-            document.getElementById('me-s-kcal').value = method.sizes.standard.kcal || 0;
-            document.getElementById('me-s-protein').value = method.sizes.standard.protein || 0;
-            document.getElementById('me-s-carbs').value = method.sizes.standard.carbs || 0;
-            document.getElementById('me-s-fat').value = method.sizes.standard.fat || 0;
-            document.getElementById('me-s-main-qty').value = method.sizes.standard.mainIngredientQty || "";
+          if (method.sizes && method.sizes.lean) {
+            document.getElementById('me-s-price').value = method.sizes.lean.price || 0;
+            document.getElementById('me-s-kcal').value = method.sizes.lean.kcal || 0;
+            document.getElementById('me-s-protein').value = method.sizes.lean.protein || 0;
+            document.getElementById('me-s-carbs').value = method.sizes.lean.carbs || 0;
+            document.getElementById('me-s-fat').value = method.sizes.lean.fat || 0;
+            document.getElementById('me-s-main-qty').value = method.sizes.lean.mainIngredientQty || "";
+          }
+          if (method.sizes && method.sizes.balance) {
+            document.getElementById('me-m-price').value = method.sizes.balance.price || 0;
+            document.getElementById('me-m-kcal').value = method.sizes.balance.kcal || 0;
+            document.getElementById('me-m-protein').value = method.sizes.balance.protein || 0;
+            document.getElementById('me-m-carbs').value = method.sizes.balance.carbs || 0;
+            document.getElementById('me-m-fat').value = method.sizes.balance.fat || 0;
+            document.getElementById('me-m-main-qty').value = method.sizes.balance.mainIngredientQty || "";
           } else {
             ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
-              const el = document.getElementById('me-s-' + k);
-              if (el) el.value = 0;
+              const els = document.getElementById('me-s-' + k);
+              if (els) els.value = 0;
+              const elm = document.getElementById('me-m-' + k);
+              if (elm) elm.value = 0;
             });
-            const qEl = document.getElementById('me-s-main-qty');
-            if (qEl) qEl.value = "";
+            const qsEl = document.getElementById('me-s-main-qty');
+            if (qsEl) qsEl.value = "";
+            const qmEl = document.getElementById('me-m-main-qty');
+            if (qmEl) qmEl.value = "";
           }
           
-          if (method.sizes && method.sizes.large) {
-            document.getElementById('me-l-price').value = method.sizes.large.price || 0;
-            document.getElementById('me-l-kcal').value = method.sizes.large.kcal || 0;
-            document.getElementById('me-l-protein').value = method.sizes.large.protein || 0;
-            document.getElementById('me-l-carbs').value = method.sizes.large.carbs || 0;
-            document.getElementById('me-l-fat').value = method.sizes.large.fat || 0;
-            document.getElementById('me-l-main-qty').value = method.sizes.large.mainIngredientQty || "";
+          if (method.sizes && method.sizes.power) {
+            document.getElementById('me-l-price').value = method.sizes.power.price || 0;
+            document.getElementById('me-l-kcal').value = method.sizes.power.kcal || 0;
+            document.getElementById('me-l-protein').value = method.sizes.power.protein || 0;
+            document.getElementById('me-l-carbs').value = method.sizes.power.carbs || 0;
+            document.getElementById('me-l-fat').value = method.sizes.power.fat || 0;
+            document.getElementById('me-l-main-qty').value = method.sizes.power.mainIngredientQty || "";
           } else {
             ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
               const el = document.getElementById('me-l-' + k);
@@ -18260,17 +18574,16 @@
           isActive: document.getElementById("dish-active").checked,
         };
 
-        if (category !== "protein") {
-          dishData.sizes = {
+        dishData.sizes = {
             standard: {
-              kcal: parseInt(document.getElementById("s-kcal").value) || 0,
+              kcal: parseInt(document.getElementById("m-kcal").value) || 0,
               protein:
-                parseFloat(document.getElementById("s-protein").value) || 0,
-              carbs: parseFloat(document.getElementById("s-carbs").value) || 0,
-              fat: parseFloat(document.getElementById("s-fat").value) || 0,
-              price: parseInt(document.getElementById("s-price").value) || 0,
+                parseFloat(document.getElementById("m-protein").value) || 0,
+              carbs: parseFloat(document.getElementById("m-carbs").value) || 0,
+              fat: parseFloat(document.getElementById("m-fat").value) || 0,
+              price: parseInt(document.getElementById("m-price").value) || 0,
               mainIngredientQty:
-                parseFloat(document.getElementById("s-main-ingQty").value) ||
+                parseFloat(document.getElementById("m-main-ingQty").value) ||
                 null,
             },
             large: {
@@ -18284,14 +18597,23 @@
                 parseFloat(document.getElementById("l-main-ingQty").value) ||
                 null,
             },
-          };
-        } else {
+        };
+        
+        if (category === "protein") {
           // Keep existing methods if it's editing an existing protein
           if (id) {
             const existing = dishes.find((d) => d.id == id);
             if (existing && existing.methods) {
-              dishData.methods = existing.methods;
+              // Create a deep copy to avoid mutating the existing array reference if we just assign
+              dishData.methods = JSON.parse(JSON.stringify(existing.methods));
             }
+          }
+          
+          const applyToAll = document.getElementById("apply-to-all-methods");
+          if (applyToAll && applyToAll.checked && dishData.methods) {
+             dishData.methods.forEach(m => {
+                 m.sizes = JSON.parse(JSON.stringify(dishData.sizes));
+             });
           }
         }
 
@@ -18352,10 +18674,10 @@
 
           document.getElementById("dish-ingredients").value =
             data.ingredients || "";
-          document.getElementById("s-kcal").value = data.s_kcal || "";
-          document.getElementById("s-protein").value = data.s_protein || "";
-          document.getElementById("s-carbs").value = data.s_carbs || "";
-          document.getElementById("s-fat").value = data.s_fat || "";
+          document.getElementById("m-kcal").value = data.s_kcal || "";
+          document.getElementById("m-protein").value = data.s_protein || "";
+          document.getElementById("m-carbs").value = data.s_carbs || "";
+          document.getElementById("m-fat").value = data.s_fat || "";
           document.getElementById("l-kcal").value = data.l_kcal || "";
           document.getElementById("l-protein").value = data.l_protein || "";
           document.getElementById("l-carbs").value = data.l_carbs || "";
@@ -18923,7 +19245,7 @@
 
         let scoredOptions = [];
         activeDishes.forEach((dish) => {
-          ["standard", "large"].forEach((sizeKey) => {
+          ["lean", "balance", "power"].forEach((sizeKey) => {
             const info = dish.sizes[sizeKey];
             let score = 0;
             score += Math.abs(info.kcal - mealTarget.kcal) * 1.5;
@@ -18931,8 +19253,10 @@
             score += Math.abs(info.carbs - mealTarget.carbs) * 2;
             score += Math.abs(info.fat - mealTarget.fat) * 4;
 
-            if (goal === "loss" && sizeKey === "large") score += 300;
-            if (goal === "gain" && sizeKey === "standard") score += 300;
+            if (goal === "loss" && (sizeKey === "power" || sizeKey === "balance")) score += 300;
+            if (goal === "loss" && sizeKey === "lean") score -= 100;
+            if (goal === "gain" && (sizeKey === "balance" || sizeKey === "lean")) score += 300;
+            if (goal === "gain" && sizeKey === "power") score -= 100;
 
             scoredOptions.push({ dish, sizeKey, score, info });
           });
@@ -19027,7 +19351,7 @@
           const mainDish = mainOpt.dish;
           const mainInfo = mainOpt.info;
           const mainSizeLabel =
-            mainOpt.sizeKey === "large" ? "Size Lớn" : "Size Cơ Bản";
+            mainOpt.sizeKey === "power" ? "Size Power (L)" : mainOpt.sizeKey === "balance" ? "Size Balance (M)" : "Size Lean (S)";
 
           const mainMatch = Math.max(85, Math.round(99 - mainOpt.score / 20));
 
@@ -19080,7 +19404,7 @@
               const altDish = altOpt.dish;
               const altInfo = altOpt.info;
               const altSizeLabel =
-                altOpt.sizeKey === "large" ? "Lớn" : "Cơ bản";
+                altOpt.sizeKey === "power" ? "Power (L)" : altOpt.sizeKey === "balance" ? "Balance (M)" : "Lean (S)";
               const altMatch = Math.max(70, Math.round(95 - altOpt.score / 15));
 
               html += `
@@ -19892,8 +20216,9 @@
                                       <div>
                                           <label class="block text-xs font-medium text-slate-500 mb-1">Size đăng ký *</label>
                                           <select id="pkg-size" required class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
-                                              <option value="standard">Size Cơ bản</option>
-                                              <option value="large">Size Lớn</option>
+                                              <option value="lean">Size Lean (S)</option>
+                                              <option value="balance">Size Balance (M)</option>
+                                              <option value="power">Size Power (L)</option>
                                           </select>
                                       </div>
                                       <div>
@@ -19904,7 +20229,7 @@
                                           </select>
                                       </div>
                                   </div>
-                                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                       <input type="text" id="pkg-name" required placeholder="Họ và tên *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
                                       <input type="tel" id="pkg-phone" required placeholder="Số điện thoại *" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm focus:border-[#15803D] focus:ring-1 focus:ring-[#15803D] outline-none transition-colors bg-slate-50 focus:bg-white">
                                   </div>
@@ -20524,12 +20849,16 @@
                               <p class="text-sm text-slate-500 mb-4 leading-relaxed">${dish.ingredients}</p>
                               <div class="flex flex-wrap gap-4 mt-auto">
                                   <div class="flex flex-col gap-1.5">
-                                      <button onclick="addToCart(${dish.id}, 'standard')" class="text-xs font-medium border border-primary text-primary lg:hover:bg-primary lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Cơ bản (${formatCurrency(dish.sizes.standard.price)}đ)</button>
-                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.standard.kcal} Kcal • P${dish.sizes.standard.protein} C${dish.sizes.standard.carbs} F${dish.sizes.standard.fat}</span>
+                                      <button onclick="addToCart(${dish.id}, 'lean')" class="text-xs font-medium border border-emerald-500 text-emerald-500 lg:hover:bg-emerald-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Lean (S) (${formatCurrency(dish.sizes.lean?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.lean?.kcal} Kcal • P${dish.sizes.lean?.protein} C${dish.sizes.lean?.carbs} F${dish.sizes.lean?.fat}</span>
                                   </div>
                                   <div class="flex flex-col gap-1.5">
-                                      <button onclick="addToCart(${dish.id}, 'large')" class="text-xs font-medium border border-amber-500 text-amber-500 lg:hover:bg-amber-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Lớn (${formatCurrency(dish.sizes.large.price)}đ)</button>
-                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.large.kcal} Kcal • P${dish.sizes.large.protein} C${dish.sizes.large.carbs} F${dish.sizes.large.fat}</span>
+                                      <button onclick="addToCart(${dish.id}, 'balance')" class="text-xs font-medium border border-primary text-primary lg:hover:bg-primary lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Balance (M) (${formatCurrency(dish.sizes.balance?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.balance?.kcal} Kcal • P${dish.sizes.balance?.protein} C${dish.sizes.balance?.carbs} F${dish.sizes.balance?.fat}</span>
+                                  </div>
+                                  <div class="flex flex-col gap-1.5">
+                                      <button onclick="addToCart(${dish.id}, 'power')" class="text-xs font-medium border border-amber-500 text-amber-500 lg:hover:bg-amber-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Power (L) (${formatCurrency(dish.sizes.power?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.power?.kcal} Kcal • P${dish.sizes.power?.protein} C${dish.sizes.power?.carbs} F${dish.sizes.power?.fat}</span>
                                   </div>
                               </div>
                           </div>
@@ -20544,7 +20873,7 @@
         if (!dish) return;
 
         const price = dish.sizes[sizeKey].price;
-        const sizeLabel = sizeKey === "standard" ? "Cơ bản" : "Lớn";
+        const sizeLabel = sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)";
         const existingItem = cart.find(
           (item) => item.dishId === dishId && item.sizeKey === sizeKey,
         );
@@ -21496,6 +21825,92 @@
       // ==========================================
       // 9. ADMIN: ORDERS & SHIPPERS
       // ==========================================
+
+      window.openKitchenCalculator = openKitchenCalculator;
+      window.closeKitchenCalculator = closeKitchenCalculator;
+
+      function openKitchenCalculator() {
+        if (!window.currentKitchenTasks) {
+           showToast("Chưa có dữ liệu bếp.");
+           return;
+        }
+        
+        const calcData = {
+           todo: { ingredients: {}, methods: {} },
+           cooking: { ingredients: {}, methods: {} },
+           done: { ingredients: {}, methods: {} }
+        };
+        
+        ['todo', 'cooking', 'done'].forEach(state => {
+           const tasks = window.currentKitchenTasks[state] || [];
+           tasks.forEach(task => {
+              const dish = dishes.find(d => d.id === task.dishId);
+              if (!dish) return;
+              
+              let componentsList = [];
+              let methodList = [];
+              
+              if (dish.category === "complete" && dish.components) {
+                 if (dish.components.proteinId) {
+                    const p = dishes.find(d => d.id === dish.components.proteinId);
+                    if (p) componentsList.push(p.name);
+                 }
+                 if (dish.components.methodName) {
+                    methodList.push(dish.components.methodName);
+                 }
+                 if (dish.components.carbId) {
+                    const c = dishes.find(d => d.id === dish.components.carbId);
+                    if (c) componentsList.push(c.name);
+                 }
+                 if (dish.components.vegIds) {
+                    dish.components.vegIds.forEach(vid => {
+                       const v = dishes.find(d => d.id === vid);
+                       if (v) componentsList.push(v.name);
+                    });
+                 }
+                 if (dish.components.sauceId) {
+                    const s = dishes.find(d => d.id === dish.components.sauceId);
+                    if (s) componentsList.push(s.name);
+                 }
+              } else {
+                 componentsList.push(dish.name);
+              }
+              
+              componentsList.forEach(cName => {
+                 calcData[state].ingredients[cName] = (calcData[state].ingredients[cName] || 0) + task.qty;
+              });
+              methodList.forEach(mName => {
+                 calcData[state].methods[mName] = (calcData[state].methods[mName] || 0) + task.qty;
+              });
+           });
+        });
+        
+        const renderSection = (dataObj, title) => {
+           let html = `<h4 class="font-bold text-sm text-slate-700 mt-3 mb-2">${title}</h4>`;
+           const keys = Object.keys(dataObj);
+           if (keys.length === 0) {
+              html += `<p class="text-xs text-slate-500 italic">Không có dữ liệu</p>`;
+              return html;
+           }
+           html += `<ul class="space-y-1">`;
+           keys.sort().forEach(k => {
+              html += `<li class="flex justify-between text-sm pb-1 border-b border-slate-100 last:border-0"><span class="text-slate-600">${k}</span><span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">${dataObj[k]}</span></li>`;
+           });
+           html += `</ul>`;
+           return html;
+        };
+        
+        document.getElementById("calc-todo-content").innerHTML = renderSection(calcData.todo.ingredients, "Nguyên liệu") + renderSection(calcData.todo.methods, "Cách chế biến");
+        document.getElementById("calc-cooking-content").innerHTML = renderSection(calcData.cooking.ingredients, "Nguyên liệu") + renderSection(calcData.cooking.methods, "Cách chế biến");
+        document.getElementById("calc-done-content").innerHTML = renderSection(calcData.done.ingredients, "Nguyên liệu") + renderSection(calcData.done.methods, "Cách chế biến");
+        
+        document.getElementById("kitchen-calc-modal").classList.remove("hidden");
+      }
+      
+      function closeKitchenCalculator() {
+        document.getElementById("kitchen-calc-modal").classList.add("hidden");
+      }
+
       function renderKitchen() {
         const filterEl = document.getElementById(
           "kitchen-delivery-time-filter",
@@ -21518,7 +21933,7 @@
               dishes.find((d) => d.id == item.dishId)?.name ||
               "Unknown";
             const size =
-              item.sizeLabel || (item.size === "large" ? "Lớn" : "Thường");
+              item.sizeLabel || (item.size === "power" ? "Power (L)" : item.size === "balance" ? "Balance (M)" : "Lean (S)");
             const groupKey = `${item.dishId}_${size}_${kTime}`;
 
             if (!kitchenTasksMap[groupKey]) {
@@ -21593,6 +22008,8 @@
             });
           filterEl.value = filterDelivery;
         }
+
+        window.currentKitchenTasks = { todo: todoList, cooking: cookingList, done: doneList };
 
         // Render functions
         const renderTaskCard = (
@@ -21982,15 +22399,15 @@
                   if (index === 0) {
                     // Giả định nguyên liệu đầu tiên trong mảng là nguyên liệu chính
                     if (
-                      item.sizeKey === "standard" &&
-                      dish.sizes.standard.mainIngredientQty
+                      item.sizeKey === "balance" &&
+                      dish.sizes.balance?.mainIngredientQty
                     ) {
-                      finalQty = dish.sizes.standard.mainIngredientQty;
+                      finalQty = dish.sizes.balance?.mainIngredientQty;
                     } else if (
-                      item.sizeKey === "large" &&
-                      dish.sizes.large.mainIngredientQty
+                      item.sizeKey === "power" &&
+                      dish.sizes.power?.mainIngredientQty
                     ) {
-                      finalQty = dish.sizes.large.mainIngredientQty;
+                      finalQty = dish.sizes.power?.mainIngredientQty;
                     }
                   }
 
@@ -22406,9 +22823,9 @@
         o.items.forEach((item) => {
           const dish = dishes.find((d) => d.id === item.dishId);
           if (!dish) return;
-          const isLarge = item.sizeKey === "large";
+          const isLarge = item.sizeKey === "power";
           const qtyMultiplier = item.qty || 1;
-          const sk = item.sizeKey || "standard";
+          const sk = item.sizeKey || "balance";
           
           if (dish.category === "complete") {
             const comps = dish.components || {};
@@ -23143,7 +23560,7 @@
                                const dish = dishes.find(
                                  (d) => d.id == i.dishId,
                                );
-                               return `<li>${i.quantity || i.qty}x ${dish ? dish.name : i.name || "Unknown"} (${i.size === "large" || i.sizeLabel === "Lớn" ? "Lớn" : "Thường"})</li>`;
+                               return `<li>${i.quantity || i.qty}x ${dish ? dish.name : i.name || "Unknown"} (${i.size === "power" || i.sizeLabel === "Power (L)" ? "Power (L)" : i.size === "balance" ? "Balance (M)" : "Lean (S)"})</li>`;
                              })
                              .join("")}
                         </ul>
@@ -23889,7 +24306,7 @@
                           <td class="px-6 py-4">
                               <div class="text-rose-500 font-medium">Gói ${resolvePackageName(c.package)}</div>
                               <div class="text-xs text-slate-500 font-semibold mt-0.5">
-                                  Size: ${c.size === "large" ? "Lớn" : "Cơ bản"}
+                                  Size: ${c.size === "power" ? "Power (L)" : c.size === "balance" ? "Balance (M)" : "Lean (S)"}
                               </div>
                               ${c.notes ? `<div class="text-xs text-amber-600 italic mt-1 max-w-[200px] truncate" title="${c.notes}"><i class="fa-regular fa-comment-dots mr-1"></i>${c.notes}</div>` : ""}
                           </td>
@@ -23911,7 +24328,7 @@
         document.getElementById("purchased-modal-title").innerText =
           "Khách mua gói";
         document.getElementById("purchased-start").valueAsDate = new Date();
-        document.getElementById("purchased-size").value = "standard";
+        document.getElementById("purchased-size").value = "balance";
         document.getElementById("purchased-notes").value = "";
         document.getElementById("purchased-self-mix").checked = false;
         updatePurchasedDistricts();
@@ -23948,7 +24365,7 @@
             document.getElementById("purchased-ward").value = c.ward || "";
             document.getElementById("purchased-street").value = c.street || "";
             document.getElementById("purchased-size").value =
-              c.size || "standard";
+              c.size || "balance";
             document.getElementById("purchased-notes").value = c.notes || "";
             document.getElementById("purchased-self-mix").checked =
               c.selfMix || false;
@@ -24568,7 +24985,7 @@
             phone: phoneVal,
             address: addressVal,
             package: pkgValue,
-            size: formSize || "standard",
+            size: formSize || "balance",
             meals: formMeals || "2",
             source: source,
             date: new Date(),
@@ -24695,7 +25112,7 @@
       function renderCustomDishSelect(dKey, mKey, activeD) {
         return `<div class="relative" id="w-${dKey}-${mKey}">
                         <input type="hidden" id="val-dish-${dKey}-${mKey}">
-                        <input type="hidden" id="val-size-${dKey}-${mKey}" value="standard">
+                        <input type="hidden" id="val-size-${dKey}-${mKey}" value="balance">
                         <button type="button" onclick="openDishPickerModal('${dKey}','${mKey}')" class="w-full bg-white border border-slate-200 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/10 px-3 py-2.5 rounded-xl flex justify-between items-center h-12 transition-all cursor-pointer shadow-sm">
                             <div id="disp-${dKey}-${mKey}" class="flex items-center gap-2 overflow-hidden w-full text-left">
                               <span class="text-xs text-slate-400 italic font-medium"><i class="fa-solid fa-plus text-slate-300 mr-1.5"></i>Chọn món ăn...</span>
@@ -24710,7 +25127,7 @@
         if (!disp) return;
         document.getElementById(`val-dish-${dK}-${mK}`).value = dId || "";
         document.getElementById(`val-size-${dK}-${mK}`).value =
-          sK || "standard";
+          sK || "balance";
 
         if (!dId) {
           disp.innerHTML =
@@ -24721,7 +25138,7 @@
             disp.innerHTML = `
                     <img src="${d.image}" class="w-7 h-7 rounded-lg object-cover border border-slate-100 shadow-sm shrink-0">
                     <div class="text-xs font-semibold text-slate-800 truncate leading-none">
-                      ${d.name} ${sK === "large" ? '<span class="text-amber-600 font-bold ml-1 text-[10px] bg-amber-50 px-1 py-0.5 rounded">(Lớn)</span>' : '<span class="text-emerald-600 font-semibold ml-1 text-[10px] bg-emerald-50 px-1 py-0.5 rounded">(CB)</span>'}
+                      ${d.name} ${sK === "power" ? '<span class="text-amber-600 font-bold ml-1 text-[10px] bg-amber-50 px-1 py-0.5 rounded">(Power)</span>' : sK === "balance" ? '<span class="text-emerald-600 font-semibold ml-1 text-[10px] bg-emerald-50 px-1 py-0.5 rounded">(Balance)</span>' : '<span class="text-emerald-500 font-semibold ml-1 text-[10px] bg-emerald-50 px-1 py-0.5 rounded">(Lean)</span>'}
                     </div>`;
           }
         }
@@ -24748,9 +25165,9 @@
           purchasedCustomers.find((x) => x.id == cId) ||
           potentialCustomers.find((x) => x.id == cId);
         const customerName = c ? c.name : "...";
-        const customerSize = c ? c.size || "standard" : "standard";
+        const customerSize = c ? c.size || "balance" : "balance";
         document.getElementById("dish-picker-modal-subtitle").innerText =
-          `Khách hàng: ${customerName} • Size mặc định gói: ${customerSize === "large" ? "Lớn" : "Cơ bản"}`;
+          `Khách hàng: ${customerName} • Size mặc định gói: ${customerSize === "power" ? "Power (L)" : customerSize === "balance" ? "Balance (M)" : "Lean (S)"}`;
 
         // Build categories
         const hiddenKeywordsPicker = dishes.filter(d => d.isActive === false).map(d => d.name).filter(Boolean).concat(
@@ -24852,7 +25269,7 @@
         const c =
           purchasedCustomers.find((x) => x.id == cId) ||
           potentialCustomers.find((x) => x.id == cId);
-        const defaultSize = c ? c.size || "standard" : "standard";
+        const defaultSize = c ? c.size || "balance" : "balance";
 
         if (filteredDishes.length === 0) {
           grid.innerHTML = `
@@ -24865,13 +25282,14 @@
 
         grid.innerHTML = filteredDishes
           .map((d) => {
-            const isStdDefault = defaultSize === "standard";
-            const isLrgDefault = defaultSize === "large";
+            const isLeanDefault = defaultSize === "lean";
+            const isStdDefault = defaultSize === "balance";
+            const isLrgDefault = defaultSize === "power";
 
             // Get correct size data based on customer's registered package size
-            const sizeKey = defaultSize; // "standard" or "large"
+            const sizeKey = defaultSize; // "balance" or "power"
             const sizeData = d.sizes?.[sizeKey] ||
-              d.sizes?.standard || {
+              d.sizes?.balance || {
                 kcal: 300,
                 protein: 25,
                 carbs: 35,
@@ -24886,8 +25304,9 @@
                       <span class="absolute top-2.5 left-2.5 bg-slate-900/75 text-white text-[10px] font-semibold px-2 py-1 rounded-lg backdrop-blur-sm">
                         ${sizeData.kcal} kcal
                       </span>
-                      ${isStdDefault ? '<span class="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Cơ bản</span>' : ""}
-                      ${isLrgDefault ? '<span class="absolute top-2.5 right-2.5 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Lớn</span>' : ""}
+                      ${isLeanDefault ? '<span class="absolute top-2.5 right-2.5 bg-emerald-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Lean (S)</span>' : ""}
+                      ${isStdDefault ? '<span class="absolute top-2.5 right-2.5 bg-emerald-600 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Balance (M)</span>' : ""}
+                      ${isLrgDefault ? '<span class="absolute top-2.5 right-2.5 bg-amber-500 text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Power (L)</span>' : ""}
                     </div>
 
                     <!-- Content -->
@@ -24922,23 +25341,31 @@
                       <!-- Action Buttons: Only show the registered package size of the customer -->
                       <div class="mt-auto">
                         ${
-                          isStdDefault
+                          isLeanDefault
                             ? `
                           <button
                             type="button"
-                            onclick="selectDishPickerItem(${d.id}, 'standard')"
+                            onclick="selectDishPickerItem(${d.id}, 'lean')"
+                            class="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.98] text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            <i class="fa-solid fa-check"></i> Chọn món (Lean (S) - ${sizeData.kcal} kcal)
+                          </button>
+                        ` : isStdDefault ? `
+                          <button
+                            type="button"
+                            onclick="selectDishPickerItem(${d.id}, 'balance')"
                             class="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                           >
-                            <i class="fa-solid fa-check"></i> Chọn món (Cơ Bản - ${sizeData.kcal} kcal)
+                            <i class="fa-solid fa-check"></i> Chọn món (Balance (M) - ${sizeData.kcal} kcal)
                           </button>
                         `
                             : `
                           <button
                             type="button"
-                            onclick="selectDishPickerItem(${d.id}, 'large')"
+                            onclick="selectDishPickerItem(${d.id}, 'power')"
                             class="w-full bg-amber-500 hover:bg-amber-600 active:scale-[0.98] text-white py-2.5 px-4 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
                           >
-                            <i class="fa-solid fa-check"></i> Chọn món (Size Lớn - ${sizeData.kcal} kcal)
+                            <i class="fa-solid fa-check"></i> Chọn món (Power (L) - ${sizeData.kcal} kcal)
                           </button>
                         `
                         }
@@ -25064,7 +25491,7 @@
         if (c) {
           document.getElementById("qo-phone").value = c.phone || "N/A";
           document.getElementById("qo-default-size").value =
-            c.size === "large" ? "Size Lớn" : "Cơ bản (CB)";
+            c.size === "power" ? "Size Power (L)" : c.size === "balance" ? "Size Balance (M)" : "Size Lean (S)";
           document.getElementById("qo-address").value = c.address || "N/A";
           if (window.quickOrderMode === "weekly") {
             window.onQuickOrderWeeklyConfigChange();
@@ -25125,9 +25552,9 @@
             const d = dishes.find((x) => x.id == m1.dishId);
             if (d) {
               const sizeLabel =
-                m1.size === "large" ? "Size Lớn" : "Cơ Bản (CB)";
-              const sizeData = d.sizes?.[m1.size || "standard"] ||
-                d.sizes?.standard || {
+                m1.size === "power" ? "Size Power (L)" : m1.size === "balance" ? "Size Balance (M)" : "Size Lean (S)";
+              const sizeData = d.sizes?.[m1.size || "balance"] ||
+                d.sizes?.balance || {
                   kcal: 300,
                   protein: 25,
                   carbs: 35,
@@ -25151,9 +25578,9 @@
             const d = dishes.find((x) => x.id == m2.dishId);
             if (d) {
               const sizeLabel =
-                m2.size === "large" ? "Size Lớn" : "Cơ Bản (CB)";
-              const sizeData = d.sizes?.[m2.size || "standard"] ||
-                d.sizes?.standard || {
+                m2.size === "power" ? "Size Power (L)" : m2.size === "balance" ? "Size Balance (M)" : "Size Lean (S)";
+              const sizeData = d.sizes?.[m2.size || "balance"] ||
+                d.sizes?.balance || {
                   kcal: 300,
                   protein: 25,
                   carbs: 35,
@@ -25192,7 +25619,7 @@
         if (!d) return;
         const sizeKey = document.getElementById("qo-size-select").value;
         const sizeData = d.sizes?.[sizeKey] ||
-          d.sizes?.standard || { kcal: 300, protein: 25, carbs: 35, fat: 10 };
+          d.sizes?.balance || { kcal: 300, protein: 25, carbs: 35, fat: 10 };
 
         const existingIndex = window.quickOrderCustomItems.findIndex(
           (item) => item.dishId == d.id && item.sizeKey === sizeKey,
@@ -25204,7 +25631,7 @@
             dishId: d.id,
             name: d.name,
             sizeKey: sizeKey,
-            sizeLabel: sizeKey === "large" ? "Size Lớn" : "Cơ bản",
+            sizeLabel: sizeKey === "power" ? "Size Power (L)" : sizeKey === "balance" ? "Size Balance (M)" : "Size Lean (S)",
             price: d.sizes?.[sizeKey]?.price || 0,
             qty: 1,
             image: d.image,
@@ -25244,7 +25671,7 @@
                       <div class="truncate max-w-[150px]" title="${item.name}">${item.name}</div>
                     </td>
                     <td class="px-3 py-2.5 text-center">
-                      <span class="px-2 py-0.5 rounded text-[10px] font-medium ${item.sizeKey === "large" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}">
+                      <span class="px-2 py-0.5 rounded text-[10px] font-medium ${item.sizeKey === "power" ? "bg-amber-50 text-amber-700" : "bg-emerald-50 text-emerald-700"}">
                         ${item.sizeLabel}
                       </span>
                     </td>
@@ -25325,8 +25752,8 @@
                 orderItems.push({
                   dishId: d.id,
                   name: d.name,
-                  sizeKey: m1.size || c.size || "standard",
-                  sizeLabel: (m1.size || c.size) === "large" ? "Lớn" : "Cơ bản",
+                  sizeKey: m1.size || c.size || "balance",
+                  sizeLabel: (m1.size || c.size) === "power" ? "Power (L)" : (m1.size || c.size) === "balance" ? "Balance (M)" : "Lean (S)",
                   price: 0,
                   qty: 1,
                 });
@@ -25341,8 +25768,8 @@
                 orderItems.push({
                   dishId: d.id,
                   name: d.name,
-                  sizeKey: m2.size || c.size || "standard",
-                  sizeLabel: (m2.size || c.size) === "large" ? "Lớn" : "Cơ bản",
+                  sizeKey: m2.size || c.size || "balance",
+                  sizeLabel: (m2.size || c.size) === "power" ? "Power (L)" : (m2.size || c.size) === "balance" ? "Balance (M)" : "Lean (S)",
                   price: 0,
                   qty: 1,
                 });
@@ -25369,7 +25796,7 @@
             dishId: item.dishId,
             name: item.name,
             sizeKey: item.sizeKey,
-            sizeLabel: item.sizeKey === "large" ? "Lớn" : "Cơ bản",
+            sizeLabel: item.sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)",
             price: item.price || 0,
             qty: item.qty,
           }));
@@ -25529,17 +25956,17 @@
         weekDays.forEach((d) => {
           const m = c.weeklyMenu[d.key] || {};
           let d1 = "",
-            s1 = c.size || "standard",
+            s1 = c.size || "balance",
             d2 = "",
-            s2 = c.size || "standard";
+            s2 = c.size || "balance";
 
           if (m.meal1) {
             d1 = m.meal1.dishId;
-            s1 = m.meal1.size || c.size || "standard";
+            s1 = m.meal1.size || c.size || "balance";
           }
           if (m.meal2) {
             d2 = m.meal2.dishId;
-            s2 = m.meal2.size || c.size || "standard";
+            s2 = m.meal2.size || c.size || "balance";
           }
 
           selectWeeklyDish(d.key, "meal1", d1, s1, false);
@@ -25628,7 +26055,7 @@
               dishId: d.id,
               name: d.name,
               sizeKey: sK,
-              sizeLabel: sK === "large" ? "Lớn" : "Cơ bản",
+              sizeLabel: sK === "power" ? "Power (L)" : sK === "balance" ? "Balance (M)" : "Lean (S)",
               price: 0,
               qty: 1,
             },
@@ -25695,7 +26122,7 @@
                 dishId: d.id,
                 name: d.name,
                 sizeKey: i.s,
-                sizeLabel: i.s === "large" ? "Lớn" : "Cơ bản",
+                sizeLabel: i.s === "power" ? "Power (L)" : i.s === "balance" ? "Balance (M)" : "Lean (S)",
                 price: 0,
                 qty: 1,
               });
@@ -26348,7 +26775,7 @@
           .filter((d) => d.isActive)
           .map(
             (d) =>
-              `- ${d.name} (${d.category}): Cơ bản ${formatCurrency(d.sizes.standard.price)}đ (${d.sizes.standard.kcal} Kcal), Lớn ${formatCurrency(d.sizes.large.price)}đ`,
+              `- ${d.name} (${d.category}): Lean ${d.sizes.lean?.price || 0}đ, Balance ${formatCurrency(d.sizes.balance.price)}đ (${d.sizes.balance.kcal} Kcal), Power ${formatCurrency(d.sizes.power.price)}đ`,
           )
           .join("\n");
 
@@ -29572,14 +29999,118 @@
                 Gói 5 Ngày
               </h3>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              <!-- Size Cơ Bản -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              <!-- Size Lean (S) -->
+              <div class="flex flex-col">
+                <div
+                  class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
+                  id="p-5-c0-title"
+                >
+                  Size Lean (S)
+                </div>
+                <div
+                  class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
+                >
+                  <!-- 1 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-5-0-1-c"
+                        >1</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-5-0-1-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-1-p"
+                        >320</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-1-u"
+                        >64</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-1-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                  <!-- 2 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-5-0-2-c"
+                        >2</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-5-0-2-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-2-p"
+                        >620</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-2-u"
+                        >62</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-5-0-2-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Size Balance (M) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-5-c1-title"
                 >
-                  Size Cơ Bản
+                  Size Balance (M)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -29677,13 +30208,13 @@
                 </div>
               </div>
 
-              <!-- Size Lớn -->
+              <!-- Size Power (L) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-5-c2-title"
                 >
-                  Size Lớn
+                  Size Power (L)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -29793,14 +30324,118 @@
                 Gói 10 Ngày
               </h3>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              <!-- Size Cơ Bản -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              <!-- Size Lean (S) -->
+              <div class="flex flex-col">
+                <div
+                  class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
+                  id="p-10-c0-title"
+                >
+                  Size Lean (S)
+                </div>
+                <div
+                  class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
+                >
+                  <!-- 1 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-10-0-1-c"
+                        >1</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-10-0-1-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-1-p"
+                        >620</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-1-u"
+                        >62</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-1-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                  <!-- 2 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-10-0-2-c"
+                        >2</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-10-0-2-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-2-p"
+                        >1.320</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-2-u"
+                        >66</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-10-0-2-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Size Balance (M) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-10-c1-title"
                 >
-                  Size Cơ Bản
+                  Size Balance (M)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -29898,13 +30533,13 @@
                 </div>
               </div>
 
-              <!-- Size Lớn -->
+              <!-- Size Power (L) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-10-c2-title"
                 >
-                  Size Lớn
+                  Size Power (L)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -30014,14 +30649,118 @@
                 Gói 20 Ngày
               </h3>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-              <!-- Size Cơ Bản -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+              <!-- Size Lean (S) -->
+              <div class="flex flex-col">
+                <div
+                  class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
+                  id="p-20-c0-title"
+                >
+                  Size Lean (S)
+                </div>
+                <div
+                  class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
+                >
+                  <!-- 1 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-20-0-1-c"
+                        >1</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-20-0-1-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-1-p"
+                        >1.320</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-1-u"
+                        >66</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-1-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                  <!-- 2 Bữa -->
+                  <div
+                    class="flex items-stretch h-[72px] bg-white shadow-sm rounded-xl overflow-visible border border-slate-100 relative group transition-transform hover:-translate-y-1"
+                  >
+                    <div
+                      class="w-16 bg-[#10B981] flex flex-col items-center justify-center rounded-l-xl border-r border-slate-200 shrink-0 z-10 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)] relative"
+                    >
+                      <span
+                        class="font-black text-3xl text-white leading-none pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-20-0-2-c"
+                        >2</span
+                      >
+                      <span
+                        class="text-[10px] font-bold text-emerald-50 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-600 rounded transition-colors duration-200"
+                        id="p-20-0-2-l"
+                        >BỮA</span
+                      >
+                    </div>
+                    <div
+                      class="flex-1 bg-white flex items-center justify-center z-10"
+                    >
+                      <span
+                        class="font-black text-[40px] text-[#15803D] tracking-tighter pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-50 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-2-p"
+                        >2.560</span
+                      >
+                    </div>
+                    <div
+                      class="w-[72px] bg-[#15803D] flex flex-col items-center justify-center text-white shrink-0 rounded-r-xl relative z-10 shadow-[-2px_0_5px_-2px_rgba(0,0,0,0.1)]"
+                    >
+                      <div
+                        class="absolute -left-2 top-1/2 -translate-y-1/2 w-4 h-6 bg-[#166534] rounded-l-full z-0 shadow-inner"
+                      ></div>
+                      <span
+                        class="font-black text-[22px] leading-none z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-2-u"
+                        >64</span
+                      >
+                      <span
+                        class="text-[10px] font-semibold z-10 pricing-editable focus:outline-none focus:ring-2 focus:ring-white focus:bg-emerald-800 rounded px-1 transition-colors duration-200"
+                        id="p-20-0-2-ul"
+                        >/bữa</span
+                      >
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Size Balance (M) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-20-c1-title"
                 >
-                  Size Cơ Bản
+                  Size Balance (M)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -30119,13 +30858,13 @@
                 </div>
               </div>
 
-              <!-- Size Lớn -->
+              <!-- Size Power (L) -->
               <div class="flex flex-col">
                 <div
                   class="bg-[#15803D] text-white text-center py-3 rounded-t-2xl font-bold text-lg uppercase tracking-wider shadow-sm pricing-editable focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:bg-emerald-700 transition-colors duration-200"
                   id="p-20-c2-title"
                 >
-                  Size Lớn
+                  Size Power (L)
                 </div>
                 <div
                   class="bg-emerald-50 border-x-2 border-b-2 border-[#15803D] rounded-b-2xl p-4 md:p-5 space-y-4 flex-1 shadow-sm relative"
@@ -30499,6 +31238,7 @@
             needsSync = true;
           } else if (id === "menu") {
             dishes = [];
+            localStorage.removeItem("nutriadmin_dishes");
             needsSync = true;
           } else if (id === "leads") {
             potentialCustomers = [];
@@ -30608,7 +31348,7 @@
       let createDishData = {
         protein: null,
         method: null,
-        size: "standard",
+        size: "balance",
         carb: null,
         veg: null,
         sauce: null,
@@ -30641,7 +31381,7 @@
       };
 
       window.orderCustomAdviceDish = function (id) {
-        const size = window.adviceDishOrderSizes[id] || "standard";
+        const size = window.adviceDishOrderSizes[id] || "balance";
         
         // Add to cart
         addToCart(id, size);
@@ -30673,11 +31413,11 @@
           <div class="grid grid-cols-1 gap-4">
             ${customAdviceDishes.filter(Boolean).map((dish) => {
               const id = dish.id;
-              const size = window.adviceDishOrderSizes[id] || "standard";
-              const stdPrice = dish.sizes && dish.sizes.standard ? dish.sizes.standard.price : 0;
-              const lrgPrice = dish.sizes && dish.sizes.large ? dish.sizes.large.price : 0;
+              const size = window.adviceDishOrderSizes[id] || "balance";
+              const stdPrice = dish.sizes && dish.sizes.balance ? dish.sizes.balance?.price : 0;
+              const lrgPrice = dish.sizes && dish.sizes.power ? dish.sizes.power?.price : 0;
               
-              const currentSizeData = dish.sizes && dish.sizes[size] ? dish.sizes[size] : (dish.sizes && dish.sizes.standard ? dish.sizes.standard : {});
+              const currentSizeData = dish.sizes && dish.sizes[size] ? dish.sizes[size] : (dish.sizes && dish.sizes.balance ? dish.sizes.balance : {});
               const proteinG = currentSizeData.protein || 0;
               const carbsG = currentSizeData.carbs || 0;
               const fatG = currentSizeData.fat || 0;
@@ -30717,21 +31457,21 @@
                     </div>
                     
                     <div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <button type="button" id="size-btn-${id}-standard" onclick="setAdviceDishOrderSize(${id}, 'standard')" 
+                        <button type="button" id="size-btn-${id}-standard" onclick="setAdviceDishOrderSize(${id}, 'balance')" 
                             class="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
-                              size === "standard" 
+                              size === "balance" 
                                 ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm" 
                                 : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                             }" style="cursor: pointer;">
-                            <i class="fa-solid fa-circle text-[8px] ${size === "standard" ? "text-orange-500" : "text-transparent"}"></i> Size Cơ Bản (${formatCurrency(stdPrice)}đ)
+                            <i class="fa-solid fa-circle text-[8px] ${size === "balance" ? "text-orange-500" : "text-transparent"}"></i> Size Balance (M) (${formatCurrency(stdPrice)}đ)
                         </button>
-                        <button type="button" id="size-btn-${id}-large" onclick="setAdviceDishOrderSize(${id}, 'large')" 
+                        <button type="button" id="size-btn-${id}-large" onclick="setAdviceDishOrderSize(${id}, 'power')" 
                             class="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
-                              size === "large" 
+                              size === "power" 
                                 ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm" 
                                 : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                             }" style="cursor: pointer;">
-                            <i class="fa-solid fa-circle text-[8px] ${size === "large" ? "text-orange-500" : "text-transparent"}"></i> Size Lớn (${formatCurrency(lrgPrice)}đ)
+                            <i class="fa-solid fa-circle text-[8px] ${size === "power" ? "text-orange-500" : "text-transparent"}"></i> Size Power (L) (${formatCurrency(lrgPrice)}đ)
                         </button>
                         <button type="button" onclick="orderCustomAdviceDish(${id})" 
                             class="py-2.5 px-4 bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white font-bold rounded-xl text-xs shadow-sm hover:shadow transition-all flex items-center justify-center gap-1.5" style="cursor: pointer;">
@@ -30754,7 +31494,7 @@
           purchasedCustomers.find((x) => x.id == cId) ||
           potentialCustomers.find((x) => x.id == cId);
         if (c) {
-          createDishData.size = c.size || "standard";
+          createDishData.size = c.size || "balance";
         }
         renderCreateDishStep();
       };
@@ -30765,7 +31505,7 @@
         createDishData = {
           protein: null,
           method: null,
-          size: "standard",
+          size: "balance",
           carb: null,
           vegs: [],
           sauce: null,
@@ -31015,20 +31755,27 @@
                   3. Size Món Ăn (Quyết định mặc định của các bước sau) <span class="text-red-500 ml-1">*</span>
                   ${sizeLockedLabel}
                 </h4>
-                <div class="grid grid-cols-2 gap-3 max-w-sm">
-                  <button type="button" onclick="selectSizeInModal('standard')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "standard" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+                <div class="grid grid-cols-3 gap-3">
+                  <button type="button" onclick="selectSizeInModal('lean')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "lean" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
                     <span class="flex items-center gap-1">
-                      Size Tiêu Chuẩn
-                      ${selfMixContext && sizeKey === "standard" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                      Size Lean (S)
+                      ${selfMixContext && sizeKey === "lean" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
                     </span>
-                    <span class="text-[9px] ${sizeKey === "standard" ? "text-orange-100" : "text-slate-400"} font-medium">Bữa ăn cân bằng cơ bản</span>
+                    <span class="text-[9px] ${sizeKey === "lean" ? "text-orange-100" : "text-slate-400"} font-medium">Gọn gàng ít năng lượng</span>
                   </button>
-                  <button type="button" onclick="selectSizeInModal('large')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "large" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+<button type="button" onclick="selectSizeInModal('balance')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "balance" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
                     <span class="flex items-center gap-1">
-                      Size Lớn
-                      ${selfMixContext && sizeKey === "large" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                      Size Balance (M)
+                      ${selfMixContext && sizeKey === "balance" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
                     </span>
-                    <span class="text-[9px] ${sizeKey === "large" ? "text-orange-100" : "text-slate-400"} font-medium">Tăng cường năng lượng & đạm</span>
+                    <span class="text-[9px] ${sizeKey === "balance" ? "text-orange-100" : "text-slate-400"} font-medium">Bữa ăn cân bằng cơ bản</span>
+                  </button>
+                  <button type="button" onclick="selectSizeInModal('power')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "power" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+                    <span class="flex items-center gap-1">
+                      Size Power (L)
+                      ${selfMixContext && sizeKey === "power" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                    </span>
+                    <span class="text-[9px] ${sizeKey === "power" ? "text-orange-100" : "text-slate-400"} font-medium">Tăng cường năng lượng & đạm</span>
                   </button>
                 </div>
               </div>
@@ -31041,7 +31788,7 @@
             <div class="space-y-4 animate-fadeIn">
               <div>
                 <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Tinh Bột <span class="text-red-500">*</span></h4>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "large" ? "Lớn" : "Tiêu chuẩn"}</b> đã chọn</p>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 ${carbs
@@ -31083,7 +31830,7 @@
                   <h4 class="font-bold text-slate-800 text-sm">Chọn Rau Củ <span class="text-red-500">*</span></h4>
                   <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">${vegsLength}/3</span>
                 </div>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "large" ? "Lớn" : "Tiêu chuẩn"}</b> đã chọn. <em>(bạn có thể chọn 1 đến 3 loại)</em></p>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn. <em>(bạn có thể chọn 1 đến 3 loại)</em></p>
               </div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 ${veggies
@@ -31143,14 +31890,15 @@
           createDishData.name = defaultGeneratedName;
 
           // Calculate standard preview
-          const sumStandard = getMacrosSum("standard");
-          const sumLarge = getMacrosSum("large");
+          const sumLean = getMacrosSum("lean");
+        const sumBalance = getMacrosSum("balance");
+          const sumPower = getMacrosSum("power");
 
           html = `
             <div class="space-y-6 animate-fadeIn">
               <div>
                 <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Nước Sốt <span class="text-red-500">*</span></h4>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "large" ? "Lớn" : "Tiêu chuẩn"}</b> đã chọn</p>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   ${sauces
                     .map((s) => {
@@ -31195,30 +31943,57 @@
                   </h4>
                   <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">Tính theo Tổng Thành Phần</span>
                 </div>
-                <div class="p-4 grid gap-4 sm:grid-cols-2">
+                <div class="p-4 grid gap-4 sm:grid-cols-3">
+                  <div class="bg-emerald-50/40 rounded-xl p-3.5 border border-emerald-100/50">
+                    <div class="flex justify-between items-center border-b border-emerald-100 pb-1.5 mb-2">
+                      <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Lean (S)
+                      </span>
+                      <span class="text-sm font-bold text-emerald-900">${formatCurrency(sumLean.price)}đ</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Calo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean.kcal} kcal</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Đạm</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean.protein}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Cacbon</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean.carbs}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Béo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean.fat}g</p>
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="bg-orange-50/40 rounded-xl p-3.5 border border-orange-100/50">
                     <div class="flex justify-between items-center border-b border-orange-100 pb-1.5 mb-2">
                       <span class="text-xs font-bold text-orange-800 flex items-center gap-1">
-                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Tiêu Chuẩn (CB)
+                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Balance (M)
                       </span>
-                      <span class="text-sm font-bold text-orange-900">${formatCurrency(sumStandard.price)}đ</span>
+                      <span class="text-sm font-bold text-orange-900">${formatCurrency(sumBalance.price)}đ</span>
                     </div>
                     <div class="grid grid-cols-4 gap-2 text-center">
                       <div>
                         <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Calo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumStandard.kcal} kcal</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance.kcal} kcal</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Đạm</p>
-                        <p class="text-xs font-bold text-slate-800">${sumStandard.protein}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance.protein}g</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Cacbon</p>
-                        <p class="text-xs font-bold text-slate-800">${sumStandard.carbs}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance.carbs}g</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Béo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumStandard.fat}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance.fat}g</p>
                       </div>
                     </div>
                   </div>
@@ -31226,26 +32001,26 @@
                   <div class="bg-indigo-50/40 rounded-xl p-3.5 border border-indigo-100/50">
                     <div class="flex justify-between items-center border-b border-indigo-100 pb-1.5 mb-2">
                       <span class="text-xs font-bold text-indigo-800 flex items-center gap-1">
-                        <i class="fa-solid fa-expand text-[10px]"></i> Size Lớn (L)
+                        <i class="fa-solid fa-expand text-[10px]"></i> Size Power (L) (L)
                       </span>
-                      <span class="text-sm font-bold text-indigo-900">${formatCurrency(sumLarge.price)}đ</span>
+                      <span class="text-sm font-bold text-indigo-900">${formatCurrency(sumPower.price)}đ</span>
                     </div>
                     <div class="grid grid-cols-4 gap-2 text-center">
                       <div>
                         <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Calo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLarge.kcal} kcal</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower.kcal} kcal</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Đạm</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLarge.protein}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower.protein}g</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Cacbon</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLarge.carbs}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower.carbs}g</p>
                       </div>
                       <div>
                         <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Béo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLarge.fat}g</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower.fat}g</p>
                       </div>
                     </div>
                   </div>
@@ -31267,33 +32042,47 @@
         if (typeof dishes === "undefined" || !Array.isArray(dishes)) return;
         let changed = false;
         dishes.filter(d => d.category === "complete" && d.components).forEach(d => {
-          let sumStandard = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
-          let sumLarge = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumLean = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumBalance = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumPower = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
           const comps = d.components;
           
           const addMacros = (sourceSizes) => {
-            if (sourceSizes.standard) {
-              sumStandard.kcal += sourceSizes.standard.kcal || 0;
-              sumStandard.protein += sourceSizes.standard.protein || 0;
-              sumStandard.carbs += sourceSizes.standard.carbs || 0;
-              sumStandard.fat += sourceSizes.standard.fat || 0;
-              sumStandard.price += sourceSizes.standard.price || 0;
+            if (sourceSizes.lean) {
+              sumLean.kcal += sourceSizes.lean.kcal || 0;
+              sumLean.protein += sourceSizes.lean.protein || 0;
+              sumLean.carbs += sourceSizes.lean.carbs || 0;
+              sumLean.fat += sourceSizes.lean.fat || 0;
+              sumLean.price += sourceSizes.lean.price || 0;
             }
-            if (sourceSizes.large) {
-              sumLarge.kcal += sourceSizes.large.kcal || 0;
-              sumLarge.protein += sourceSizes.large.protein || 0;
-              sumLarge.carbs += sourceSizes.large.carbs || 0;
-              sumLarge.fat += sourceSizes.large.fat || 0;
-              sumLarge.price += sourceSizes.large.price || 0;
+
+            if (sourceSizes.balance) {
+              sumBalance.kcal += sourceSizes.balance.kcal || 0;
+              sumBalance.protein += sourceSizes.balance.protein || 0;
+              sumBalance.carbs += sourceSizes.balance.carbs || 0;
+              sumBalance.fat += sourceSizes.balance.fat || 0;
+              sumBalance.price += sourceSizes.balance.price || 0;
+            }
+            if (sourceSizes.power) {
+              sumPower.kcal += sourceSizes.power.kcal || 0;
+              sumPower.protein += sourceSizes.power.protein || 0;
+              sumPower.carbs += sourceSizes.power.carbs || 0;
+              sumPower.fat += sourceSizes.power.fat || 0;
+              sumPower.price += sourceSizes.power.price || 0;
             }
           };
 
           // Protein & Method
           const protein = dishes.find(x => x.id === comps.proteinId);
-          if (protein && protein.methods) {
-            const methodObj = protein.methods.find(m => m.name === comps.methodName);
+          if (protein) {
+            let methodObj = null;
+            if (protein.methods) {
+              methodObj = protein.methods.find(m => m.name === comps.methodName);
+            }
             if (methodObj && methodObj.sizes) {
               addMacros(methodObj.sizes);
+            } else if (protein.sizes) {
+              addMacros(protein.sizes);
             }
           }
           
@@ -31320,20 +32109,28 @@
           }
 
           if (!d.sizes) d.sizes = {};
-          if (!d.sizes.standard) d.sizes.standard = {};
-          if (!d.sizes.large) d.sizes.large = {};
+          if (!d.sizes.lean) d.sizes.lean = {};
           
-          d.sizes.standard.kcal = sumStandard.kcal;
-          d.sizes.standard.protein = sumStandard.protein;
-          d.sizes.standard.carbs = sumStandard.carbs;
-          d.sizes.standard.fat = sumStandard.fat;
-          d.sizes.standard.price = sumStandard.price;
+          d.sizes.lean.kcal = sumLean.kcal;
+          d.sizes.lean.protein = sumLean.protein;
+          d.sizes.lean.carbs = sumLean.carbs;
+          d.sizes.lean.fat = sumLean.fat;
+          d.sizes.lean.price = sumLean.price;
 
-          d.sizes.large.kcal = sumLarge.kcal;
-          d.sizes.large.protein = sumLarge.protein;
-          d.sizes.large.carbs = sumLarge.carbs;
-          d.sizes.large.fat = sumLarge.fat;
-          d.sizes.large.price = sumLarge.price;
+          if (!d.sizes.balance) d.sizes.balance = {};
+          if (!d.sizes.power) d.sizes.power = {};
+          
+          d.sizes.balance.kcal = sumBalance.kcal;
+          d.sizes.balance.protein = sumBalance.protein;
+          d.sizes.balance.carbs = sumBalance.carbs;
+          d.sizes.balance.fat = sumBalance.fat;
+          d.sizes.balance.price = sumBalance.price;
+
+          d.sizes.power.kcal = sumPower.kcal;
+          d.sizes.power.protein = sumPower.protein;
+          d.sizes.power.carbs = sumPower.carbs;
+          d.sizes.power.fat = sumPower.fat;
+          d.sizes.power.price = sumPower.price;
           
           changed = true;
         });
@@ -31345,12 +32142,22 @@
       };
       function getMacrosSum(sizeKey) {
         let sum = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
-        if (createDishData.protein && createDishData.method) {
-          const methodObj = createDishData.protein.methods.find(
-            (m) => m.name === createDishData.method,
-          );
+        if (createDishData.protein) {
+          let methodObj = null;
+          if (createDishData.protein.methods && createDishData.method) {
+            methodObj = createDishData.protein.methods.find(
+              (m) => m.name === createDishData.method,
+            );
+          }
           if (methodObj && methodObj.sizes && methodObj.sizes[sizeKey]) {
             const sizeData = methodObj.sizes[sizeKey];
+            sum.kcal += sizeData.kcal || 0;
+            sum.protein += sizeData.protein || 0;
+            sum.carbs += sizeData.carbs || 0;
+            sum.fat += sizeData.fat || 0;
+            sum.price += sizeData.price || 0;
+          } else if (createDishData.protein.sizes && createDishData.protein.sizes[sizeKey]) {
+            const sizeData = createDishData.protein.sizes[sizeKey];
             sum.kcal += sizeData.kcal || 0;
             sum.protein += sizeData.protein || 0;
             sum.carbs += sizeData.carbs || 0;
@@ -31474,8 +32281,8 @@
         const nameVal =
           (nameInputEl ? nameInputEl.value.trim() : "") || createDishData.name;
 
-        const sumStandard = getMacrosSum("standard");
-        const sumLarge = getMacrosSum("large");
+        const sumBalance = getMacrosSum("balance");
+        const sumPower = getMacrosSum("power");
 
         const vegsIngredients = createDishData.vegs
           ? createDishData.vegs.map((v) => v.name).join(", ")
@@ -31499,20 +32306,29 @@
             sauceId: createDishData.sauce ? createDishData.sauce.id : null
           },
           sizes: {
-            standard: {
-              kcal: sumStandard.kcal,
-              protein: sumStandard.protein,
-              carbs: sumStandard.carbs,
-              fat: sumStandard.fat,
-              price: sumStandard.price,
+            lean: {
+              kcal: sumLean.kcal,
+              protein: sumLean.protein,
+              carbs: sumLean.carbs,
+              fat: sumLean.fat,
+              price: sumLean.price,
+              mainIngredientQty: 0.15,
+            },
+
+            balance: {
+              kcal: sumBalance.kcal,
+              protein: sumBalance.protein,
+              carbs: sumBalance.carbs,
+              fat: sumBalance.fat,
+              price: sumBalance.price,
               mainIngredientQty: 0.15,
             },
             large: {
-              kcal: sumLarge.kcal,
-              protein: sumLarge.protein,
-              carbs: sumLarge.carbs,
-              fat: sumLarge.fat,
-              price: sumLarge.price,
+              kcal: sumPower.kcal,
+              protein: sumPower.protein,
+              carbs: sumPower.carbs,
+              fat: sumPower.fat,
+              price: sumPower.price,
               mainIngredientQty: 0.25,
             },
           },
@@ -31566,7 +32382,7 @@
             if (!c.weeklyMenu[dKey]) c.weeklyMenu[dKey] = {};
             c.weeklyMenu[dKey][mKey] = {
               dishId: newDish.id,
-              size: c.size || "standard",
+              size: c.size || "balance",
             };
             if (typeof syncStateToServer === "function") {
               lastStateStr = "";
