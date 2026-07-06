@@ -18260,7 +18260,13 @@
         
         const listContainer = document.getElementById("cooking-methods-list");
         listContainer.innerHTML = dish.methods.map((method, index) => {
-          const hasSImage = method.image && method.image.trim() !== "";
+                    const hasSImage = method.image && method.image.trim() !== "";
+          const leanPrice = (method.sizes && method.sizes.lean && method.sizes.lean.price) || 0;
+          const leanKcal = (method.sizes && method.sizes.lean && method.sizes.lean.kcal) || 0;
+          const leanProtein = (method.sizes && method.sizes.lean && method.sizes.lean.protein) || 0;
+          const leanCarbs = (method.sizes && method.sizes.lean && method.sizes.lean.carbs) || 0;
+          const leanFat = (method.sizes && method.sizes.lean && method.sizes.lean.fat) || 0;
+          const leanQty = method.sizes && method.sizes.lean && method.sizes.lean.mainIngredientQty;
           const balancePrice = (method.sizes && method.sizes.balance && method.sizes.balance.price) || 0;
           const balanceKcal = (method.sizes && method.sizes.balance && method.sizes.balance.kcal) || 0;
           const balanceProtein = (method.sizes && method.sizes.balance && method.sizes.balance.protein) || 0;
@@ -20872,7 +20878,7 @@
         const dish = dishes.find((d) => d.id === dishId);
         if (!dish) return;
 
-        const price = dish.sizes[sizeKey].price;
+        const price = dish.sizes[sizeKey]?.price || 0;
         const sizeLabel = sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)";
         const existingItem = cart.find(
           (item) => item.dishId === dishId && item.sizeKey === sizeKey,
@@ -20950,7 +20956,7 @@
           .map((item, index) => {
             const dishObj = dishes.find(d => d.id === item.dishId);
             if (dishObj && dishObj.sizes && dishObj.sizes[item.sizeKey]) {
-                item.price = dishObj.sizes[item.sizeKey].price || item.price;
+                item.price = dishObj.sizes[item.sizeKey]?.price || item.price;
             }
             subtotal += item.price * item.qty;
             return `
@@ -21932,16 +21938,39 @@
               item.name ||
               dishes.find((d) => d.id == item.dishId)?.name ||
               "Unknown";
+            const dish = dishes.find(d => d.id == item.dishId);
+            let methodName = "";
+            let estTime = 10;
+            if (dish && dish.components && dish.components.methodName) {
+                methodName = dish.components.methodName;
+            } else if (dish && dish.methods && dish.methods.length > 0) {
+                methodName = dish.methods[0].name;
+            } else if (dName) {
+                if (dName.toLowerCase().includes('nướng')) methodName = "Nướng";
+                else if (dName.toLowerCase().includes('áp chảo')) methodName = "Áp chảo";
+                else if (dName.toLowerCase().includes('sốt')) methodName = "Sốt";
+                else if (dName.toLowerCase().includes('luộc')) methodName = "Luộc";
+                else if (dName.toLowerCase().includes('hấp')) methodName = "Hấp";
+            }
+            
+            const lower = methodName.toLowerCase();
+            if (lower.includes('nướng')) estTime = 15;
+            else if (lower.includes('áp chảo')) estTime = 12;
+            else if (lower.includes('sốt')) estTime = 15;
+            else if (lower.includes('hấp')) estTime = 12;
+            else if (lower.includes('luộc')) estTime = 10;
+            
             const size =
               item.sizeLabel || (item.size === "power" ? "Power (L)" : item.size === "balance" ? "Balance (M)" : "Lean (S)");
             const groupKey = `${item.dishId}_${size}_${kTime}`;
-
             if (!kitchenTasksMap[groupKey]) {
               kitchenTasksMap[groupKey] = {
                 id: groupKey,
                 dishId: item.dishId,
                 name: dName,
                 size: size,
+                methodName: methodName,
+                estTime: estTime,
                 deliveryTime: kTime,
                 qty: 0,
                 orders: [],
@@ -22025,6 +22054,25 @@
                 `<span class="bg-white/50 px-1.5 py-0.5 rounded border border-black/10">#${o.id}(x${o.qty})</span>`,
             )
             .join(" ");
+            
+          let progressHtml = "";
+          if (task.state === "cooking") {
+             const startTimes = JSON.parse(localStorage.getItem("nutriadmin_kitchen_cooking_starts") || "{}");
+             const startTime = startTimes[task.id] || Date.now();
+             const estTimeMs = (task.estTime || 10) * 60 * 1000;
+             
+             progressHtml = `
+             <div class="mb-3 kitchen-progress-container" data-start="${startTime}" data-est="${estTimeMs}">
+                <div class="flex justify-between items-center text-[10px] mb-1 font-semibold">
+                    <span class="text-amber-600 flex items-center gap-1"><i class="fa-solid fa-fire fa-fade"></i> ${task.methodName || 'Đang nấu'}</span>
+                    <span class="text-slate-600 kitchen-progress-text">Tính toán...</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                    <div class="bg-amber-500 h-1.5 rounded-full kitchen-progress-bar transition-all duration-1000" style="width: 0%"></div>
+                </div>
+             </div>`;
+          }
+
           return `
                    <div class="bg-white rounded-lg p-3 shadow-sm border border-slate-200 hover:shadow-md transition-shadow relative">
                       <div class="flex justify-between items-start mb-2">
@@ -22037,6 +22085,7 @@
                       <div class="text-[10px] text-slate-500 mb-3 leading-relaxed">
                          Từ đơn: ${ordersMsg}
                       </div>
+                      ${progressHtml}
                       ${nextState ? `<button onclick="updateKitchenTask('${task.id}', '${nextState}')" class="w-full ${btnColor} text-white text-xs font-bold py-2 rounded transition-colors flex justify-center items-center gap-1.5 active:scale-95"><i class="fa-solid fa-${nextIcon}"></i> ${nextLabel}</button>` : ""}
                       ${task.state === "done" ? `<button onclick="updateKitchenTask('${task.id}', 'todo')" class="w-full bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-medium py-1.5 rounded transition-colors mt-2">Nấu lại</button>` : ""}
                    </div>
@@ -22090,14 +22139,31 @@
           doneList.length;
       }
 
-      function updateKitchenTask(id, newState) {
+            function updateKitchenTask(id, newState) {
         const savedStates = JSON.parse(
-          localStorage.getItem("nutriadmin_kitchen_states") || "{}",
+          localStorage.getItem("nutriadmin_kitchen_states") || "{}"
         );
+        const startTimes = JSON.parse(
+          localStorage.getItem("nutriadmin_kitchen_cooking_starts") || "{}"
+        );
+        
         savedStates[id] = newState;
+        
+        if (newState === "cooking") {
+          if (!startTimes[id]) {
+            startTimes[id] = Date.now();
+          }
+        } else {
+          delete startTimes[id];
+        }
+        
         localStorage.setItem(
           "nutriadmin_kitchen_states",
-          JSON.stringify(savedStates),
+          JSON.stringify(savedStates)
+        );
+        localStorage.setItem(
+          "nutriadmin_kitchen_cooking_starts",
+          JSON.stringify(startTimes)
         );
         renderKitchen();
       }
@@ -32406,5 +32472,56 @@
       id="realtime-notification-container"
       class="fixed top-6 right-6 z-[100] flex flex-col gap-3 max-w-sm w-full pointer-events-none"
     ></div>
-  </body>
+  
+    <script>
+      // Kitchen Progress Timer
+      setInterval(() => {
+        const containers = document.querySelectorAll('.kitchen-progress-container');
+        const now = Date.now();
+        containers.forEach(container => {
+           const start = parseInt(container.getAttribute('data-start'));
+           const estMs = parseInt(container.getAttribute('data-est'));
+           
+           if (!start || !estMs) return;
+           
+           let elapsed = now - start;
+           let remaining = estMs - elapsed;
+           
+           let percent = (elapsed / estMs) * 100;
+           if (percent > 100) percent = 100;
+           
+           const bar = container.querySelector('.kitchen-progress-bar');
+           if (bar) {
+             bar.style.width = percent + '%';
+             if (percent >= 100) {
+               bar.classList.remove('bg-amber-500');
+               bar.classList.add('bg-emerald-500');
+             }
+           }
+           
+           const textEl = container.querySelector('.kitchen-progress-text');
+           if (textEl) {
+             if (remaining <= 0) {
+               textEl.innerText = "Hoàn tất!";
+               textEl.classList.remove('text-slate-600');
+               textEl.classList.add('text-emerald-600');
+               
+               const methodIcon = container.querySelector('.fa-fire');
+               if (methodIcon) {
+                   methodIcon.classList.remove('fa-fire', 'fa-fade', 'text-amber-600');
+                   methodIcon.classList.add('fa-check', 'text-emerald-600');
+                   methodIcon.parentElement.classList.remove('text-amber-600');
+                   methodIcon.parentElement.classList.add('text-emerald-600');
+               }
+             } else {
+               const min = Math.floor(remaining / 60000);
+               const sec = Math.floor((remaining % 60000) / 1000);
+               textEl.innerText = `Còn ${min}p ${sec}s`;
+             }
+           }
+        });
+      }, 1000);
+    </script>
+
+</body>
 </html>
