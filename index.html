@@ -18425,12 +18425,34 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         // Khôi phục việc nhúng payload Firebase/API key để QR có thể hoạt động đúng với DB cá nhân
         landingUrl = buildUrlWithCredentials(landingUrl);
-        document.getElementById("landing-url").value = landingUrl;
-        document.getElementById("qr-code-img").src =
-          `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(landingUrl)}&margin=0`;
+        
+        document.getElementById("qr-code-img").src = "https://via.placeholder.com/250x250.png?text=Dang+Tao+Ma+QR...";
+        document.getElementById("landing-url").value = "Đang tạo link rút gọn...";
 
         closeTrackingModal();
         document.getElementById("qr-modal").classList.remove("hidden");
+
+        try {
+          const res = await fetch("/api/shorten", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: landingUrl }),
+          });
+          if (!res.ok) throw new Error("Failed to shorten");
+          const data = await res.json();
+          const shortUrl = data.shortUrl;
+          
+          document.getElementById("landing-url").value = shortUrl;
+          document.getElementById("qr-code-img").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
+        } catch (e) {
+          console.error("Shortening error, fallback to long url", e);
+          document.getElementById("landing-url").value = landingUrl;
+          document.getElementById("qr-code-img").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(landingUrl)}&margin=0`;
+        }
       }
 
       function closeQRModal() {
@@ -26178,7 +26200,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           .join("");
       }
 
-      function showShipperQR(id) {
+      async function showShipperQR(id) {
         currentShipperAppId = id;
         const shipper = shippers.find((s) => s.id === id);
         if (!shipper) return;
@@ -26187,10 +26209,31 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         appUrl = buildUrlWithCredentials(appUrl);
         document.getElementById("shipper-qr-name").innerText =
           "TÀI XẾ: " + shipper.name;
+        
         document.getElementById("shipper-qr-img").src =
-          `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(appUrl)}&margin=0`;
+          "https://via.placeholder.com/250x250.png?text=Dang+Tao+Ma+QR...";
 
         document.getElementById("shipper-qr-modal").classList.remove("hidden");
+
+        try {
+          const res = await fetch("/api/shorten", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ url: appUrl }),
+          });
+          if (!res.ok) throw new Error("Failed to shorten");
+          const data = await res.json();
+          const shortUrl = data.shortUrl;
+
+          document.getElementById("shipper-qr-img").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
+        } catch (e) {
+          console.error("Shortening error, fallback to long url", e);
+          document.getElementById("shipper-qr-img").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(appUrl)}&margin=0`;
+        }
       }
 
       function closeShipperQRModal() {
