@@ -18427,19 +18427,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         landingUrl = buildUrlWithCredentials(landingUrl);
         document.getElementById("landing-url").value = landingUrl;
         document.getElementById("qr-code-img").src =
-          "https://via.placeholder.com/250x250.png?text=Loading...";
-
-        try {
-            // Dùng TinyURL thay vì is.gd vì is.gd thường xuyên bị lỗi với URL dài hoặc có ký tự đặc biệt
-            const response = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(landingUrl)}`);
-            const shortUrl = await response.text();
-            document.getElementById("qr-code-img").src =
-              `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-        } catch(e) {
-            console.error("Failed to shorten url", e);
-            document.getElementById("qr-code-img").src =
-              `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(landingUrl)}&margin=0`;
-        }
+          `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(landingUrl)}&margin=0`;
 
         closeTrackingModal();
         document.getElementById("qr-modal").classList.remove("hidden");
@@ -26200,12 +26188,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.getElementById("shipper-qr-name").innerText =
           "TÀI XẾ: " + shipper.name;
         document.getElementById("shipper-qr-img").src =
-          "https://via.placeholder.com/250x250.png?text=Loading...";
-
-        getShortUrlJsonp(appUrl, function (shortUrl) {
-          document.getElementById("shipper-qr-img").src =
-            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-        });
+          `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(appUrl)}&margin=0`;
 
         document.getElementById("shipper-qr-modal").classList.remove("hidden");
       }
