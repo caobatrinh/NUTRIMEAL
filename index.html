@@ -14272,10 +14272,7 @@
         for (let i = 0; i < delays.length; i++) {
           try {
             const headers = { "Content-Type": "application/json" };
-            if (customKey) {
-              headers["x-custom-api-key"] = customKey;
-              headers["x-custom-gemini-key"] = customKey;
-            }
+            if (!customKey) headers["x-custom-api-key"] = customKey;
 
             const response = await fetch(url, {
               method: "POST",
@@ -17559,9 +17556,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
-      function saveCustomApiKey() {
+      async function saveCustomApiKey() {
         const key = document.getElementById("custom-api-key").value.trim();
         localStorage.setItem("nutriadmin_custom_api_key", key);
+        try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_key: key }) }); } catch(e){}
         if (key) {
           showToast("Đã lưu API Key cá nhân thành công.", "success");
         } else {
@@ -17663,7 +17661,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
-      function saveCustomFirebaseConfig() {
+      async function saveCustomFirebaseConfig() {
         let configStr = document
           .getElementById("custom-firebase-config")
           .value.trim();
@@ -17674,6 +17672,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               const config = (new Function('return ' + match[0]))();
               const normalizedJson = JSON.stringify(config);
               localStorage.setItem("nutriadmin_custom_firebase_config", normalizedJson);
+              try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firebase_config: normalizedJson }) }); } catch(e){}
               showToast("Đã lưu cấu hình Cloud thành công.", "success");
             } else {
               throw new Error("No object found");
@@ -17683,6 +17682,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
         } else {
           localStorage.removeItem("nutriadmin_custom_firebase_config");
+          try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firebase_config: "" }) }); } catch(e){}
           showToast(
             "Đã xóa cấu hình Cloud. Hệ thống sẽ lưu dữ liệu Local.",
             "info",
@@ -18356,23 +18356,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         try {
           const cfg = {};
           if (customKey) cfg.ak = customKey;
-          if (customFb) {
-            try {
-              const fbObj = JSON.parse(customFb);
-              if (fbObj.apiKey && fbObj.projectId && fbObj.appId) {
-                // Compress standard firebase config keys
-                cfg.fb = {
-                  k: fbObj.apiKey,
-                  p: fbObj.projectId,
-                  i: fbObj.appId
-                };
-              } else {
-                cfg.fb = customFb;
-              }
-            } catch (e) {
-              cfg.fb = customFb;
-            }
-          }
+          if (customFb) cfg.fb = customFb;
 
           const hash = btoa(encodeURIComponent(JSON.stringify(cfg)));
           return base + (base.includes("?") ? "&" : "?") + "cfg=" + hash;
@@ -18444,36 +18428,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         // Khôi phục việc nhúng payload Firebase/API key để QR có thể hoạt động đúng với DB cá nhân
         landingUrl = buildUrlWithCredentials(landingUrl);
-        
-        document.getElementById("qr-code-img").src = "https://via.placeholder.com/250x250.png?text=Dang+Tao+Ma+QR...";
-        document.getElementById("landing-url").value = "Đang tạo link rút gọn...";
+        document.getElementById("landing-url").value = landingUrl;
+        document.getElementById("qr-code-img").src =
+          "https://via.placeholder.com/250x250.png?text=Loading...";
+
+        getShortUrlJsonp(landingUrl, function (shortUrl) {
+          document.getElementById("qr-code-img").src =
+            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
+        });
 
         closeTrackingModal();
         document.getElementById("qr-modal").classList.remove("hidden");
-
-        try {
-          const res = await fetch("/api/shorten", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ url: landingUrl }),
-          });
-          if (!res.ok) throw new Error("Failed to shorten");
-          const data = await res.json();
-          const shortUrl = data.shortUrl;
-          
-          document.getElementById("landing-url").value = shortUrl;
-          document.getElementById("qr-code-img").src =
-            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-        } catch (e) {
-          console.error("Shortening error, trying is.gd client-side JSONP", e);
-          getShortUrlJsonp(landingUrl, function (shortUrl) {
-            document.getElementById("landing-url").value = shortUrl;
-            document.getElementById("qr-code-img").src =
-              `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-          });
-        }
       }
 
       function closeQRModal() {
@@ -26221,7 +26186,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           .join("");
       }
 
-      async function showShipperQR(id) {
+      function showShipperQR(id) {
         currentShipperAppId = id;
         const shipper = shippers.find((s) => s.id === id);
         if (!shipper) return;
@@ -26230,33 +26195,15 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         appUrl = buildUrlWithCredentials(appUrl);
         document.getElementById("shipper-qr-name").innerText =
           "TÀI XẾ: " + shipper.name;
-        
         document.getElementById("shipper-qr-img").src =
-          "https://via.placeholder.com/250x250.png?text=Dang+Tao+Ma+QR...";
+          "https://via.placeholder.com/250x250.png?text=Loading...";
 
-        document.getElementById("shipper-qr-modal").classList.remove("hidden");
-
-        try {
-          const res = await fetch("/api/shorten", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ url: appUrl }),
-          });
-          if (!res.ok) throw new Error("Failed to shorten");
-          const data = await res.json();
-          const shortUrl = data.shortUrl;
-
+        getShortUrlJsonp(appUrl, function (shortUrl) {
           document.getElementById("shipper-qr-img").src =
             `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-        } catch (e) {
-          console.error("Shortening error, trying is.gd client-side JSONP", e);
-          getShortUrlJsonp(appUrl, function (shortUrl) {
-            document.getElementById("shipper-qr-img").src =
-              `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
-          });
-        }
+        });
+
+        document.getElementById("shipper-qr-modal").classList.remove("hidden");
       }
 
       function closeShipperQRModal() {
@@ -29736,10 +29683,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         for (let i = 0; i < delays.length; i++) {
           try {
             const headers = { "Content-Type": "application/json" };
-            if (customKey) {
-              headers["x-custom-api-key"] = customKey;
-              headers["x-custom-gemini-key"] = customKey;
-            }
+            if (!customKey) headers["x-custom-api-key"] = customKey;
 
             const response = await fetch(url, {
               method: "POST",
@@ -29978,7 +29922,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       let firebaseSyncTask = null;
 
       function initFirebaseSync() {
-        let configStr = localStorage.getItem(
+        const configStr = localStorage.getItem(
           "nutriadmin_custom_firebase_config",
         );
         if (!configStr) return;
@@ -32781,7 +32725,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         setTimeout(runLoop, 1000 / mascotFps);
       }
 
-      window.onload = () => {
+      window.onload = async () => {
+        try {
+          const res = await fetch('/api/config');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.api_key) {
+              localStorage.setItem("nutriadmin_custom_api_key", data.api_key);
+            } else if (data.api_key === "") {
+              localStorage.removeItem("nutriadmin_custom_api_key");
+            }
+            if (data.firebase_config) {
+              localStorage.setItem("nutriadmin_custom_firebase_config", data.firebase_config);
+            } else if (data.firebase_config === "") {
+              localStorage.removeItem("nutriadmin_custom_firebase_config");
+            }
+          }
+        } catch(e) {}
+
         const urlParams = new URLSearchParams(window.location.search);
         let cfgHash = null;
         if (window.location.hash.startsWith("#cfg=")) {
@@ -32796,28 +32757,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             const cfg = JSON.parse(decodeURIComponent(cfgStr));
             if (cfg.ak)
               localStorage.setItem("nutriadmin_custom_api_key", cfg.ak);
-            if (cfg.fb) {
-              let decompressedFb = cfg.fb;
-              if (cfg.fb && typeof cfg.fb === "object" && cfg.fb.k && cfg.fb.p && cfg.fb.i) {
-                const decompressedObj = {
-                  apiKey: cfg.fb.k,
-                  projectId: cfg.fb.p,
-                  appId: cfg.fb.i,
-                  authDomain: `${cfg.fb.p}.firebaseapp.com`,
-                  storageBucket: `${cfg.fb.p}.appspot.com`
-                };
-                const appIdParts = cfg.fb.i.split(":");
-                if (appIdParts.length > 1) {
-                  decompressedObj.messagingSenderId = appIdParts[1];
-                }
-                decompressedFb = JSON.stringify(decompressedObj);
-              } else if (typeof cfg.fb === "string" && cfg.fb.trim().startsWith("{")) {
-                decompressedFb = cfg.fb;
-              } else {
-                decompressedFb = typeof cfg.fb === "string" ? cfg.fb : JSON.stringify(cfg.fb);
-              }
-              localStorage.setItem("nutriadmin_custom_firebase_config", decompressedFb);
-            }
+            if (cfg.fb)
+              localStorage.setItem("nutriadmin_custom_firebase_config", cfg.fb);
 
             if (urlParams.has("cfg")) {
               urlParams.delete("cfg");
@@ -35807,14 +35748,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
 
           try {
-              const headers = {};
-              const customKey = localStorage.getItem("nutriadmin_custom_api_key") || "";
-              if (customKey) {
-                  headers["x-custom-gemini-key"] = customKey;
-              }
               const res = await fetch('/api/analyze-food', {
                   method: 'POST',
-                  headers: headers,
                   body: formData
               });
               
