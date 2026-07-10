@@ -18397,35 +18397,23 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         showToast("Đã copy đường dẫn/mã thành công!");
       }
 
-      function getShortUrlJsonp(longUrl, callback) {
-        const script = document.createElement("script");
-        const callbackName =
-          "jsonp_callback_" + Math.round(1000000 * Math.random());
-
-        const timeoutId = setTimeout(() => {
-          if (window[callbackName]) {
-            delete window[callbackName];
-            document.body.removeChild(script);
-            callback(longUrl);
+      async function getShortUrl(longUrl, callback) {
+        try {
+          const res = await fetch("/api/shorten", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url: longUrl })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.shortUrl) {
+              return callback(data.shortUrl);
+            }
           }
-        }, 5000);
-
-        window[callbackName] = function (data) {
-          clearTimeout(timeoutId);
-          delete window[callbackName];
-          document.body.removeChild(script);
-          callback(data.shorturl || longUrl);
-        };
-
-        script.onerror = function () {
-          clearTimeout(timeoutId);
-          delete window[callbackName];
-          document.body.removeChild(script);
-          callback(longUrl);
-        };
-
-        script.src = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}&callback=${callbackName}`;
-        document.body.appendChild(script);
+        } catch(e) {
+          console.error("Shorten URL error:", e);
+        }
+        callback(longUrl);
       }
 
       async function openQRModal(sourceCode = null) {
@@ -18449,7 +18437,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.getElementById("qr-code-img").src =
           "https://via.placeholder.com/250x250.png?text=Loading...";
 
-        getShortUrlJsonp(landingUrl, function (shortUrl) {
+        getShortUrl(landingUrl, function (shortUrl) {
           document.getElementById("qr-code-img").src =
             `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
         });
