@@ -709,6 +709,26 @@
         });
       });
     </script>
+
+    <!-- Cấu hình Firebase & Gemini cho Github Pages -->
+    <script>
+      window.NURI_FIREBASE_CONFIG = null; // Dán chuỗi JSON config của Firebase vào đây. VD: '{"apiKey": "...", ...}'
+      window.NURI_GEMINI_API_KEY = null; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
+    </script>
+
+    <!-- Fetch config từ Server -->
+    <script>
+      (async function() {
+        try {
+          const res = await fetch("/api/config");
+          const data = await res.json();
+          if (data && data.firebaseConfig) {
+             window.NURI_FIREBASE_CONFIG = data.firebaseConfig;
+             if (typeof initFirebaseSync === 'function') initFirebaseSync();
+          }
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body
     class="bg-slate-50 dark:bg-slate-900 min-h-screen font-sans text-slate-800 dark:text-slate-100 pb-20 transition-colors duration-200 overflow-x-hidden"
@@ -14252,8 +14272,7 @@
       // 2. UTILITY FUNCTIONS (Toasts, Modals, API)
       // ==========================================
       async function fetchGeminiAPI(prompt, isJson = false) {
-        const customKey =
-          localStorage.getItem("nutriadmin_custom_api_key") || "";
+        const customKey = localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY || "";
         const url = customKey
           ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
           : `/api/gemini`;
@@ -17307,9 +17326,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document.getElementById("custom-api-key").value = customKey;
         }
 
-        const customFirebase = localStorage.getItem(
-          "nutriadmin_custom_firebase_config",
-        );
+        const customFirebase = (localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG);
         if (customFirebase) {
           document.getElementById("custom-firebase-config").value =
             customFirebase;
@@ -17556,10 +17573,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
-      async function saveCustomApiKey() {
+      function saveCustomApiKey() {
         const key = document.getElementById("custom-api-key").value.trim();
         localStorage.setItem("nutriadmin_custom_api_key", key);
-        try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ api_key: key }) }); } catch(e){}
         if (key) {
           showToast("Đã lưu API Key cá nhân thành công.", "success");
         } else {
@@ -17661,7 +17677,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
-      async function saveCustomFirebaseConfig() {
+      function saveCustomFirebaseConfig() {
         let configStr = document
           .getElementById("custom-firebase-config")
           .value.trim();
@@ -17672,7 +17688,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               const config = (new Function('return ' + match[0]))();
               const normalizedJson = JSON.stringify(config);
               localStorage.setItem("nutriadmin_custom_firebase_config", normalizedJson);
-              try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firebase_config: normalizedJson }) }); } catch(e){}
               showToast("Đã lưu cấu hình Cloud thành công.", "success");
             } else {
               throw new Error("No object found");
@@ -17682,7 +17697,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
         } else {
           localStorage.removeItem("nutriadmin_custom_firebase_config");
-          try { await fetch('/api/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ firebase_config: "" }) }); } catch(e){}
           showToast(
             "Đã xóa cấu hình Cloud. Hệ thống sẽ lưu dữ liệu Local.",
             "info",
@@ -18347,9 +18361,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function buildUrlWithCredentials(base) {
         const customKey = localStorage.getItem("nutriadmin_custom_api_key");
-        const customFb = localStorage.getItem(
-          "nutriadmin_custom_firebase_config",
-        );
+        const customFb = (localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG);
 
         if (!customKey && !customFb) return base;
 
@@ -29668,8 +29680,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const fullSystemInstruction =
           getChatSystemInstruction(storeBrandName) + dynamicKnowledgeBase;
 
-        const customKey =
-          localStorage.getItem("nutriadmin_custom_api_key") || "";
+        const customKey = localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY || "";
         const url = customKey
           ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
           : `/api/gemini`;
@@ -29703,11 +29714,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             return aiText;
           } catch (error) {
             if (i === delays.length - 1) {
-              chatHistory.pop(); // Remove user message from history on final failure
+              const fallback = "Xin lỗi, AI đang gặp sự cố kết nối (hoặc chưa cấu hình API Key). Nhưng tin nhắn của bạn đã được lưu lại để bộ phận CSKH hỗ trợ! 😔";
+              chatHistory.push({ role: "model", parts: [{ text: fallback }] });
               isSystemProcessing = false;
               saveAllChats();
               console.error("Chat API Error:", error);
-              return "Xin lỗi, mình đang gặp sự cố kết nối. Bạn thử lại sau chút nhé! 😔";
+              return fallback;
             }
             await new Promise((res) => setTimeout(res, delays[i]));
           }
@@ -29911,6 +29923,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               renderCustomerTracking();
             if (typeof updatePersonalMascot === "function")
               updatePersonalMascot();
+            if (typeof drawEmptyStateMascot === "function") drawEmptyStateMascot();
+            if (typeof drawPopupMascot === "function") drawPopupMascot();
+            if (typeof drawOrderSuccessMascot === "function") drawOrderSuccessMascot();
+            if (typeof drawTrustBannerMascot === "function") drawTrustBannerMascot();
+            if (typeof drawFabMascot === "function") drawFabMascot();
+            if (typeof drawSubMenuMascot === "function") drawSubMenuMascot();
+            if (typeof drawAdviceMascot === "function") drawAdviceMascot();
+            if (typeof drawRankMascots === "function") drawRankMascots();
           }
         } catch (e) {
           console.error("Error syncing missing mascot sequences", e);
@@ -29922,18 +29942,22 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       let firebaseSyncTask = null;
 
       function initFirebaseSync() {
-        const configStr = localStorage.getItem(
-          "nutriadmin_custom_firebase_config",
-        );
+        let configStr = localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG;
         if (!configStr) return;
 
         let config;
-        try {
-          let looseJson = configStr.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"');
-          config = JSON.parse(looseJson);
-          configStr = looseJson; // Update it for saving
-        } catch (e) {
-          return;
+        if (typeof configStr === 'object') {
+          config = configStr;
+          configStr = JSON.stringify(configStr);
+        } else {
+          try {
+            let looseJson = configStr.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"');
+            config = JSON.parse(looseJson);
+            configStr = looseJson; // Update it for saving
+          } catch (e) {
+            console.error("Firebase config parse error", e);
+            return;
+          }
         }
 
         if (!config.apiKey || !config.projectId) return;
@@ -31777,7 +31801,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         const readPromises = files.map((file) => {
           return new Promise((resolve) => {
-            compressMascotImage(file, 400, 400, 0.7, (dataUrl) => {
+            compressMascotImage(file, 200, 200, 0.6, (dataUrl) => {
               resolve(dataUrl);
             });
           });
@@ -32725,24 +32749,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         setTimeout(runLoop, 1000 / mascotFps);
       }
 
-      window.onload = async () => {
-        try {
-          const res = await fetch('/api/config');
-          if (res.ok) {
-            const data = await res.json();
-            if (data.api_key) {
-              localStorage.setItem("nutriadmin_custom_api_key", data.api_key);
-            } else if (data.api_key === "") {
-              localStorage.removeItem("nutriadmin_custom_api_key");
-            }
-            if (data.firebase_config) {
-              localStorage.setItem("nutriadmin_custom_firebase_config", data.firebase_config);
-            } else if (data.firebase_config === "") {
-              localStorage.removeItem("nutriadmin_custom_firebase_config");
-            }
-          }
-        } catch(e) {}
-
+      window.onload = () => {
         const urlParams = new URLSearchParams(window.location.search);
         let cfgHash = null;
         if (window.location.hash.startsWith("#cfg=")) {
@@ -35173,6 +35180,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const nameVal =
           (nameInputEl ? nameInputEl.value.trim() : "") || createDishData.name;
 
+        const sumLean = getMacrosSum("lean");
         const sumBalance = getMacrosSum("balance");
         const sumPower = getMacrosSum("power");
 
