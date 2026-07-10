@@ -17861,9 +17861,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             .value.trim();
           if (config) {
             try {
-              let looseJson = config.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"');
-              JSON.parse(looseJson);
-              localStorage.setItem("nutriadmin_custom_firebase_config", looseJson);
+              const match = config.match(/\{[\s\S]*\}/);
+              let parsedConfig;
+              if (match) {
+                parsedConfig = (new Function('return ' + match[0]))();
+              } else {
+                parsedConfig = JSON.parse(config);
+              }
+              localStorage.setItem("nutriadmin_custom_firebase_config", JSON.stringify(parsedConfig));
               showToast("Đã tự động lưu cấu hình Cloud.", "success");
             } catch (e) {
               // Ignore parse errors silently during auto-save
@@ -18368,7 +18373,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         try {
           const cfg = {};
           if (customKey) cfg.ak = customKey;
-          if (customFb) cfg.fb = customFb;
+          if (customFb) cfg.fb = typeof customFb === "string" ? customFb : JSON.stringify(customFb);
 
           const hash = btoa(encodeURIComponent(JSON.stringify(cfg)));
           return base + (base.includes("?") ? "&" : "?") + "cfg=" + hash;
@@ -29951,9 +29956,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           configStr = JSON.stringify(configStr);
         } else {
           try {
-            let looseJson = configStr.replace(/(['"])?([a-zA-Z0-9_]+)(['"])?\s*:/g, '"$2":').replace(/'/g, '"');
-            config = JSON.parse(looseJson);
-            configStr = looseJson; // Update it for saving
+            const match = configStr.match(/\{[\s\S]*\}/);
+            if (match) {
+              config = (new Function('return ' + match[0]))();
+            } else {
+              config = JSON.parse(configStr);
+            }
+            configStr = JSON.stringify(config);
           } catch (e) {
             console.error("Firebase config parse error", e);
             return;
@@ -32764,8 +32773,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             const cfg = JSON.parse(decodeURIComponent(cfgStr));
             if (cfg.ak)
               localStorage.setItem("nutriadmin_custom_api_key", cfg.ak);
-            if (cfg.fb)
-              localStorage.setItem("nutriadmin_custom_firebase_config", cfg.fb);
+            if (cfg.fb) localStorage.setItem("nutriadmin_custom_firebase_config", typeof cfg.fb === "string" ? cfg.fb : JSON.stringify(cfg.fb));
 
             if (urlParams.has("cfg")) {
               urlParams.delete("cfg");
