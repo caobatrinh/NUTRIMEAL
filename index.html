@@ -119,6 +119,14 @@
       .animate-fade-in {
         animation: fadeIn 0.3s ease-in-out;
       }
+      @keyframes loginShake {
+        0%, 100% { transform: translateX(0); }
+        15%, 45%, 75% { transform: translateX(-5px); }
+        30%, 60%, 90% { transform: translateX(5px); }
+      }
+      .animate-login-shake {
+        animation: loginShake 0.4s ease-in-out;
+      }
       .animate-slide-in {
         animation: slideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
       }
@@ -852,9 +860,18 @@
             </button>
             <div
               class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm border border-emerald-200 cursor-pointer hidden md:flex"
+              title="Tài khoản Quản trị"
             >
               AD
             </div>
+            <button
+              id="admin-logout-btn"
+              onclick="adminLogout()"
+              class="text-xs bg-red-550 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-950/20 dark:hover:bg-red-950/40 dark:text-red-400 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors hidden md:flex"
+              title="Đăng xuất Quản trị"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i> Đăng xuất
+            </button>
             <button
               onclick="
                 document
@@ -969,6 +986,15 @@
             "
             class="block px-3 py-2 rounded-md text-base font-medium text-slate-700 dark:text-slate-300 cursor-pointer transition-colors"
             ><i class="fa-solid fa-gear w-6"></i> Hệ thống</a
+          >
+          <a
+            id="admin-logout-mobile-btn"
+            onclick="
+              adminLogout();
+              document.getElementById('mobile-menu').classList.add('hidden');
+            "
+            class="block px-3 py-2 rounded-md text-base font-medium text-red-600 dark:text-red-400 cursor-pointer transition-colors border-t border-slate-150 dark:border-slate-700/50 mt-2 pt-2 hidden"
+            ><i class="fa-solid fa-right-from-bracket w-6"></i> Đăng xuất Quản trị</a
           >
         </div>
       </div>
@@ -8281,7 +8307,8 @@
               class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:border-red-500 focus:ring-1 focus:ring-red-500 outline-none transition-colors"
               placeholder="Nhập mật khẩu để tiếp tục..."
             />
-            <p class="text-xs text-slate-400 mt-2">
+            <!-- Hidden default password hint -->
+            <p class="text-xs text-slate-400 mt-2 hidden">
               <i class="fa-solid fa-info-circle mr-1"></i> Mặc định là 180298
             </p>
           </div>
@@ -8310,76 +8337,110 @@
     <!-- Modal: Login -->
     <div
       id="login-modal"
-      class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in"
+      class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 transition-all duration-300 animate-fade-in"
     >
       <div
-        class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative"
       >
-        <div class="p-6 bg-emerald-600 text-white relative">
+        <!-- Modal Header with elegant gradient background and brand patterns -->
+        <div class="p-6 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -left-10 -bottom-10 w-24 h-24 bg-teal-500/20 rounded-full blur-xl pointer-events-none"></div>
+          
           <button
             onclick="closeAuthModal('login')"
-            class="absolute top-4 right-4 text-emerald-200 hover:text-white transition-colors"
+            class="absolute top-5 right-5 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
           >
-            <i class="fa-solid fa-times text-xl"></i>
+            <i class="fa-solid fa-times text-sm"></i>
           </button>
-          <h3 class="text-xl font-bold mb-1">Đăng nhập</h3>
-          <p class="text-sm text-emerald-100">
-            Quản lý bữa ăn và điểm thưởng của bạn
+          
+          <!-- Brand Logo icon inside the header -->
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-8 h-8 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white shadow-inner">
+              <i class="fa-solid fa-cookie-bite text-sm animate-wiggle"></i>
+            </div>
+            <span class="text-[10px] uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
+          </div>
+          
+          <h3 class="text-xl font-extrabold tracking-tight mb-1">Chào mừng quay lại!</h3>
+          <p class="text-xs text-emerald-100/90 font-medium">
+            Quản lý bữa ăn dinh dưỡng & nhận điểm thưởng hấp dẫn
           </p>
         </div>
+        
         <div class="p-6">
-          <form id="login-form" onsubmit="handleLogin(event)">
-            <div class="mb-4">
-              <label class="block text-sm font-semibold text-slate-700 mb-1"
+          <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5"
                 >Số điện thoại</label
               >
-              <input
-                type="tel"
-                id="login-phone"
-                required
-                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                placeholder="VD: 0912345678"
-              />
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-phone text-xs"></i>
+                </span>
+                <input
+                  type="tel"
+                  id="login-phone"
+                  required
+                  class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-sm font-medium"
+                  placeholder="VD: 0912345678"
+                />
+              </div>
             </div>
-            <div class="mb-6">
-              <label class="block text-sm font-semibold text-slate-700 mb-1"
+            
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5"
                 >Mật khẩu</label
               >
-              <input
-                type="password"
-                id="login-password"
-                required
-                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                placeholder="••••••••"
-              />
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input
+                  type="password"
+                  id="login-password"
+                  required
+                  class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-12 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-sm font-medium"
+                  placeholder="••••••••"
+                />
+                <button 
+                  type="button" 
+                  onclick="togglePasswordVisibility('login-password')" 
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-600 transition-colors"
+                >
+                  <i class="fa-solid fa-eye text-xs" id="login-password-eye"></i>
+                </button>
+              </div>
             </div>
+            
             <button
               type="submit"
-              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-colors mb-4"
+              class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold py-3 px-4 rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all duration-200 text-sm flex items-center justify-center gap-2"
             >
-              Đăng nhập
+              <span>Đăng nhập</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
           </form>
 
           <!-- Google Sign In -->
           <div class="mb-4 hidden" id="google-signin-container-login">
             <div class="flex items-center my-4">
-              <div class="flex-grow border-t border-slate-200"></div>
-              <span class="mx-3 text-xs text-slate-400 font-medium">HOẶC</span>
-              <div class="flex-grow border-t border-slate-200"></div>
+              <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+              <span class="mx-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">HOẶC</span>
+              <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
             </div>
             <div id="g_id_signin_login" class="flex justify-center"></div>
           </div>
 
           <div
-            class="text-center text-sm text-slate-500 border-t border-slate-100 pt-4"
+            class="text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-4"
           >
             Chưa có tài khoản?
             <button
               onclick="switchAuthModal('register')"
-              class="text-emerald-600 font-bold hover:underline"
+              class="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline ml-1"
             >
-              Tạo tài khoản
+              Tạo tài khoản ngay
             </button>
           </div>
         </div>
@@ -8389,88 +8450,128 @@
     <!-- Modal: Register -->
     <div
       id="register-modal"
-      class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 animate-fade-in"
+      class="fixed inset-0 z-[9999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-md p-4 transition-all duration-300 animate-fade-in"
     >
       <div
-        class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+        class="bg-white dark:bg-slate-900 w-full max-w-sm rounded-[2rem] shadow-2xl border border-slate-100 dark:border-slate-800/80 overflow-hidden flex flex-col transform scale-100 transition-all duration-300 relative"
       >
-        <div class="p-6 bg-emerald-600 text-white relative">
+        <!-- Modal Header with elegant gradient background and brand patterns -->
+        <div class="p-6 bg-gradient-to-br from-emerald-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden">
+          <div class="absolute -right-10 -top-10 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+          <div class="absolute -left-10 -bottom-10 w-24 h-24 bg-teal-500/20 rounded-full blur-xl pointer-events-none"></div>
+          
           <button
             onclick="closeAuthModal('register')"
-            class="absolute top-4 right-4 text-emerald-200 hover:text-white transition-colors"
+            class="absolute top-5 right-5 text-emerald-100 hover:text-white bg-white/10 hover:bg-white/20 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200"
           >
-            <i class="fa-solid fa-times text-xl"></i>
+            <i class="fa-solid fa-times text-sm"></i>
           </button>
-          <h3 class="text-xl font-bold mb-1">Tạo tài khoản</h3>
-          <p class="text-sm text-emerald-100">
+          
+          <!-- Brand Logo icon inside the header -->
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-8 h-8 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-white shadow-inner">
+              <i class="fa-solid fa-wand-magic-sparkles text-sm animate-wiggle"></i>
+            </div>
+            <span class="text-[10px] uppercase tracking-widest font-black text-emerald-200">Nuri Kitchen</span>
+          </div>
+          
+          <h3 class="text-xl font-extrabold tracking-tight mb-1">Tạo tài khoản</h3>
+          <p class="text-xs text-emerald-100/90 font-medium">
             Bắt đầu hành trình dinh dưỡng cùng Nuri Kitchen
           </p>
         </div>
+        
         <div class="p-6">
-          <form id="register-form" onsubmit="handleRegister(event)">
-            <div class="mb-4">
-              <label class="block text-sm font-semibold text-slate-700 mb-1"
+          <form id="register-form" onsubmit="handleRegister(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5"
                 >Họ và tên</label
               >
-              <input
-                type="text"
-                id="register-name"
-                required
-                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                placeholder="Nguyễn Văn A"
-              />
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-user text-xs"></i>
+                </span>
+                <input
+                  type="text"
+                  id="register-name"
+                  required
+                  class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-sm font-medium"
+                  placeholder="Nguyễn Văn A"
+                />
+              </div>
             </div>
-            <div class="mb-4">
-              <label class="block text-sm font-semibold text-slate-700 mb-1"
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5"
                 >Số điện thoại</label
               >
-              <input
-                type="tel"
-                id="register-phone"
-                required
-                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                placeholder="VD: 0912345678"
-              />
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-phone text-xs"></i>
+                </span>
+                <input
+                  type="tel"
+                  id="register-phone"
+                  required
+                  class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-4 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-sm font-medium"
+                  placeholder="VD: 0912345678"
+                />
+              </div>
             </div>
-            <div class="mb-6">
-              <label class="block text-sm font-semibold text-slate-700 mb-1"
+            
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-emerald-400 mb-1.5"
                 >Mật khẩu</label
               >
-              <input
-                type="password"
-                id="register-password"
-                required
-                class="w-full border border-slate-300 rounded-xl px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-slate-50"
-                placeholder="••••••••"
-              />
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 dark:text-emerald-600">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input
+                  type="password"
+                  id="register-password"
+                  required
+                  class="w-full border border-slate-200 dark:border-slate-800 rounded-2xl pl-10 pr-12 py-3 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 bg-slate-50/50 dark:bg-slate-950/50 text-slate-800 dark:text-white transition-all duration-200 text-sm font-medium"
+                  placeholder="••••••••"
+                />
+                <button 
+                  type="button" 
+                  onclick="togglePasswordVisibility('register-password')" 
+                  class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-emerald-600 transition-colors"
+                >
+                  <i class="fa-solid fa-eye text-xs" id="register-password-eye"></i>
+                </button>
+              </div>
             </div>
+            
             <button
               type="submit"
-              class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-sm transition-colors mb-4"
+              class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold py-3 px-4 rounded-2xl shadow-lg shadow-emerald-600/20 active:scale-[0.98] transition-all duration-200 text-sm flex items-center justify-center gap-2"
             >
-              Đăng ký
+              <span>Đăng ký</span>
+              <i class="fa-solid fa-arrow-right text-xs"></i>
             </button>
           </form>
 
           <!-- Google Sign In -->
           <div class="mb-4 hidden" id="google-signin-container-register">
             <div class="flex items-center my-4">
-              <div class="flex-grow border-t border-slate-200"></div>
-              <span class="mx-3 text-xs text-slate-400 font-medium">HOẶC</span>
-              <div class="flex-grow border-t border-slate-200"></div>
+              <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
+              <span class="mx-3 text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">HOẶC</span>
+              <div class="flex-grow border-t border-slate-100 dark:border-slate-800"></div>
             </div>
             <div id="g_id_signin_register" class="flex justify-center"></div>
           </div>
 
           <div
-            class="text-center text-sm text-slate-500 border-t border-slate-100 pt-4"
+            class="text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800/80 pt-4 mt-4"
           >
             Đã có tài khoản?
             <button
               onclick="switchAuthModal('login')"
-              class="text-emerald-600 font-bold hover:underline"
+              class="text-emerald-600 dark:text-emerald-400 font-extrabold hover:underline ml-1"
             >
-              Đăng nhập
+              Đăng nhập ngay
             </button>
           </div>
         </div>
@@ -9448,17 +9549,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="s-main-ingQty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.15"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="s-raw-ingQty"
+                              oninput="calculateDishYield('s', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.20"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="s-yield"
+                              oninput="calculateDishYield('s', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="s-main-ingQty"
+                              oninput="calculateDishYield('s', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.15"
+                            />
+                          </div>
                         </div>
                       </div>
                       <div
@@ -9520,17 +9653,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="m-main-ingQty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.15"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="m-raw-ingQty"
+                              oninput="calculateDishYield('m', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.20"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="m-yield"
+                              oninput="calculateDishYield('m', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="m-main-ingQty"
+                              oninput="calculateDishYield('m', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.15"
+                            />
+                          </div>
                         </div>
                       </div>
                       <div
@@ -9592,17 +9757,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)
-                          </label>
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="l-main-ingQty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.25"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="l-raw-ingQty"
+                              oninput="calculateDishYield('l', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.30"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="l-yield"
+                              oninput="calculateDishYield('l', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="l-main-ingQty"
+                              oninput="calculateDishYield('l', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.25"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -9805,17 +10002,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)</label
-                          >
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="me-s-main-qty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.15"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-s-raw-qty"
+                              oninput="calculateMethodYield('s', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.20"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="me-s-yield"
+                              oninput="calculateMethodYield('s', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-s-main-qty"
+                              oninput="calculateMethodYield('s', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.15"
+                            />
+                          </div>
                         </div>
                       </div>
                       <div
@@ -9877,17 +10106,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)</label
-                          >
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="me-m-main-qty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.15"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-m-raw-qty"
+                              oninput="calculateMethodYield('m', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.20"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="me-m-yield"
+                              oninput="calculateMethodYield('m', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-m-main-qty"
+                              oninput="calculateMethodYield('m', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.15"
+                            />
+                          </div>
                         </div>
                       </div>
                       <!-- Large Size -->
@@ -9950,17 +10211,49 @@
                             />
                           </div>
                         </div>
-                        <div class="mb-3 border-t pt-3 mt-3">
-                          <label class="text-xs text-slate-700 font-bold"
-                            >Định lượng nguyên liệu chính (kg)</label
-                          >
-                          <input
-                            type="number"
-                            step="0.01"
-                            id="me-l-main-qty"
-                            class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors"
-                            placeholder="VD: 0.25"
-                          />
+                        <div class="mb-3 border-t pt-3 mt-3 space-y-2">
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu sống (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-l-raw-qty"
+                              oninput="calculateMethodYield('l', 'raw')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.30"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Tỉ lệ hao hụt YIELD (%)
+                            </label>
+                            <input
+                              type="number"
+                              step="1"
+                              min="1"
+                              max="100"
+                              id="me-l-yield"
+                              oninput="calculateMethodYield('l', 'yield')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="Mặc định: 100"
+                              value="100"
+                            />
+                          </div>
+                          <div>
+                            <label class="text-xs text-slate-700 font-bold block"
+                              >Định lượng nguyên liệu chín (kg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.001"
+                              id="me-l-main-qty"
+                              oninput="calculateMethodYield('l', 'cooked')"
+                              class="w-full border border-slate-300 rounded px-2 py-1.5 mt-1 focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary transition-colors text-sm"
+                              placeholder="VD: 0.25"
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -14704,6 +14997,11 @@
           switchView("customer-profile");
         } else {
           showToast("Số điện thoại hoặc mật khẩu không đúng", "error");
+          const card = document.querySelector("#login-modal > div");
+          if (card) {
+            card.classList.add("animate-login-shake");
+            setTimeout(() => card.classList.remove("animate-login-shake"), 500);
+          }
         }
       }
 
@@ -14718,6 +15016,11 @@
           potentialCustomers.find((c) => c.phone === phone)
         ) {
           showToast("Số điện thoại đã được đăng ký", "error");
+          const card = document.querySelector("#register-modal > div");
+          if (card) {
+            card.classList.add("animate-login-shake");
+            setTimeout(() => card.classList.remove("animate-login-shake"), 500);
+          }
           return;
         }
 
@@ -17990,6 +18293,25 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function switchView(viewName) {
+        if (isAdminViewActive()) {
+          if (!checkAdminSessionSilent()) {
+            window.pendingAdminView = viewName;
+            showAdminAuthOverlay();
+            return;
+          }
+          
+          const allowedAdminViews = ["dashboard", "orders", "messages"];
+          if (!allowedAdminViews.includes(viewName) && viewName !== "consulting" && viewName !== "shipper-app") {
+            const isUnlocked = localStorage.getItem("admin_fully_unlocked") === "true";
+            if (!isUnlocked) {
+              openAdminPasswordLockModal(viewName);
+              return;
+            }
+          } else if (allowedAdminViews.includes(viewName)) {
+            window.currentSafeView = viewName;
+          }
+        }
+
         if (viewName !== 'consulting' && window.isUpdatingProfile) {
             window.isUpdatingProfile = false;
             let rec = document.getElementById('menu-recommendation-container');
@@ -19766,6 +20088,50 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
+      function calculateDishYield(size, sourceField) {
+        const rawInput = document.getElementById(`${size}-raw-ingQty`);
+        const yieldInput = document.getElementById(`${size}-yield`);
+        const cookedInput = document.getElementById(`${size}-main-ingQty`);
+        
+        if (!rawInput || !yieldInput || !cookedInput) return;
+        
+        const yieldVal = parseFloat(yieldInput.value) || 100;
+        
+        if (sourceField === 'yield' || sourceField === 'raw') {
+          const rawVal = parseFloat(rawInput.value);
+          if (!isNaN(rawVal)) {
+            cookedInput.value = (rawVal * (yieldVal / 100)).toFixed(3);
+          }
+        } else if (sourceField === 'cooked') {
+          const cookedVal = parseFloat(cookedInput.value);
+          if (!isNaN(cookedVal) && yieldVal > 0) {
+            rawInput.value = (cookedVal / (yieldVal / 100)).toFixed(3);
+          }
+        }
+      }
+
+      function calculateMethodYield(size, sourceField) {
+        const rawInput = document.getElementById(`me-${size}-raw-qty`);
+        const yieldInput = document.getElementById(`me-${size}-yield`);
+        const cookedInput = document.getElementById(`me-${size}-main-qty`);
+        
+        if (!rawInput || !yieldInput || !cookedInput) return;
+        
+        const yieldVal = parseFloat(yieldInput.value) || 100;
+        
+        if (sourceField === 'yield' || sourceField === 'raw') {
+          const rawVal = parseFloat(rawInput.value);
+          if (!isNaN(rawVal)) {
+            cookedInput.value = (rawVal * (yieldVal / 100)).toFixed(3);
+          }
+        } else if (sourceField === 'cooked') {
+          const cookedVal = parseFloat(cookedInput.value);
+          if (!isNaN(cookedVal) && yieldVal > 0) {
+            rawInput.value = (cookedVal / (yieldVal / 100)).toFixed(3);
+          }
+        }
+      }
+
       function closeModal() {
         document.getElementById("dish-modal").classList.add("hidden");
       }
@@ -19809,6 +20175,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               document.getElementById("s-carbs").value = dish.sizes.lean?.carbs || "";
               document.getElementById("s-fat").value = dish.sizes.lean?.fat || "";
               document.getElementById("s-main-ingQty").value = dish.sizes.lean?.mainIngredientQty || "";
+              document.getElementById("s-raw-ingQty").value = dish.sizes.lean?.rawIngredientQty || "";
+              document.getElementById("s-yield").value = dish.sizes.lean?.yield || 100;
               document.getElementById("m-price").value =
                 dish.sizes.balance?.price || "";
               document.getElementById("m-kcal").value =
@@ -19821,6 +20189,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 dish.sizes.balance?.fat || "";
               document.getElementById("m-main-ingQty").value =
                 dish.sizes.balance?.mainIngredientQty || "";
+              document.getElementById("m-raw-ingQty").value =
+                dish.sizes.balance?.rawIngredientQty || "";
+              document.getElementById("m-yield").value =
+                dish.sizes.balance?.yield || 100;
               document.getElementById("l-price").value =
                 dish.sizes.power?.price || "";
               document.getElementById("l-kcal").value =
@@ -19833,6 +20205,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 dish.sizes.power?.fat || "";
               document.getElementById("l-main-ingQty").value =
                 dish.sizes.power?.mainIngredientQty || "";
+              document.getElementById("l-raw-ingQty").value =
+                dish.sizes.power?.rawIngredientQty || "";
+              document.getElementById("l-yield").value =
+                dish.sizes.power?.yield || 100;
             } else {
               [
                 "m-price",
@@ -19841,20 +20217,30 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 "m-carbs",
                 "m-fat",
                 "m-main-ingQty",
+                "m-raw-ingQty",
                 "s-price",
                 "s-kcal",
                 "s-protein",
                 "s-carbs",
                 "s-fat",
                 "s-main-ingQty",
+                "s-raw-ingQty",
                 "l-price",
                 "l-kcal",
                 "l-protein",
                 "l-carbs",
                 "l-fat",
                 "l-main-ingQty",
+                "l-raw-ingQty",
               ].forEach((id) => {
                 document.getElementById(id).value = "";
+              });
+              [
+                "s-yield",
+                "m-yield",
+                "l-yield"
+              ].forEach((id) => {
+                document.getElementById(id).value = 100;
               });
             }
           }
@@ -19919,6 +20305,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             parseFloat(document.getElementById("me-s-fat").value) || 0;
           const meSQty = document.getElementById("me-s-main-qty").value;
           method.sizes.lean.mainIngredientQty = meSQty ? parseFloat(meSQty) : null;
+          method.sizes.lean.yield = parseFloat(document.getElementById("me-s-yield").value) || 100;
+          const meSRawQty = document.getElementById("me-s-raw-qty").value;
+          method.sizes.lean.rawIngredientQty = meSRawQty ? parseFloat(meSRawQty) : null;
 
           if (!method.sizes.balance) method.sizes.balance = {};
           if (!method.sizes.power) method.sizes.power = {};
@@ -19937,6 +20326,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           method.sizes.balance.mainIngredientQty = sQty
             ? parseFloat(sQty)
             : null;
+          method.sizes.balance.yield = parseFloat(document.getElementById("me-m-yield").value) || 100;
+          const meMRawQty = document.getElementById("me-m-raw-qty").value;
+          method.sizes.balance.rawIngredientQty = meMRawQty ? parseFloat(meMRawQty) : null;
 
           method.sizes.power.price =
             parseInt(document.getElementById("me-l-price").value) || 0;
@@ -19950,6 +20342,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             parseFloat(document.getElementById("me-l-fat").value) || 0;
           const lQty = document.getElementById("me-l-main-qty").value;
           method.sizes.power.mainIngredientQty = lQty ? parseFloat(lQty) : null;
+          method.sizes.power.yield = parseFloat(document.getElementById("me-l-yield").value) || 100;
+          const meLRawQty = document.getElementById("me-l-raw-qty").value;
+          method.sizes.power.rawIngredientQty = meLRawQty ? parseFloat(meLRawQty) : null;
 
           if (typeof syncStateToServer === "function") {
             lastStateStr = "";
@@ -20124,6 +20519,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             document.getElementById('me-s-carbs').value = method.sizes.lean?.carbs || 0;
             document.getElementById('me-s-fat').value = method.sizes.lean?.fat || 0;
             document.getElementById('me-s-main-qty').value = method.sizes.lean.mainIngredientQty || "";
+            document.getElementById('me-s-yield').value = method.sizes.lean.yield || 100;
+            document.getElementById('me-s-raw-qty').value = method.sizes.lean.rawIngredientQty || "";
           }
           if (method.sizes && method.sizes.balance) {
             document.getElementById('me-m-price').value = method.sizes.balance?.price || 0;
@@ -20132,6 +20529,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             document.getElementById('me-m-carbs').value = method.sizes.balance?.carbs || 0;
             document.getElementById('me-m-fat').value = method.sizes.balance?.fat || 0;
             document.getElementById('me-m-main-qty').value = method.sizes.balance.mainIngredientQty || "";
+            document.getElementById('me-m-yield').value = method.sizes.balance.yield || 100;
+            document.getElementById('me-m-raw-qty').value = method.sizes.balance.rawIngredientQty || "";
           } else {
             ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
               const els = document.getElementById('me-s-' + k);
@@ -20143,6 +20542,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (qsEl) qsEl.value = "";
             const qmEl = document.getElementById('me-m-main-qty');
             if (qmEl) qmEl.value = "";
+            
+            // reset new S and M fields
+            document.getElementById('me-s-yield').value = 100;
+            document.getElementById('me-s-raw-qty').value = "";
+            document.getElementById('me-m-yield').value = 100;
+            document.getElementById('me-m-raw-qty').value = "";
           }
           
           if (method.sizes && method.sizes.power) {
@@ -20152,6 +20557,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             document.getElementById('me-l-carbs').value = method.sizes.power?.carbs || 0;
             document.getElementById('me-l-fat').value = method.sizes.power?.fat || 0;
             document.getElementById('me-l-main-qty').value = method.sizes.power.mainIngredientQty || "";
+            document.getElementById('me-l-yield').value = method.sizes.power.yield || 100;
+            document.getElementById('me-l-raw-qty').value = method.sizes.power.rawIngredientQty || "";
           } else {
             ['price', 'kcal', 'protein', 'carbs', 'fat'].forEach(k => {
               const el = document.getElementById('me-l-' + k);
@@ -20159,6 +20566,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             });
             const qEl = document.getElementById('me-l-main-qty');
             if (qEl) qEl.value = "";
+            
+            // reset new L fields
+            document.getElementById('me-l-yield').value = 100;
+            document.getElementById('me-l-raw-qty').value = "";
           }
           
           document.getElementById('method-edit-modal').classList.remove('hidden');
@@ -20300,6 +20711,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             fat: parseFloat(document.getElementById("s-fat").value) || 0,
             price: parseInt(document.getElementById("s-price").value) || 0,
             mainIngredientQty: parseFloat(document.getElementById("s-main-ingQty").value) || null,
+            rawIngredientQty: document.getElementById("s-raw-ingQty").value ? parseFloat(document.getElementById("s-raw-ingQty").value) : null,
+            yield: parseFloat(document.getElementById("s-yield").value) || 100,
           },
           balance: {
             kcal: parseInt(document.getElementById("m-kcal").value) || 0,
@@ -20308,6 +20721,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             fat: parseFloat(document.getElementById("m-fat").value) || 0,
             price: parseInt(document.getElementById("m-price").value) || 0,
             mainIngredientQty: parseFloat(document.getElementById("m-main-ingQty").value) || null,
+            rawIngredientQty: document.getElementById("m-raw-ingQty").value ? parseFloat(document.getElementById("m-raw-ingQty").value) : null,
+            yield: parseFloat(document.getElementById("m-yield").value) || 100,
           },
           power: {
             kcal: parseInt(document.getElementById("l-kcal").value) || 0,
@@ -20316,6 +20731,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             fat: parseFloat(document.getElementById("l-fat").value) || 0,
             price: parseInt(document.getElementById("l-price").value) || 0,
             mainIngredientQty: parseFloat(document.getElementById("l-main-ingQty").value) || null,
+            rawIngredientQty: document.getElementById("l-raw-ingQty").value ? parseFloat(document.getElementById("l-raw-ingQty").value) : null,
+            yield: parseFloat(document.getElementById("l-yield").value) || 100,
           }
         };
 
@@ -23688,56 +24105,105 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               if (dish.category === "complete" && dish.components) {
                  if (dish.components?.proteinId) {
                     const p = dishes.find(d => d.id === dish.components?.proteinId);
-                    if (p) componentsList.push(p.name);
+                    if (p) componentsList.push({ dish: p, isProtein: true });
                  }
                  if (dish.components.methodName) {
                     methodList.push(dish.components.methodName);
                  }
                  if (dish.components.carbId) {
                     const c = dishes.find(d => d.id === dish.components.carbId);
-                    if (c) componentsList.push(c.name);
+                    if (c) componentsList.push({ dish: c });
                  }
                  if (dish.components.vegIds) {
                     dish.components.vegIds.forEach(vid => {
                        const v = dishes.find(d => d.id === vid);
-                       if (v) componentsList.push(v.name);
+                       if (v) componentsList.push({ dish: v });
                     });
                  }
                  if (dish.components.sauceId) {
                     const s = dishes.find(d => d.id === dish.components.sauceId);
-                    if (s) componentsList.push(s.name);
+                    if (s) componentsList.push({ dish: s });
                  }
               } else {
-                 componentsList.push(dish.name);
+                 componentsList.push({ dish: dish });
               }
               
-              componentsList.forEach(cName => {
-                 calcData[state].ingredients[cName] = (calcData[state].ingredients[cName] || 0) + task.qty;
+              // Map task size to lowercase sizeKey
+              let sizeKey = 'balance';
+              if (task.size.includes('Lean') || task.size.includes('S')) sizeKey = 'lean';
+              else if (task.size.includes('Balance') || task.size.includes('M')) sizeKey = 'balance';
+              else if (task.size.includes('Power') || task.size.includes('L')) sizeKey = 'power';
+
+              componentsList.forEach(comp => {
+                 const cName = comp.dish.name;
+                 if (!calcData[state].ingredients[cName]) {
+                    calcData[state].ingredients[cName] = { portions: 0, cooked: 0, raw: 0 };
+                 }
+                 
+                 // Get weights for this component in this size
+                 let sizesSource = comp.dish.sizes;
+                 if (comp.isProtein && dish.components?.methodName && comp.dish.methods) {
+                    const methodObj = comp.dish.methods.find(m => m.name === dish.components.methodName);
+                    if (methodObj && methodObj.sizes) {
+                       sizesSource = methodObj.sizes;
+                    }
+                 }
+                 
+                 const sizeData = sizesSource ? sizesSource[sizeKey] : null;
+                 let cookedUnit = 0;
+                 let rawUnit = 0;
+                 if (sizeData) {
+                    cookedUnit = parseFloat(sizeData.mainIngredientQty) || 0;
+                    rawUnit = parseFloat(sizeData.rawIngredientQty) || 0;
+                    const yieldVal = parseFloat(sizeData.yield) || 100;
+                    if (rawUnit === 0 && cookedUnit > 0 && yieldVal > 0) {
+                       rawUnit = cookedUnit / (yieldVal / 100);
+                    }
+                 }
+                 
+                 calcData[state].ingredients[cName].portions += task.qty;
+                 calcData[state].ingredients[cName].cooked += cookedUnit * task.qty;
+                 calcData[state].ingredients[cName].raw += rawUnit * task.qty;
               });
+
               methodList.forEach(mName => {
                  calcData[state].methods[mName] = (calcData[state].methods[mName] || 0) + task.qty;
               });
            });
         });
         
-        const renderSection = (dataObj, title) => {
+        const renderSection = (dataObj, title, isIngredient = false) => {
            let html = `<h4 class="font-bold text-sm text-slate-700 mt-3 mb-2">${title}</h4>`;
            const keys = Object.keys(dataObj);
            if (keys.length === 0) {
               html += `<p class="text-xs text-slate-500 italic">Không có dữ liệu</p>`;
               return html;
            }
-           html += `<ul class="space-y-1">`;
+           html += `<ul class="space-y-1.5">`;
            keys.sort().forEach(k => {
-              html += `<li class="flex justify-between text-sm pb-1 border-b border-slate-100 last:border-0"><span class="text-slate-600">${k}</span><span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">${dataObj[k]}</span></li>`;
+              if (isIngredient) {
+                 const item = dataObj[k];
+                 html += `<li class="flex justify-between text-sm pb-1.5 border-b border-slate-100 last:border-0 items-center">
+                    <div>
+                       <span class="text-slate-700 font-medium">${k}</span>
+                       <span class="text-[11px] text-slate-500 block">Số suất: ${item.portions}</span>
+                    </div>
+                    <div class="flex flex-col items-end gap-1">
+                       <span class="font-bold text-emerald-700 bg-emerald-50 text-[11px] px-2 py-0.5 rounded" title="Định lượng chín">Chín: ${item.cooked.toFixed(3)} kg</span>
+                       <span class="font-bold text-amber-700 bg-amber-50 text-[11px] px-2 py-0.5 rounded" title="Định lượng sống">Sống: ${item.raw.toFixed(3)} kg</span>
+                    </div>
+                 </li>`;
+              } else {
+                 html += `<li class="flex justify-between text-sm pb-1 border-b border-slate-100 last:border-0"><span class="text-slate-600">${k}</span><span class="font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">${dataObj[k]} suất</span></li>`;
+              }
            });
            html += `</ul>`;
            return html;
         };
         
-        document.getElementById("calc-todo-content").innerHTML = renderSection(calcData.todo.ingredients, "Nguyên liệu") + renderSection(calcData.todo.methods, "Cách chế biến");
-        document.getElementById("calc-cooking-content").innerHTML = renderSection(calcData.cooking.ingredients, "Nguyên liệu") + renderSection(calcData.cooking.methods, "Cách chế biến");
-        document.getElementById("calc-done-content").innerHTML = renderSection(calcData.done.ingredients, "Nguyên liệu") + renderSection(calcData.done.methods, "Cách chế biến");
+        document.getElementById("calc-todo-content").innerHTML = renderSection(calcData.todo.ingredients, "Nguyên liệu", true) + renderSection(calcData.todo.methods, "Cách chế biến");
+        document.getElementById("calc-cooking-content").innerHTML = renderSection(calcData.cooking.ingredients, "Nguyên liệu", true) + renderSection(calcData.cooking.methods, "Cách chế biến");
+        document.getElementById("calc-done-content").innerHTML = renderSection(calcData.done.ingredients, "Nguyên liệu", true) + renderSection(calcData.done.methods, "Cách chế biến");
         
         document.getElementById("kitchen-calc-modal").classList.remove("hidden");
       }
@@ -36251,6 +36717,576 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       window.triggerMascotEvolution = triggerMascotEvolution;
       window.showRankUpModal = showRankUpModal;
       window.closeRankUpModal = closeRankUpModal;
+    </script>
+
+    <!-- ========================================== -->
+    <!-- ADMIN AUTHENTICATION AND LOCK CONTROLS UI -->
+    <!-- ========================================== -->
+
+    <!-- Admin Auth Overlay -->
+    <div id="admin-auth-overlay" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/90 backdrop-blur-md text-slate-100 hidden">
+      <script>
+        (function() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const mode = urlParams.get("mode");
+          const isAdmin = mode !== "landing" && mode !== "shipper-app";
+          if (isAdmin) {
+            const loginTime = localStorage.getItem("admin_login_time");
+            let loggedIn = false;
+            if (loginTime) {
+              const diff = Date.now() - parseInt(loginTime);
+              loggedIn = diff < 6 * 60 * 60 * 1000;
+            }
+            if (!loggedIn) {
+              document.getElementById("admin-auth-overlay").classList.remove("hidden");
+              document.body.classList.add("overflow-hidden");
+            }
+          }
+        })();
+      </script>
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 max-w-md w-full shadow-2xl relative mx-4 animate-fade-in">
+        <!-- Top Decorative Header -->
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+            <i class="fa-solid fa-shield-halved text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold tracking-tight text-white">Nuri Kitchen Admin</h3>
+            <p class="text-xs text-slate-400">Hệ thống quản lý nhà bếp thông minh</p>
+          </div>
+        </div>
+
+        <!-- Tab Selector -->
+        <div class="flex border-b border-slate-800 mb-6" id="admin-auth-tabs">
+          <button onclick="toggleAdminAuthTab('login')" id="tab-btn-login" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 transition-all focus:outline-none">
+            Đăng nhập
+          </button>
+          <button onclick="toggleAdminAuthTab('register')" id="tab-btn-register" class="flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all focus:outline-none">
+            Đăng ký Quản trị
+          </button>
+        </div>
+
+        <!-- Login Tab Panel -->
+        <div id="panel-login" class="space-y-4">
+          <p class="text-xs text-slate-400 mb-2">Vui lòng đăng nhập tài khoản quản trị để tiếp tục.</p>
+          <form onsubmit="handleAdminLoginSubmit(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Số điện thoại</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-phone text-xs"></i>
+                </span>
+                <input type="text" id="admin-login-phone" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập số điện thoại">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Mật khẩu</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input type="password" id="admin-login-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập mật khẩu">
+                <button type="button" onclick="togglePasswordVisibility('admin-login-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-eye text-xs" id="admin-login-password-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-600/15 transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-right-to-bracket"></i> Đăng nhập
+            </button>
+          </form>
+        </div>
+
+        <!-- Register Tab Panel -->
+        <div id="panel-register" class="space-y-4 hidden">
+          <p class="text-xs text-slate-400 mb-2">Đăng ký tài khoản quản trị mới. OTP xác thực sẽ gửi tới số mặc định <span class="text-emerald-400 font-semibold">0392478727</span>.</p>
+          <form onsubmit="handleAdminRegisterRequest(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Họ và tên</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-user text-xs"></i>
+                </span>
+                <input type="text" id="admin-reg-name" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập họ và tên">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Số điện thoại quản trị</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-phone text-xs"></i>
+                </span>
+                <input type="text" id="admin-reg-phone" value="0392478727" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập số điện thoại">
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Mật khẩu</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input type="password" id="admin-reg-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập mật khẩu (tối thiểu 6 ký tự)">
+                <button type="button" onclick="togglePasswordVisibility('admin-reg-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-eye text-xs" id="admin-reg-password-eye"></i>
+                </button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Nhập lại mật khẩu</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                  <i class="fa-solid fa-lock text-xs"></i>
+                </span>
+                <input type="password" id="admin-reg-repassword" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all" placeholder="Nhập lại mật khẩu">
+                <button type="button" onclick="togglePasswordVisibility('admin-reg-repassword')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300">
+                  <i class="fa-solid fa-eye text-xs" id="admin-reg-repassword-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl shadow-lg shadow-emerald-600/15 transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-paper-plane text-xs"></i> Tiếp tục & Nhận mã OTP
+            </button>
+          </form>
+        </div>
+
+        <!-- OTP Panel -->
+        <div id="panel-otp" class="space-y-5 hidden">
+          <div class="text-center">
+            <div class="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-3">
+              <i class="fa-solid fa-comment-sms text-xl"></i>
+            </div>
+            <h4 class="font-bold text-white">Xác thực OTP</h4>
+            <p class="text-xs text-slate-400 mt-1">Mã xác minh gồm 6 chữ số đã được gửi qua SMS đến số điện thoại <span class="text-emerald-400 font-semibold" id="otp-phone-display">0392478727</span>.</p>
+          </div>
+
+          <form onsubmit="handleAdminOtpSubmit(event)" class="space-y-4">
+            <div>
+              <input type="text" id="admin-otp-code" maxlength="6" required class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 text-center text-2xl font-bold tracking-[0.5em] text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all animate-pulse" placeholder="000000">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-2.5 px-4 rounded-xl transition-all flex items-center justify-center gap-2">
+              <i class="fa-solid fa-circle-check"></i> Xác nhận Đăng ký
+            </button>
+            <div class="flex items-center justify-between text-xs text-slate-500">
+              <span id="otp-timer">Gửi lại mã sau 60s</span>
+              <button type="button" onclick="resendAdminOtp()" id="btn-resend-otp" class="text-emerald-500 hover:text-emerald-400 font-semibold hidden">Gửi lại OTP</button>
+            </div>
+            <button type="button" onclick="cancelAdminOtp()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium py-2 px-4 rounded-xl text-sm transition-all">
+              Quay lại
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Level 2 Password Lock Modal -->
+    <div id="admin-password-lock-modal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm hidden">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-md w-full shadow-2xl text-slate-100 mx-4 relative overflow-hidden animate-fade-in">
+        <!-- Visual Accent Line -->
+        <div class="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-amber-500 to-amber-600"></div>
+
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+            <i class="fa-solid fa-key text-xl"></i>
+          </div>
+          <div class="space-y-1.5 flex-1">
+            <h4 class="text-lg font-bold text-white">Yêu cầu Mật khẩu Cấp 2</h4>
+            <p class="text-xs text-slate-400">Trang này chứa dữ liệu quan trọng và yêu cầu mật khẩu cấp 2 để truy cập nâng cao.</p>
+          </div>
+        </div>
+
+        <form onsubmit="handleAdminPasswordLockSubmit(event)" class="mt-6 space-y-4">
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Mật khẩu cấp 2</label>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-500">
+                <i class="fa-solid fa-lock text-xs"></i>
+              </span>
+              <input type="password" id="admin-second-password" required class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-10 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" placeholder="Nhập mật khẩu cấp 2">
+              <button type="button" onclick="togglePasswordVisibility('admin-second-password')" class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300">
+                <i class="fa-solid fa-eye text-xs" id="admin-second-password-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <button type="button" onclick="cancelAdminPasswordLock()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold py-2 px-4 rounded-xl text-sm transition-all">
+              Hủy bỏ
+            </button>
+            <button type="submit" class="flex-1 bg-amber-600 hover:bg-amber-500 text-white font-semibold py-2 px-4 rounded-xl text-sm shadow-lg shadow-amber-600/15 transition-all">
+              Xác nhận
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Simulated SMS Notification -->
+    <div id="sms-notification-banner" onclick="clickSmsNotification()" class="fixed top-4 right-4 z-[10000] w-80 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border-l-4 border-emerald-500 p-4 transform translate-y-[-150%] transition-transform duration-500 flex flex-col gap-1.5 text-slate-800 dark:text-slate-100 cursor-pointer hidden animate-fade-in">
+      <div class="flex items-center justify-between text-xs text-slate-500">
+        <div class="flex items-center gap-1.5 font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
+          <i class="fa-solid fa-message-sms"></i> Tin nhắn mới (0392478727)
+        </div>
+        <span>vừa xong</span>
+      </div>
+      <p class="text-sm font-medium leading-normal" id="sms-text-content"></p>
+      <div class="text-[10px] text-emerald-500 font-semibold flex items-center gap-1 mt-0.5">
+        <i class="fa-solid fa-hand-pointer"></i> Click vào để tự động điền mã OTP
+      </div>
+    </div>
+
+    <!-- Controller Scripts -->
+    <script>
+      // ==========================================
+      // ADMIN AUTHENTICATION AND LOCK CONTROLS JS
+      // ==========================================
+      window.currentSafeView = "dashboard";
+      window.pendingAdminView = null;
+      window.currentAdminRegisterOtp = null;
+      window.currentAdminRegisterData = null;
+      window.adminOtpCountdown = 0;
+      window.adminOtpTimerInterval = null;
+
+      function isAdminViewActive() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get("mode");
+        return mode !== "landing" && mode !== "shipper-app" && !isSimulating;
+      }
+
+      function checkAdminSessionSilent() {
+        const loginTime = localStorage.getItem("admin_login_time");
+        if (!loginTime) return false;
+        const diff = Date.now() - parseInt(loginTime);
+        const sixHours = 6 * 60 * 60 * 1000;
+        return diff < sixHours;
+      }
+
+      function showAdminAuthOverlay() {
+        const overlay = document.getElementById("admin-auth-overlay");
+        if (overlay) {
+          overlay.classList.remove("hidden");
+          toggleAdminAuthTab("login");
+          document.body.classList.add("overflow-hidden");
+        }
+      }
+
+      function hideAdminAuthOverlay() {
+        const overlay = document.getElementById("admin-auth-overlay");
+        if (overlay) {
+          overlay.classList.add("hidden");
+          document.body.classList.remove("overflow-hidden");
+        }
+        // Update logout button visibility
+        updateAdminLogoutButtons();
+      }
+
+      function updateAdminLogoutButtons() {
+        const loggedIn = checkAdminSessionSilent();
+        const desktopBtn = document.getElementById("admin-logout-btn");
+        const mobileBtn = document.getElementById("admin-logout-mobile-btn");
+        if (desktopBtn) {
+          if (loggedIn) desktopBtn.classList.remove("hidden");
+          else desktopBtn.classList.add("hidden");
+        }
+        if (mobileBtn) {
+          if (loggedIn) mobileBtn.classList.remove("hidden");
+          else mobileBtn.classList.add("hidden");
+        }
+      }
+
+      function toggleAdminAuthTab(tab) {
+        const tabLogin = document.getElementById("tab-btn-login");
+        const tabRegister = document.getElementById("tab-btn-register");
+        const panelLogin = document.getElementById("panel-login");
+        const panelRegister = document.getElementById("panel-register");
+        const panelOtp = document.getElementById("panel-otp");
+
+        // Hide OTP panel if visible
+        if (panelOtp) panelOtp.classList.add("hidden");
+
+        const activeTabClass = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-emerald-500 text-emerald-400 transition-all focus:outline-none";
+        const inactiveTabClass = "flex-1 py-2.5 text-sm font-semibold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-all focus:outline-none";
+
+        if (tab === "login") {
+          if (tabLogin) tabLogin.className = activeTabClass;
+          if (tabRegister) tabRegister.className = inactiveTabClass;
+          if (panelLogin) panelLogin.classList.remove("hidden");
+          if (panelRegister) panelRegister.classList.add("hidden");
+        } else {
+          if (tabLogin) tabLogin.className = inactiveTabClass;
+          if (tabRegister) tabRegister.className = activeTabClass;
+          if (panelLogin) panelLogin.classList.add("hidden");
+          if (panelRegister) panelRegister.classList.remove("hidden");
+        }
+      }
+
+      function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const eye = document.getElementById(inputId + "-eye");
+        if (input && eye) {
+          if (input.type === "password") {
+            input.type = "text";
+            eye.classList.remove("fa-eye");
+            eye.classList.add("fa-eye-slash");
+          } else {
+            input.type = "password";
+            eye.classList.remove("fa-eye-slash");
+            eye.classList.add("fa-eye");
+          }
+        }
+      }
+
+      function handleAdminLoginSubmit(e) {
+        e.preventDefault();
+        const phone = document.getElementById("admin-login-phone").value.trim();
+        const password = document.getElementById("admin-login-password").value;
+
+        const accounts = JSON.parse(localStorage.getItem("nutriadmin_admin_accounts") || "[]");
+        const found = accounts.find(acc => acc.phone === phone && acc.password === password);
+
+        if (found) {
+          localStorage.setItem("admin_login_time", Date.now().toString());
+          localStorage.setItem("admin_logged_in_user", JSON.stringify(found));
+          showToast("Đăng nhập Quản trị thành công!", "success");
+          hideAdminAuthOverlay();
+          
+          // Redirect to pending view if any
+          const target = window.pendingAdminView || "dashboard";
+          window.pendingAdminView = null;
+          switchView(target);
+        } else {
+          // If no account exists at all, guide the user to register first
+          if (accounts.length === 0) {
+            showToast("Hệ thống chưa có tài khoản. Vui lòng chọn tab Đăng ký để tạo mới!", "error");
+            toggleAdminAuthTab("register");
+          } else {
+            showToast("Số điện thoại hoặc mật khẩu không chính xác!", "error");
+          }
+        }
+      }
+
+      function handleAdminRegisterRequest(e) {
+        e.preventDefault();
+        const name = document.getElementById("admin-reg-name").value.trim();
+        const phone = document.getElementById("admin-reg-phone").value.trim();
+        const password = document.getElementById("admin-reg-password").value;
+        const repassword = document.getElementById("admin-reg-repassword").value;
+
+        if (password.length < 6) {
+          showToast("Mật khẩu phải chứa ít nhất 6 ký tự!", "error");
+          return;
+        }
+
+        if (password !== repassword) {
+          showToast("Hai mật khẩu không trùng khớp!", "error");
+          return;
+        }
+
+        const accounts = JSON.parse(localStorage.getItem("nutriadmin_admin_accounts") || "[]");
+        if (accounts.some(acc => acc.phone === phone)) {
+          showToast("Số điện thoại này đã được đăng ký quản trị!", "error");
+          return;
+        }
+
+        // Store temp data
+        window.currentAdminRegisterData = { name, phone, password };
+
+        // Generate OTP code
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        window.currentAdminRegisterOtp = otp;
+
+        // Switch panel to OTP screen
+        document.getElementById("panel-login").classList.add("hidden");
+        document.getElementById("panel-register").classList.add("hidden");
+        document.getElementById("panel-otp").classList.remove("hidden");
+
+        // Trigger simulated SMS delivery
+        sendSmsNotification(otp, phone);
+      }
+
+      function sendSmsNotification(otp, phone) {
+        const text = `NURI KITCHEN OTP: Mã xác thực đăng ký tài khoản Quản trị của bạn là ${otp}. Hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này.`;
+        document.getElementById("sms-text-content").innerText = text;
+        
+        const banner = document.getElementById("sms-notification-banner");
+        banner.classList.remove("hidden");
+        setTimeout(() => {
+          banner.classList.remove("translate-y-[-150%]");
+          banner.classList.add("translate-y-0");
+        }, 100);
+
+        // Auto-dismiss SMS banner after 12 seconds
+        setTimeout(() => {
+          dismissSmsNotification();
+        }, 12000);
+
+        // Start Resend countdown
+        startOtpCountdown();
+      }
+
+      function dismissSmsNotification() {
+        const banner = document.getElementById("sms-notification-banner");
+        if (banner) {
+          banner.classList.remove("translate-y-0");
+          banner.classList.add("translate-y-[-150%]");
+          setTimeout(() => {
+            banner.classList.add("hidden");
+          }, 500);
+        }
+      }
+
+      function clickSmsNotification() {
+        const otpInput = document.getElementById("admin-otp-code");
+        if (otpInput && window.currentAdminRegisterOtp) {
+          otpInput.value = window.currentAdminRegisterOtp;
+          showToast("Đã tự động điền mã OTP!", "success");
+          dismissSmsNotification();
+        }
+      }
+
+      function startOtpCountdown() {
+        window.adminOtpCountdown = 60;
+        const timerText = document.getElementById("otp-timer");
+        const resendBtn = document.getElementById("btn-resend-otp");
+        if (timerText) timerText.classList.remove("hidden");
+        if (resendBtn) resendBtn.classList.add("hidden");
+
+        clearInterval(window.adminOtpTimerInterval);
+        window.adminOtpTimerInterval = setInterval(() => {
+          window.adminOtpCountdown--;
+          if (timerText) timerText.innerText = `Gửi lại mã sau ${window.adminOtpCountdown}s`;
+          
+          if (window.adminOtpCountdown <= 0) {
+            clearInterval(window.adminOtpTimerInterval);
+            if (timerText) timerText.classList.add("hidden");
+            if (resendBtn) resendBtn.classList.remove("hidden");
+          }
+        }, 1000);
+      }
+
+      function resendAdminOtp() {
+        if (!window.currentAdminRegisterData) return;
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        window.currentAdminRegisterOtp = otp;
+        sendSmsNotification(otp, window.currentAdminRegisterData.phone);
+        showToast("Đã gửi lại mã OTP mới qua SMS!", "success");
+      }
+
+      function cancelAdminOtp() {
+        window.currentAdminRegisterOtp = null;
+        clearInterval(window.adminOtpTimerInterval);
+        toggleAdminAuthTab("register");
+      }
+
+      function handleAdminOtpSubmit(e) {
+        e.preventDefault();
+        const codeInput = document.getElementById("admin-otp-code").value.trim();
+        if (codeInput === window.currentAdminRegisterOtp) {
+          // Success registration
+          const accounts = JSON.parse(localStorage.getItem("nutriadmin_admin_accounts") || "[]");
+          accounts.push(window.currentAdminRegisterData);
+          localStorage.setItem("nutriadmin_admin_accounts", JSON.stringify(accounts));
+
+          // Log in
+          localStorage.setItem("admin_login_time", Date.now().toString());
+          localStorage.setItem("admin_logged_in_user", JSON.stringify(window.currentAdminRegisterData));
+
+          showToast("Xác thực OTP thành công. Tài khoản quản trị đã được tạo!", "success");
+          hideAdminAuthOverlay();
+
+          // Reset temp states
+          window.currentAdminRegisterOtp = null;
+          window.currentAdminRegisterData = null;
+          clearInterval(window.adminOtpTimerInterval);
+
+          // Redirect to pending view or dashboard
+          const target = window.pendingAdminView || "dashboard";
+          window.pendingAdminView = null;
+          switchView(target);
+        } else {
+          showToast("Mã xác thực OTP không chính xác. Vui lòng kiểm tra lại!", "error");
+        }
+      }
+
+      function openAdminPasswordLockModal(viewName) {
+        window.pendingAdminView = viewName;
+        const modal = document.getElementById("admin-password-lock-modal");
+        if (modal) {
+          modal.classList.remove("hidden");
+          const input = document.getElementById("admin-second-password");
+          if (input) {
+            input.value = "";
+            input.focus();
+          }
+        }
+      }
+
+      function handleAdminPasswordLockSubmit(e) {
+        e.preventDefault();
+        const pass = document.getElementById("admin-second-password").value;
+        if (pass === "1613757") {
+          localStorage.setItem("admin_fully_unlocked", "true");
+          showToast("Xác thực thành công. Đã mở khóa tính năng nâng cao!", "success");
+          
+          const modal = document.getElementById("admin-password-lock-modal");
+          if (modal) modal.classList.add("hidden");
+
+          const target = window.pendingAdminView || "dashboard";
+          window.pendingAdminView = null;
+          switchView(target);
+        } else {
+          showToast("Mật khẩu cấp 2 không chính xác!", "error");
+        }
+      }
+
+      function cancelAdminPasswordLock() {
+        const modal = document.getElementById("admin-password-lock-modal");
+        if (modal) modal.classList.add("hidden");
+        
+        window.pendingAdminView = null;
+        // Go back to previous safe view or fallback to dashboard
+        switchView(window.currentSafeView || "dashboard");
+      }
+
+      function adminLogout() {
+        openConfirmModal("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản Quản trị không?", () => {
+          localStorage.removeItem("admin_login_time");
+          localStorage.removeItem("admin_logged_in_user");
+          localStorage.removeItem("admin_fully_unlocked");
+          showToast("Đã đăng xuất khỏi tài khoản Quản trị.", "success");
+          
+          // Show overlay immediately for seamless transition
+          showAdminAuthOverlay();
+          updateAdminLogoutButtons();
+          
+          // Force screen refresh to clear in-memory states
+          window.location.reload();
+        });
+      }
+
+      // Expose controls to window
+      window.adminLogout = adminLogout;
+      window.toggleAdminAuthTab = toggleAdminAuthTab;
+      window.togglePasswordVisibility = togglePasswordVisibility;
+      window.handleAdminLoginSubmit = handleAdminLoginSubmit;
+      window.handleAdminRegisterRequest = handleAdminRegisterRequest;
+      window.clickSmsNotification = clickSmsNotification;
+      window.handleAdminOtpSubmit = handleAdminOtpSubmit;
+      window.handleAdminPasswordLockSubmit = handleAdminPasswordLockSubmit;
+      window.cancelAdminPasswordLock = cancelAdminPasswordLock;
+      window.resendAdminOtp = resendAdminOtp;
+      window.cancelAdminOtp = cancelAdminOtp;
+
+      // Check on loaded
+      function checkAdminSessionOnLoad() {
+        updateAdminLogoutButtons();
+        if (isAdminViewActive() && !checkAdminSessionSilent()) {
+          showAdminAuthOverlay();
+        }
+      }
+
+      // Run immediately and schedule multiple fail-safes
+      checkAdminSessionOnLoad();
+      setTimeout(checkAdminSessionOnLoad, 100);
+      setTimeout(checkAdminSessionOnLoad, 500);
     </script>
 \n</body>
 </html>
