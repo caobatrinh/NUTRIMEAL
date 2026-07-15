@@ -2527,8 +2527,10 @@
                         class="font-bold text-slate-700 mb-3 flex items-center gap-2"
                       >
                         <img
-                          src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+                          src="https://test-payment.momo.vn/v2/gateway/resources/images/logos/momo_logo_pink.png"
+                          onerror="this.onerror=null; this.src='https://homepage.momocdn.net/img/momo-upload-api-220810142637-637957383979148092.png';"
                           class="h-5"
+                          alt="MoMo"
                         />
                         Mã QR Ví MoMo
                       </h3>
@@ -3795,13 +3797,13 @@
                   class="w-5/12 relative h-[500px] mt-0 z-10 flex justify-end shrink-0"
                 >
                   <!-- Hidden File Inputs for Banner Images -->
-                  <input type="file" id="banner-img-top-upload" class="hidden" accept="image/*" onchange="handleBannerImageUpload(event, 'top')" />
-                  <input type="file" id="banner-img-bottom-upload" class="hidden" accept="image/*" onchange="handleBannerImageUpload(event, 'bottom')" />
+                  <input type="file" id="banner-img-top-upload" class="hidden" accept="image/*" multiple onchange="handleBannerImageUpload(event, 'banner-top')" />
+                  <input type="file" id="banner-img-bottom-upload" class="hidden" accept="image/*" multiple onchange="handleBannerImageUpload(event, 'banner-bottom')" />
 
                   <!-- Top Food Image Container -->
                   <div class="absolute top-0 right-0 w-80 h-56 rotate-3 z-20 group/banner-top cursor-pointer" onclick="document.getElementById('banner-img-top-upload').click()">
                     <img
-                      id="banner-img-top"
+                      id="banner-img-banner-top"
                       src="https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop"
                       alt="Healthy Meal Box"
                       class="w-full h-full object-cover rounded-3xl shadow-2xl border-[6px] border-white transition-all group-hover/banner-top:brightness-75"
@@ -3816,7 +3818,7 @@
                   <!-- Bottom Food Image Container -->
                   <div class="absolute bottom-0 right-16 w-80 h-56 -rotate-6 z-10 group/banner-bottom cursor-pointer" onclick="document.getElementById('banner-img-bottom-upload').click()">
                     <img
-                      id="banner-img-bottom"
+                      id="banner-img-banner-bottom"
                       src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop"
                       alt="Healthy Beef Box"
                       class="w-full h-full object-cover rounded-3xl shadow-2xl border-[6px] border-white transition-all group-hover/banner-bottom:brightness-75"
@@ -3933,6 +3935,52 @@
               <i
                 class="fa-solid fa-leaf absolute top-20 right-1/2 text-emerald-200/40 text-3xl rotate-90 pointer-events-none animate-[pulse_3s_infinite]"
               ></i>
+            </div>
+          </div>
+
+          
+          <div
+            class="mt-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100"
+          >
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg">
+                Ảnh Banner Khai Trương (Siêu Ưu Đãi)
+              </h3>
+              <p class="text-sm text-slate-500">
+                Tải lên ảnh hoặc PNG sequence (chọn nhiều file) cho 2 ảnh trong Banner Khai Trương
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <button onclick="document.getElementById('banner-img-top-upload').click()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-200 transition-colors">
+                <i class="fa-solid fa-camera mr-2"></i> Ảnh Trên
+              </button>
+              <button onclick="document.getElementById('banner-img-bottom-upload').click()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-200 transition-colors">
+                <i class="fa-solid fa-camera mr-2"></i> Ảnh Dưới
+              </button>
+            </div>
+          </div>
+
+          <div
+            class="mt-8 flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-slate-100"
+          >
+            <div>
+              <h3 class="font-bold text-slate-800 text-lg">
+                Ảnh Trust Banner (Trang Tư Vấn - Hero Section)
+              </h3>
+              <p class="text-sm text-slate-500">
+                Tải lên ảnh hoặc PNG sequence (chọn nhiều file) cho 2 ảnh trong Trust Banner
+              </p>
+            </div>
+            <div class="flex gap-4">
+              <input type="file" id="trust-img-top-upload" class="hidden" accept="image/*" multiple onchange="handleBannerImageUpload(event, 'trust-top')" />
+              <input type="file" id="trust-img-bottom-upload" class="hidden" accept="image/*" multiple onchange="handleBannerImageUpload(event, 'trust-bottom')" />
+              
+              <button onclick="document.getElementById('trust-img-top-upload').click()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-200 transition-colors">
+                <i class="fa-solid fa-camera mr-2"></i> Ảnh Trên
+              </button>
+              <button onclick="document.getElementById('trust-img-bottom-upload').click()" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded-lg font-bold text-sm hover:bg-emerald-200 transition-colors">
+                <i class="fa-solid fa-camera mr-2"></i> Ảnh Dưới
+              </button>
             </div>
           </div>
 
@@ -4172,7 +4220,7 @@
                   <tr>
                     <th class="px-6 py-4">Khách hàng</th>
                     <th class="px-6 py-4">Gói đang dùng</th>
-                    <th class="px-6 py-4">Ngày bắt đầu</th>
+                    <th class="px-6 py-4">Ngày BĐ - KT</th>
                     <th class="px-6 py-4">Trạng thái</th>
                     <th class="px-6 py-4 text-right">Thao tác</th>
                   </tr>
@@ -5385,7 +5433,7 @@
                   <div
                     class="absolute top-[5%] right-[5%] md:right-[0%] w-[70%] h-[70%] rounded-full shadow-[0_10px_20px_rgba(0,0,0,0.3)] md:shadow-2xl border-[3px] md:border-[6px] border-[#043F2E] overflow-hidden z-20 animate-float"
                   >
-                    <img
+                    <img id="user-banner-img-trust-top"
                       src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop"
                       alt="Healthy Food"
                       class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
@@ -5394,7 +5442,7 @@
                   <div
                     class="absolute bottom-[5%] left-[5%] md:left-[5%] w-[50%] h-[50%] rounded-full shadow-[0_10px_20px_rgba(0,0,0,0.3)] md:shadow-2xl border-[3px] md:border-[6px] border-[#043F2E] overflow-hidden z-30 animate-float-delayed"
                   >
-                    <img
+                    <img id="user-banner-img-trust-bottom"
                       src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&auto=format&fit=crop"
                       alt="Salad"
                       class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
@@ -9453,19 +9501,20 @@
             🎧 Hỗ trợ
           </button>
         </div>
-        <div class="p-3 flex gap-2 shrink-0">
-          <input
-            type="text"
+        <div class="p-3 flex shrink-0 relative items-end">
+          <textarea
             id="chatbot-input"
             placeholder="Nhập câu hỏi của bạn..."
-            class="flex-1 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-slate-50 focus:bg-white transition-colors"
-            onkeypress="if (event.key === 'Enter') sendChatMessage();"
-          />
+            rows="1"
+            class="w-full border border-slate-200 rounded-2xl pl-4 pr-12 py-3 text-sm focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary bg-slate-50 focus:bg-white transition-colors resize-none overflow-y-auto leading-relaxed min-h-[46px] max-h-[120px]"
+            oninput="this.style.height = '46px'; this.style.height = Math.min(this.scrollHeight, 120) + 'px';"
+            onkeydown="if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendChatMessage(); }"
+          ></textarea>
           <button
             onclick="sendChatMessage()"
-            class="bg-primary hover:bg-primaryHover text-white w-11 h-11 rounded-xl flex items-center justify-center transition-colors shrink-0 shadow-sm"
+            class="absolute right-4 bottom-4 text-primary hover:text-primaryHover w-8 h-8 rounded-full flex items-center justify-center transition-colors shrink-0"
           >
-            <i class="fa-solid fa-paper-plane"></i>
+            <i class="fa-solid fa-paper-plane text-lg"></i>
           </button>
         </div>
       </div>
@@ -11162,37 +11211,17 @@
                   </div>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        class="block text-sm font-medium text-slate-700 mb-1"
-                        >Gói đăng ký</label
-                      >
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Gói đăng ký</label>
                       <select
                         id="purchased-package"
                         class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
+                        onchange="autoCalculatePurchasedEndDate()"
                       >
-                        <option value="target_7">
-                          Gói Trải Nghiệm (7 Ngày)
-                        </option>
-                        <option value="target_14">
-                          Gói Chuyển Đổi (14 Ngày)
-                        </option>
+                        <option value="target_7">Gói Trải Nghiệm (7 Ngày)</option>
+                        <option value="target_14">Gói Chuyển Đổi (14 Ngày)</option>
                         <option value="target_30">Gói Bứt Phá (30 Ngày)</option>
                       </select>
                     </div>
-                    <div>
-                      <label
-                        class="block text-sm font-medium text-slate-700 mb-1"
-                        >Ngày bắt đầu</label
-                      >
-                      <input
-                        type="date"
-                        id="purchased-start"
-                        required
-                        class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
-                      />
-                    </div>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
                     <div>
                       <label
                         class="block text-sm font-medium text-slate-700 mb-1"
@@ -11207,18 +11236,41 @@
                         <option value="power">Size Power (L)</option>
                       </select>
                     </div>
+                  </div>
+                  <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label
-                        class="block text-sm font-medium text-slate-700 mb-1"
-                        >Ghi chú đơn hàng</label
-                      >
+                      <label class="block text-sm font-medium text-slate-700 mb-1">Ngày bắt đầu</label>
                       <input
-                        type="text"
-                        id="purchased-notes"
-                        placeholder="Không hành, nhiều rau..."
+                        type="date"
+                        id="purchased-start"
+                        required
+                        class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
+                        onchange="autoCalculatePurchasedEndDate()"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-slate-700 mb-1 flex justify-between items-center gap-1">
+                        <span class="shrink-0">Ngày kết thúc</span>
+                        <button type="button" onclick="extendPurchasedEndDate()" class="text-[10px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded hover:bg-emerald-200 flex items-center gap-1 transition-colors" title="Gia hạn thêm 1 chu kỳ gói">
+                          <i class="fa-solid fa-clock-rotate-left text-[9px]"></i> Gia hạn nhanh
+                        </button>
+                      </label>
+                      <input
+                        type="date"
+                        id="purchased-end"
+                        required
                         class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
                       />
                     </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú đơn hàng</label>
+                    <input
+                      type="text"
+                      id="purchased-notes"
+                      placeholder="Không hành, nhiều rau..."
+                      class="w-full rounded-lg border border-slate-300 py-2 px-3 text-sm"
+                    />
                   </div>
                   <div class="mt-4 flex items-center gap-2">
                     <input
@@ -11423,6 +11475,31 @@
     </div>
 
     <!-- Modal: Dish Picker for Weekly Menu -->
+
+    <!-- Locked Menu Modal -->
+    <div
+      id="locked-menu-modal"
+      class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4 opacity-0 transition-opacity duration-300"
+    >
+      <div
+        class="bg-white rounded-3xl w-full max-w-sm overflow-hidden shadow-2xl transform scale-95 transition-all duration-300"
+      >
+        <div class="p-6 text-center">
+          <div class="w-32 h-32 mx-auto mb-4" id="locked-menu-mascot-container">
+            <!-- SVG will be injected here -->
+          </div>
+          <h3 class="text-xl font-bold text-slate-800 mb-2">Xin lỗi bạn nhé!</h3>
+          <p class="text-slate-600 text-sm mb-6">Món ăn của bữa ăn chỉ được thay đổi trước 2 ngày so với ngày giao.</p>
+          <button
+            onclick="closeLockedMenuModal()"
+            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-colors"
+          >
+            Đã hiểu
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div
       id="dish-picker-modal"
       class="fixed inset-0 z-50 hidden"
@@ -12849,6 +12926,7 @@
             JSON.stringify(serverState.settings),
           );
           if (typeof loadSettings === "function") loadSettings();
+        if (window.loadAllBannerImages) window.loadAllBannerImages();
         }
 
         if (serverState.pwaNotifications) {
@@ -15127,9 +15205,7 @@
       // ==========================================
       async function fetchGeminiAPI(prompt, isJson = false) {
         const customKey = localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY || "";
-        const url = customKey
-          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
-          : `/api/gemini`;
+        const url = `/api/gemini`;
         const payload = {
           contents: [{ parts: [{ text: prompt }] }],
           systemInstruction: {
@@ -15145,7 +15221,7 @@
         for (let i = 0; i < delays.length; i++) {
           try {
             const headers = { "Content-Type": "application/json" };
-            if (!customKey) headers["x-custom-api-key"] = customKey;
+            if (customKey) headers["x-custom-api-key"] = customKey;
 
             const response = await fetch(url, {
               method: "POST",
@@ -16113,6 +16189,7 @@
         }
         return 7;
       }
+      window.getStreakDays = getStreakDays;
 
       function isSameCalendarWeek(timestamp1, timestamp2) {
         if (!timestamp1 || !timestamp2) return false;
@@ -16271,7 +16348,7 @@
             base = 0;
           } else {
             // Past days keep their default demo base
-            base = defaultDemoBases[dayId] || 0;
+            base = 0;
           }
 
           // Add completed package orders of current week for this day of the week
@@ -16650,7 +16727,7 @@
             if (orderOnThisDay) {
               dayBase = getOrderKcal(orderOnThisDay);
             } else {
-              dayBase = defaultDemoBases[dayId] || 0;
+              dayBase = 0;
             }
 
             totalKcalFromStart += dayBase;
@@ -17511,6 +17588,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                             <button onclick="switchView('order-form')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-cart-shopping"></i> Đặt hàng ngoài gói đăng ký
                             </button>
+                            <button onclick="openRenewSubscriptionModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
+                                <i class="fa-solid fa-repeat"></i> Gia hạn gói ăn
+                            </button>
                         </div>
                     `;
         }
@@ -18206,21 +18286,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             });
           }
 
-          if (settings.bannerImages) {
-            if (settings.bannerImages.top) {
-              const topImg = document.getElementById("banner-img-top");
-              if (topImg) topImg.src = settings.bannerImages.top;
-              const userTopImg = document.getElementById("user-banner-img-top");
-              if (userTopImg) userTopImg.src = settings.bannerImages.top;
-            }
-            if (settings.bannerImages.bottom) {
-              const bottomImg = document.getElementById("banner-img-bottom");
-              if (bottomImg) bottomImg.src = settings.bannerImages.bottom;
-              const userBottomImg = document.getElementById("user-banner-img-bottom");
-              if (userBottomImg) userBottomImg.src = settings.bannerImages.bottom;
-            }
-          }
-
+          if (window.loadAllBannerImages) window.loadAllBannerImages();
           if (settings.bannerGrandOpeningText) {
             const bannerGrandOpeningTextEl = document.getElementById(
               "banner-grand-opening-text",
@@ -18269,35 +18335,125 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
-      window.handleBannerImageUpload = function (event, position) {
-        const file = event.target.files[0];
-        if (!file) return;
+      
+      window.loadAllBannerImages = async function() {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        if (!savedSettings) return;
+        const settings = JSON.parse(savedSettings);
+        if (settings.bannerImages) {
+          const loadImg = async (position) => {
+            let val = settings.bannerImages[position];
+            if (!val) return;
+            let frames = [];
+            if (typeof val === 'string' && val.startsWith('IDB:')) {
+              const seqId = val.substring(4);
+              if (window.MascotDB) {
+                await window.MascotDB.init();
+                frames = await window.MascotDB.getSequence(seqId);
+              }
+            } else {
+              frames = [val];
+            }
+            if (frames && frames.length > 0) {
+              if (window.applySequence) {
+                window.applySequence("banner-img-" + position, frames);
+                
+                // For the hero section in user view
+                // Actually the ID is user-banner-img-banner-top/bottom
+                if (position === 'banner-top' || position === 'banner-bottom') {
+                    window.applySequence("user-banner-img-" + position, frames);
+                } else if (position === 'trust-top' || position === 'trust-bottom') {
+                    window.applySequence("user-banner-img-" + position, frames);
+                }
+              }
+            }
+          };
+          await loadImg('banner-top');
+          await loadImg('banner-bottom');
+          await loadImg('trust-top');
+          await loadImg('trust-bottom');
+        }
+      };
+      
+      window.sequenceIntervals = window.sequenceIntervals || {};
 
-        compressImage(file, 800, 600, 0.8, function (compressedDataUrl) {
-          // Update the editor image
-          const editorImg = document.getElementById(`banner-img-${position}`);
-          if (editorImg) editorImg.src = compressedDataUrl;
-
-          // Update the user-side banner image if it is on the screen currently
-          const userImg = document.getElementById(`user-banner-img-${position}`);
-          if (userImg) userImg.src = compressedDataUrl;
-
-          // Save to localStorage settings
-          const savedSettings = localStorage.getItem("nutriadmin_settings");
-          let settings = savedSettings ? JSON.parse(savedSettings) : {};
-          if (!settings.bannerImages) settings.bannerImages = {};
-          settings.bannerImages[position] = compressedDataUrl;
-          localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
-
-          if (typeof syncStateToServer === "function") {
-            syncStateToServer();
-          }
-        });
+      window.applySequence = function(imgId, frames) {
+        if (!frames || frames.length === 0) return;
+        const imgEl = document.getElementById(imgId);
+        if (!imgEl) return;
+        
+        if (window.sequenceIntervals[imgId]) {
+          clearInterval(window.sequenceIntervals[imgId]);
+          delete window.sequenceIntervals[imgId];
+        }
+        
+        if (frames.length === 1) {
+          imgEl.src = frames[0];
+          return;
+        }
+        
+        let i = 0;
+        imgEl.src = frames[0];
+        window.sequenceIntervals[imgId] = setInterval(() => {
+          i = (i + 1) % frames.length;
+          imgEl.src = frames[i];
+        }, 150); // ~7fps
       };
 
+      window.handleBannerImageUpload = async function (event, position) {
+        const files = event.target.files;
+        if (!files || files.length === 0) return;
+
+        const processFile = (file) => {
+          return new Promise((resolve) => {
+            compressImage(file, 800, 600, 0.8, function (compressedDataUrl) {
+              resolve(compressedDataUrl);
+            });
+          });
+        };
+
+        const frames = [];
+        for (let i = 0; i < files.length; i++) {
+           frames.push(await processFile(files[i]));
+        }
+
+        // Apply to editor image (if exists)
+        window.applySequence(`banner-img-${position}`, frames);
+        
+        // Apply to user side image
+        window.applySequence(`user-banner-img-${position}`, frames);
+        
+        if (position.startsWith('trust')) {
+            window.applySequence(`user-banner-img-${position}-2`, frames);
+        }
+
+        // Store in MascotDB for sequences
+        await MascotDB.init();
+        await MascotDB.saveSequence(`seq_${position}`, frames);
+
+        // Save reference in settings
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settings = savedSettings ? JSON.parse(savedSettings) : {};
+        if (!settings.bannerImages) settings.bannerImages = {};
+        
+        settings.bannerImages[position] = `IDB:seq_${position}`;
+        
+        localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+
+        if (typeof syncStateToServer === "function") {
+          syncStateToServer();
+        }
+      };
       function handleLogoUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const logoImg = document.getElementById("set-brand-logo-preview");
+          if (logoImg) logoImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
 
         compressImage(file, 400, 400, 0.8, function (compressedDataUrl) {
           const logoImg = document.getElementById("set-brand-logo-preview");
@@ -18309,6 +18465,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const file = event.target.files[0];
         if (!file) return;
 
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const favImg = document.getElementById("set-favicon-preview");
+          if (favImg) favImg.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+
         compressImage(file, 128, 128, 0.8, function (compressedDataUrl) {
           const favImg = document.getElementById("set-favicon-preview");
           if (favImg) favImg.src = compressedDataUrl;
@@ -18318,6 +18481,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       function handlePaymentQRUpload(event, type) {
         const file = event.target.files[0];
         if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = document.getElementById(`set-payment-${type}-qr-preview`);
+          if (img) img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
 
         compressImage(file, 600, 600, 0.8, function (compressedDataUrl) {
           const img = document.getElementById(`set-payment-${type}-qr-preview`);
@@ -18473,14 +18643,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         });
 
         const bannerImages = existingSettings.bannerImages || {};
-        const adminTopImg = document.getElementById("banner-img-top");
-        const adminBottomImg = document.getElementById("banner-img-bottom");
-        if (adminTopImg && adminTopImg.src && adminTopImg.src.startsWith("data:image")) {
-          bannerImages.top = adminTopImg.src;
-        }
-        if (adminBottomImg && adminBottomImg.src && adminBottomImg.src.startsWith("data:image")) {
-          bannerImages.bottom = adminBottomImg.src;
-        }
+        // Banner images are handled via handleBannerImageUpload
 
         const settings = {
           ...existingSettings,
@@ -19073,6 +19236,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
                 // Re-render UI
                 loadSettings();
+        if (window.loadAllBannerImages) window.loadAllBannerImages();
                 renderCategories();
                 renderDishes();
                 renderOrdersAdmin();
@@ -19295,6 +19459,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document.getElementById("nav-consulting").className = activeClass;
 
         if (viewName === "system") loadSettings();
+        if (window.loadAllBannerImages) window.loadAllBannerImages();
         if (viewName === "inventory") renderInventory();
         if (viewName === "order-form") {
           renderCustomerMenu();
@@ -20842,36 +21007,36 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                       ${dish.sizes?.lean ? `
                                       <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                           <div class="flex justify-between items-center mb-1.5">
-                                              <span class="text-xs font-bold text-slate-700">Lean (S) <span class="text-emerald-500 font-medium ml-1">${formatCurrency(dish.sizes.lean?.price)}đ</span></span>
-                                              <span class="text-xs font-bold text-primary">${dish.sizes.lean?.kcal || 0} Kcal</span>
+                                              <span class="text-xs font-bold text-slate-700">Lean (S) <span class="text-emerald-500 font-medium ml-1">${formatCurrency(dish.sizes?.lean?.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-primary">${dish.sizes?.lean?.kcal || 0} Kcal</span>
                                           </div>
                                           <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.lean?.protein || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.lean?.carbs || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.lean?.fat || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes?.lean?.protein || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes?.lean?.carbs || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes?.lean?.fat || 0}g</p></div>
                                           </div>
                                       </div>
                                       ` : ""}
                                       <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                           <div class="flex justify-between items-center mb-1.5">
-                                              <span class="text-xs font-bold text-slate-700">Balance (M) <span class="text-emerald-600 font-medium ml-1">${formatCurrency(dish.sizes.balance?.price)}đ</span></span>
-                                              <span class="text-xs font-bold text-primary">${dish.sizes.balance?.kcal || 0} Kcal</span>
+                                              <span class="text-xs font-bold text-slate-700">Balance (M) <span class="text-emerald-600 font-medium ml-1">${formatCurrency(dish.sizes?.balance?.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-primary">${dish.sizes?.balance?.kcal || 0} Kcal</span>
                                           </div>
                                           <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.balance?.protein || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.balance?.carbs || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.balance?.fat || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes?.balance?.protein || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes?.balance?.carbs || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes?.balance?.fat || 0}g</p></div>
                                           </div>
                                       </div>
                                       <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-100">
                                           <div class="flex justify-between items-center mb-1.5">
-                                              <span class="text-xs font-bold text-slate-700">Power (L) <span class="text-amber-600 font-medium ml-1">${formatCurrency(dish.sizes.power?.price)}đ</span></span>
-                                              <span class="text-xs font-bold text-amber-600">${dish.sizes.power?.kcal || 0} Kcal</span>
+                                              <span class="text-xs font-bold text-slate-700">Power (L) <span class="text-amber-600 font-medium ml-1">${formatCurrency(dish.sizes?.power?.price)}đ</span></span>
+                                              <span class="text-xs font-bold text-amber-600">${dish.sizes?.power?.kcal || 0} Kcal</span>
                                           </div>
                                           <div class="grid grid-cols-3 gap-1 text-center divide-x divide-slate-200">
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes.power?.protein || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes.power?.carbs || 0}g</p></div>
-                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes.power?.fat || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Đạm</p><p class="text-xs font-semibold">${dish.sizes?.power?.protein || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Tinh bột</p><p class="text-xs font-semibold">${dish.sizes?.power?.carbs || 0}g</p></div>
+                                              <div><p class="text-[10px] text-slate-400 uppercase">Béo</p><p class="text-xs font-semibold">${dish.sizes?.power?.fat || 0}g</p></div>
                                           </div>
                                       </div>
                                       `
@@ -21010,46 +21175,46 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             document.getElementById("dish-active").checked = dish.isActive;
 
             if (dish.sizes) {
-              document.getElementById("s-price").value = dish.sizes.lean?.price || "";
-              document.getElementById("s-kcal").value = dish.sizes.lean?.kcal || "";
-              document.getElementById("s-protein").value = dish.sizes.lean?.protein || "";
-              document.getElementById("s-carbs").value = dish.sizes.lean?.carbs || "";
-              document.getElementById("s-fat").value = dish.sizes.lean?.fat || "";
-              document.getElementById("s-main-ingQty").value = dish.sizes.lean?.mainIngredientQty || "";
-              document.getElementById("s-raw-ingQty").value = dish.sizes.lean?.rawIngredientQty || "";
-              document.getElementById("s-yield").value = dish.sizes.lean?.yield || 100;
+              document.getElementById("s-price").value = dish.sizes?.lean?.price || "";
+              document.getElementById("s-kcal").value = dish.sizes?.lean?.kcal || "";
+              document.getElementById("s-protein").value = dish.sizes?.lean?.protein || "";
+              document.getElementById("s-carbs").value = dish.sizes?.lean?.carbs || "";
+              document.getElementById("s-fat").value = dish.sizes?.lean?.fat || "";
+              document.getElementById("s-main-ingQty").value = dish.sizes?.lean?.mainIngredientQty || "";
+              document.getElementById("s-raw-ingQty").value = dish.sizes?.lean?.rawIngredientQty || "";
+              document.getElementById("s-yield").value = dish.sizes?.lean?.yield || 100;
               document.getElementById("m-price").value =
-                dish.sizes.balance?.price || "";
+                dish.sizes?.balance?.price || "";
               document.getElementById("m-kcal").value =
-                dish.sizes.balance?.kcal || "";
+                dish.sizes?.balance?.kcal || "";
               document.getElementById("m-protein").value =
-                dish.sizes.balance?.protein || "";
+                dish.sizes?.balance?.protein || "";
               document.getElementById("m-carbs").value =
-                dish.sizes.balance?.carbs || "";
+                dish.sizes?.balance?.carbs || "";
               document.getElementById("m-fat").value =
-                dish.sizes.balance?.fat || "";
+                dish.sizes?.balance?.fat || "";
               document.getElementById("m-main-ingQty").value =
-                dish.sizes.balance?.mainIngredientQty || "";
+                dish.sizes?.balance?.mainIngredientQty || "";
               document.getElementById("m-raw-ingQty").value =
-                dish.sizes.balance?.rawIngredientQty || "";
+                dish.sizes?.balance?.rawIngredientQty || "";
               document.getElementById("m-yield").value =
-                dish.sizes.balance?.yield || 100;
+                dish.sizes?.balance?.yield || 100;
               document.getElementById("l-price").value =
-                dish.sizes.power?.price || "";
+                dish.sizes?.power?.price || "";
               document.getElementById("l-kcal").value =
-                dish.sizes.power?.kcal || "";
+                dish.sizes?.power?.kcal || "";
               document.getElementById("l-protein").value =
-                dish.sizes.power?.protein || "";
+                dish.sizes?.power?.protein || "";
               document.getElementById("l-carbs").value =
-                dish.sizes.power?.carbs || "";
+                dish.sizes?.power?.carbs || "";
               document.getElementById("l-fat").value =
-                dish.sizes.power?.fat || "";
+                dish.sizes?.power?.fat || "";
               document.getElementById("l-main-ingQty").value =
-                dish.sizes.power?.mainIngredientQty || "";
+                dish.sizes?.power?.mainIngredientQty || "";
               document.getElementById("l-raw-ingQty").value =
-                dish.sizes.power?.rawIngredientQty || "";
+                dish.sizes?.power?.rawIngredientQty || "";
               document.getElementById("l-yield").value =
-                dish.sizes.power?.yield || 100;
+                dish.sizes?.power?.yield || 100;
             } else {
               [
                 "m-price",
@@ -21209,24 +21374,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const listContainer = document.getElementById("cooking-methods-list");
         listContainer.innerHTML = dish.methods.map((method, index) => {
                     const hasSImage = method.image && method.image.trim() !== "";
-          const leanPrice = (method.sizes && method.sizes.lean && method.sizes.lean?.price) || 0;
-          const leanKcal = (method.sizes && method.sizes.lean && method.sizes.lean?.kcal) || 0;
-          const leanProtein = (method.sizes && method.sizes.lean && method.sizes.lean?.protein) || 0;
-          const leanCarbs = (method.sizes && method.sizes.lean && method.sizes.lean?.carbs) || 0;
-          const leanFat = (method.sizes && method.sizes.lean && method.sizes.lean?.fat) || 0;
+          const leanPrice = (method.sizes && method.sizes.lean && method.sizes?.lean?.price) || 0;
+          const leanKcal = (method.sizes && method.sizes.lean && method.sizes?.lean?.kcal) || 0;
+          const leanProtein = (method.sizes && method.sizes.lean && method.sizes?.lean?.protein) || 0;
+          const leanCarbs = (method.sizes && method.sizes.lean && method.sizes?.lean?.carbs) || 0;
+          const leanFat = (method.sizes && method.sizes.lean && method.sizes?.lean?.fat) || 0;
           const leanQty = method.sizes && method.sizes.lean && method.sizes.lean.mainIngredientQty;
-          const balancePrice = (method.sizes && method.sizes.balance && method.sizes.balance?.price) || 0;
-          const balanceKcal = (method.sizes && method.sizes.balance && method.sizes.balance?.kcal) || 0;
-          const balanceProtein = (method.sizes && method.sizes.balance && method.sizes.balance?.protein) || 0;
-          const balanceCarbs = (method.sizes && method.sizes.balance && method.sizes.balance?.carbs) || 0;
-          const balanceFat = (method.sizes && method.sizes.balance && method.sizes.balance?.fat) || 0;
+          const balancePrice = (method.sizes && method.sizes.balance && method.sizes?.balance?.price) || 0;
+          const balanceKcal = (method.sizes && method.sizes.balance && method.sizes?.balance?.kcal) || 0;
+          const balanceProtein = (method.sizes && method.sizes.balance && method.sizes?.balance?.protein) || 0;
+          const balanceCarbs = (method.sizes && method.sizes.balance && method.sizes?.balance?.carbs) || 0;
+          const balanceFat = (method.sizes && method.sizes.balance && method.sizes?.balance?.fat) || 0;
           const balanceQty = method.sizes && method.sizes.balance && method.sizes.balance.mainIngredientQty;
 
-          const powerPrice = (method.sizes && method.sizes.power && method.sizes.power?.price) || 0;
-          const powerKcal = (method.sizes && method.sizes.power && method.sizes.power?.kcal) || 0;
-          const powerProtein = (method.sizes && method.sizes.power && method.sizes.power?.protein) || 0;
-          const powerCarbs = (method.sizes && method.sizes.power && method.sizes.power?.carbs) || 0;
-          const powerFat = (method.sizes && method.sizes.power && method.sizes.power?.fat) || 0;
+          const powerPrice = (method.sizes && method.sizes.power && method.sizes?.power?.price) || 0;
+          const powerKcal = (method.sizes && method.sizes.power && method.sizes?.power?.kcal) || 0;
+          const powerProtein = (method.sizes && method.sizes.power && method.sizes?.power?.protein) || 0;
+          const powerCarbs = (method.sizes && method.sizes.power && method.sizes?.power?.carbs) || 0;
+          const powerFat = (method.sizes && method.sizes.power && method.sizes?.power?.fat) || 0;
           const powerQty = method.sizes && method.sizes.power && method.sizes.power.mainIngredientQty;
 
           return `
@@ -21354,21 +21519,21 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document.getElementById('me-ingredients').value = method.ingredients || "";
           
           if (method.sizes && method.sizes.lean) {
-            document.getElementById('me-s-price').value = method.sizes.lean?.price || 0;
-            document.getElementById('me-s-kcal').value = method.sizes.lean?.kcal || 0;
-            document.getElementById('me-s-protein').value = method.sizes.lean?.protein || 0;
-            document.getElementById('me-s-carbs').value = method.sizes.lean?.carbs || 0;
-            document.getElementById('me-s-fat').value = method.sizes.lean?.fat || 0;
+            document.getElementById('me-s-price').value = method.sizes?.lean?.price || 0;
+            document.getElementById('me-s-kcal').value = method.sizes?.lean?.kcal || 0;
+            document.getElementById('me-s-protein').value = method.sizes?.lean?.protein || 0;
+            document.getElementById('me-s-carbs').value = method.sizes?.lean?.carbs || 0;
+            document.getElementById('me-s-fat').value = method.sizes?.lean?.fat || 0;
             document.getElementById('me-s-main-qty').value = method.sizes.lean.mainIngredientQty || "";
             document.getElementById('me-s-yield').value = method.sizes.lean.yield || 100;
             document.getElementById('me-s-raw-qty').value = method.sizes.lean.rawIngredientQty || "";
           }
           if (method.sizes && method.sizes.balance) {
-            document.getElementById('me-m-price').value = method.sizes.balance?.price || 0;
-            document.getElementById('me-m-kcal').value = method.sizes.balance?.kcal || 0;
-            document.getElementById('me-m-protein').value = method.sizes.balance?.protein || 0;
-            document.getElementById('me-m-carbs').value = method.sizes.balance?.carbs || 0;
-            document.getElementById('me-m-fat').value = method.sizes.balance?.fat || 0;
+            document.getElementById('me-m-price').value = method.sizes?.balance?.price || 0;
+            document.getElementById('me-m-kcal').value = method.sizes?.balance?.kcal || 0;
+            document.getElementById('me-m-protein').value = method.sizes?.balance?.protein || 0;
+            document.getElementById('me-m-carbs').value = method.sizes?.balance?.carbs || 0;
+            document.getElementById('me-m-fat').value = method.sizes?.balance?.fat || 0;
             document.getElementById('me-m-main-qty').value = method.sizes.balance.mainIngredientQty || "";
             document.getElementById('me-m-yield').value = method.sizes.balance.yield || 100;
             document.getElementById('me-m-raw-qty').value = method.sizes.balance.rawIngredientQty || "";
@@ -21392,11 +21557,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
           
           if (method.sizes && method.sizes.power) {
-            document.getElementById('me-l-price').value = method.sizes.power?.price || 0;
-            document.getElementById('me-l-kcal').value = method.sizes.power?.kcal || 0;
-            document.getElementById('me-l-protein').value = method.sizes.power?.protein || 0;
-            document.getElementById('me-l-carbs').value = method.sizes.power?.carbs || 0;
-            document.getElementById('me-l-fat').value = method.sizes.power?.fat || 0;
+            document.getElementById('me-l-price').value = method.sizes?.power?.price || 0;
+            document.getElementById('me-l-kcal').value = method.sizes?.power?.kcal || 0;
+            document.getElementById('me-l-protein').value = method.sizes?.power?.protein || 0;
+            document.getElementById('me-l-carbs').value = method.sizes?.power?.carbs || 0;
+            document.getElementById('me-l-fat').value = method.sizes?.power?.fat || 0;
             document.getElementById('me-l-main-qty').value = method.sizes.power.mainIngredientQty || "";
             document.getElementById('me-l-yield').value = method.sizes.power.yield || 100;
             document.getElementById('me-l-raw-qty').value = method.sizes.power.rawIngredientQty || "";
@@ -22538,8 +22703,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           parsedSettings.bannerGrandOpeningText || "GRAND OPENING - 15/11/2026";
 
         const bannerImages = parsedSettings.bannerImages || {};
-        const bannerImgTop = bannerImages.top || "https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop";
-        const bannerImgBottom = bannerImages.bottom || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop";
+        const bannerImgTop = (bannerImages["banner-top"] && typeof bannerImages["banner-top"] === "string" && !bannerImages["banner-top"].startsWith("IDB:")) ? bannerImages["banner-top"] : (bannerImages.top || "https://images.unsplash.com/photo-1543362906-acfc16c67564?q=80&w=600&auto=format&fit=crop");
+        const bannerImgBottom = (bannerImages["banner-bottom"] && typeof bannerImages["banner-bottom"] === "string" && !bannerImages["banner-bottom"].startsWith("IDB:")) ? bannerImages["banner-bottom"] : (bannerImages.bottom || "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=600&auto=format&fit=crop");
 
         const showBanner =
           JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}")
@@ -22854,7 +23019,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                       >
                         <!-- Top Food Image -->
                         <img
-                          id="user-banner-img-top"
+                          id="user-banner-img-banner-top"
                           src="${bannerImgTop}"
                           alt="Healthy Meal Box"
                           class="absolute top-0 right-0 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white rotate-3 z-20"
@@ -22862,7 +23027,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
                         <!-- Bottom Food Image -->
                         <img
-                          id="user-banner-img-bottom"
+                          id="user-banner-img-banner-bottom"
                           src="${bannerImgBottom}"
                           alt="Healthy Beef Box"
                           class="absolute bottom-0 right-16 w-80 h-56 object-cover rounded-3xl shadow-2xl border-[6px] border-white -rotate-6 z-10"
@@ -23467,6 +23632,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                   `;
 
         container.innerHTML = htmlToRender;
+        if (window.loadAllBannerImages) window.loadAllBannerImages();
 
         if (window.renderCustomAdviceDishes) {
           window.renderCustomAdviceDishes();
@@ -23934,16 +24100,16 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                               <p class="text-sm text-slate-500 mb-4 leading-relaxed">${dish.ingredients}</p>
                               <div class="flex flex-wrap gap-4 mt-auto">
                                   <div class="flex flex-col gap-1.5">
-                                      <button onclick="addToCart(${dish.id}, 'lean')" class="text-xs font-medium border border-emerald-500 text-emerald-500 lg:hover:bg-emerald-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Lean (S) (${formatCurrency(dish.sizes.lean?.price)}đ)</button>
-                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.lean?.kcal || 0} Kcal • P${dish.sizes.lean?.protein} C${dish.sizes.lean?.carbs} F${dish.sizes.lean?.fat}</span>
+                                      <button onclick="addToCart(${dish.id}, 'lean')" class="text-xs font-medium border border-emerald-500 text-emerald-500 lg:hover:bg-emerald-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Lean (S) (${formatCurrency(dish.sizes?.lean?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes?.lean?.kcal || 0} Kcal • P${dish.sizes?.lean?.protein} C${dish.sizes?.lean?.carbs} F${dish.sizes?.lean?.fat}</span>
                                   </div>
                                   <div class="flex flex-col gap-1.5">
-                                      <button onclick="addToCart(${dish.id}, 'balance')" class="text-xs font-medium border border-primary text-primary lg:hover:bg-primary lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Balance (M) (${formatCurrency(dish.sizes.balance?.price)}đ)</button>
-                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.balance?.kcal || 0} Kcal • P${dish.sizes.balance?.protein} C${dish.sizes.balance?.carbs} F${dish.sizes.balance?.fat}</span>
+                                      <button onclick="addToCart(${dish.id}, 'balance')" class="text-xs font-medium border border-primary text-primary lg:hover:bg-primary lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Balance (M) (${formatCurrency(dish.sizes?.balance?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes?.balance?.kcal || 0} Kcal • P${dish.sizes?.balance?.protein} C${dish.sizes?.balance?.carbs} F${dish.sizes?.balance?.fat}</span>
                                   </div>
                                   <div class="flex flex-col gap-1.5">
-                                      <button onclick="addToCart(${dish.id}, 'power')" class="text-xs font-medium border border-amber-500 text-amber-500 lg:hover:bg-amber-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Power (L) (${formatCurrency(dish.sizes.power?.price)}đ)</button>
-                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes.power?.kcal || 0} Kcal • P${dish.sizes.power?.protein} C${dish.sizes.power?.carbs} F${dish.sizes.power?.fat}</span>
+                                      <button onclick="addToCart(${dish.id}, 'power')" class="text-xs font-medium border border-amber-500 text-amber-500 lg:hover:bg-amber-500 lg:hover:text-white lg:hover:scale-105 active:scale-95 px-3 py-1.5 rounded-lg transition-all duration-300 w-fit">Power (L) (${formatCurrency(dish.sizes?.power?.price)}đ)</button>
+                                      <span class="text-[10px] text-slate-500 font-medium ml-1">🔥 ${dish.sizes?.power?.kcal || 0} Kcal • P${dish.sizes?.power?.protein} C${dish.sizes?.power?.carbs} F${dish.sizes?.power?.fat}</span>
                                   </div>
                               </div>
                           </div>
@@ -24219,7 +24385,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             : "Quét mã MoMo để thanh toán";
           qrImage.src =
             settings.paymentMomoQr ||
-            "https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png";
+            "https://via.placeholder.com/200?text=QR+MoMo";
         } else if (method === "bank") {
           qrContainer.classList.remove("hidden");
           instructionTag.innerText = settings.paymentBankInfo
@@ -25324,9 +25490,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         
         Object.values(portionMap).forEach(p => {
           let sizeLabels = [];
-          if (p.sizes.lean > 0) sizeLabels.push(`<span class="text-rose-600 font-semibold">${p.sizes.lean} S</span>`);
-          if (p.sizes.balance > 0) sizeLabels.push(`<span class="text-amber-600 font-semibold">${p.sizes.balance} M</span>`);
-          if (p.sizes.power > 0) sizeLabels.push(`<span class="text-indigo-600 font-semibold">${p.sizes.power} L</span>`);
+          if (p.sizes?.lean > 0) sizeLabels.push(`<span class="text-rose-600 font-semibold">${p.sizes?.lean} S</span>`);
+          if (p.sizes?.balance > 0) sizeLabels.push(`<span class="text-amber-600 font-semibold">${p.sizes?.balance} M</span>`);
+          if (p.sizes?.power > 0) sizeLabels.push(`<span class="text-indigo-600 font-semibold">${p.sizes?.power} L</span>`);
           
           portionsHtml += `
             <div class="flex items-center justify-between p-3 bg-slate-50/50 rounded-xl border border-slate-100">
@@ -25706,9 +25872,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         let portionsTableRows = "";
         Object.values(portionMap).forEach(p => {
           let sizeLabels = [];
-          if (p.sizes.lean > 0) sizeLabels.push(`<span style="color: #e11d48; font-weight: bold;">${p.sizes.lean} S (Lean)</span>`);
-          if (p.sizes.balance > 0) sizeLabels.push(`<span style="color: #d97706; font-weight: bold;">${p.sizes.balance} M (Balance)</span>`);
-          if (p.sizes.power > 0) sizeLabels.push(`<span style="color: #4f46e5; font-weight: bold;">${p.sizes.power} L (Power)</span>`);
+          if (p.sizes?.lean > 0) sizeLabels.push(`<span style="color: #e11d48; font-weight: bold;">${p.sizes?.lean} S (Lean)</span>`);
+          if (p.sizes?.balance > 0) sizeLabels.push(`<span style="color: #d97706; font-weight: bold;">${p.sizes?.balance} M (Balance)</span>`);
+          if (p.sizes?.power > 0) sizeLabels.push(`<span style="color: #4f46e5; font-weight: bold;">${p.sizes?.power} L (Power)</span>`);
           
           portionsTableRows += `
             <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -26535,14 +26701,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                     // Giả định nguyên liệu đầu tiên trong mảng là nguyên liệu chính
                     if (
                       item.sizeKey === "balance" &&
-                      dish.sizes.balance?.mainIngredientQty
+                      dish.sizes?.balance?.mainIngredientQty
                     ) {
-                      finalQty = dish.sizes.balance?.mainIngredientQty;
+                      finalQty = dish.sizes?.balance?.mainIngredientQty;
                     } else if (
                       item.sizeKey === "power" &&
-                      dish.sizes.power?.mainIngredientQty
+                      dish.sizes?.power?.mainIngredientQty
                     ) {
-                      finalQty = dish.sizes.power?.mainIngredientQty;
+                      finalQty = dish.sizes?.power?.mainIngredientQty;
                     }
                   }
 
@@ -27938,7 +28104,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             "Khách hàng": c.name,
             "Số điện thoại": `="${c.phone}"`,
             "Gói đang dùng": resolvePackageName(c.package),
-            "Ngày bắt đầu": c.startDate,
+            "Ngày bắt đầu - Kết thúc": c.startDate + (c.endDate ? " đến " + c.endDate : ""), // replaced original
             "Địa chỉ":
               `${c.street || ""} ${c.ward ? ", " + c.ward : ""} ${c.district ? ", " + c.district : ""}`.trim(),
           }));
@@ -28469,7 +28635,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                               </div>
                               ${c.notes ? `<div class="text-xs text-amber-600 italic mt-1 max-w-[200px] truncate" title="${c.notes}"><i class="fa-regular fa-comment-dots mr-1"></i>${c.notes}</div>` : ""}
                           </td>
-                          <td class="px-6 py-4 text-slate-600">${new Date(c.startDate).toLocaleDateString("vi-VN")}</td>
+                          <td class="px-6 py-4 text-slate-600">${new Date(c.startDate).toLocaleDateString("vi-VN")}${c.endDate ? " - " + new Date(c.endDate).toLocaleDateString("vi-VN") : ""}</td>
                           <td class="px-6 py-4">${dStatus}</td>
                           <td class="px-6 py-4 text-right">
                               <button onclick="openCustomerMenuModal(${c.id}, true)" class="text-xs bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded mr-2"><i class="fa-solid fa-calendar-week"></i> Menu</button>
@@ -28487,6 +28653,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.getElementById("purchased-modal-title").innerText =
           "Khách mua gói";
         document.getElementById("purchased-start").valueAsDate = new Date();
+        autoCalculatePurchasedEndDate();
         document.getElementById("purchased-size").value = "balance";
         document.getElementById("purchased-notes").value = "";
         document.getElementById("purchased-self-mix").checked = false;
@@ -28518,6 +28685,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             document.getElementById("purchased-phone").value = c.phone;
             document.getElementById("purchased-package").value = c.package;
             document.getElementById("purchased-start").value = c.startDate;
+            if (c.endDate) document.getElementById("purchased-end").value = c.endDate;
+            else autoCalculatePurchasedEndDate();
             document.getElementById("purchased-district").value =
               c.district || "";
             updatePurchasedWards();
@@ -28550,6 +28719,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               pAcc.package || "";
             if (pAcc.startDate)
               document.getElementById("purchased-start").value = pAcc.startDate;
+            if (pAcc.endDate) document.getElementById("purchased-end").value = pAcc.endDate;
+            else autoCalculatePurchasedEndDate();
             if (pAcc.district)
               document.getElementById("purchased-district").value =
                 pAcc.district;
@@ -28582,6 +28753,46 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         return "Cây sự sống";
       }
 
+      
+      function autoCalculatePurchasedEndDate() {
+        const startInput = document.getElementById("purchased-start").value;
+        const pkgValue = document.getElementById("purchased-package").value;
+        if (!startInput || !pkgValue) return;
+        
+        let days = 0;
+        if (pkgValue === "target_5" || pkgValue === "target_7" || String(pkgValue) === "5" || String(pkgValue) === "7") days = 7;
+        else if (pkgValue === "target_10" || pkgValue === "target_14" || String(pkgValue) === "10" || String(pkgValue) === "14") days = 14;
+        else if (pkgValue === "target_20" || pkgValue === "target_30" || String(pkgValue) === "20" || String(pkgValue) === "30") days = 30;
+        
+        if (days > 0) {
+            const startDate = new Date(startInput);
+            // end date is start date + days - 1
+            const endDate = new Date(startDate.getTime() + (days - 1) * 24 * 60 * 60 * 1000);
+            document.getElementById("purchased-end").valueAsDate = endDate;
+        }
+      }
+
+      function extendPurchasedEndDate() {
+        const endInput = document.getElementById("purchased-end").value;
+        const pkgValue = document.getElementById("purchased-package").value;
+        if (!endInput || !pkgValue) {
+            showToast("Vui lòng chọn ngày bắt đầu & gói đăng ký trước!", "error");
+            return;
+        }
+        
+        let days = 0;
+        if (pkgValue === "target_5" || pkgValue === "target_7" || String(pkgValue) === "5" || String(pkgValue) === "7") days = 7;
+        else if (pkgValue === "target_10" || pkgValue === "target_14" || String(pkgValue) === "10" || String(pkgValue) === "14") days = 14;
+        else if (pkgValue === "target_20" || pkgValue === "target_30" || String(pkgValue) === "20" || String(pkgValue) === "30") days = 30;
+        
+        if (days > 0) {
+            const endDate = new Date(endInput);
+            const newEndDate = new Date(endDate.getTime() + days * 24 * 60 * 60 * 1000);
+            document.getElementById("purchased-end").valueAsDate = newEndDate;
+            showToast("Đã gia hạn thêm " + days + " ngày!", "success");
+        }
+      }
+
       function getPackagePoints(pkgValue) {
         if (pkgValue === "target_5" || String(pkgValue) === "5" || pkgValue === "target_7" || String(pkgValue) === "7") return 490;
         if (pkgValue === "target_10" || String(pkgValue) === "10" || pkgValue === "target_14" || String(pkgValue) === "14") return 980;
@@ -28610,6 +28821,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           phone: phone,
           package: document.getElementById("purchased-package").value,
           startDate: document.getElementById("purchased-start").value,
+          endDate: document.getElementById("purchased-end").value,
           district: dist,
           ward: ward,
           street: str,
@@ -29268,15 +29480,15 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       let currentPickerMKey = "";
       let currentCategoryFilter = "all";
 
-      function renderCustomDishSelect(dKey, mKey, activeD) {
+      function renderCustomDishSelect(dKey, mKey, activeD, isLocked = false) {
         return `<div class="relative" id="w-${dKey}-${mKey}">
                         <input type="hidden" id="val-dish-${dKey}-${mKey}">
                         <input type="hidden" id="val-size-${dKey}-${mKey}" value="balance">
-                        <button type="button" onclick="openDishPickerModal('${dKey}','${mKey}')" class="w-full bg-white border border-slate-200 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/10 px-3 py-2.5 rounded-xl flex justify-between items-center h-12 transition-all cursor-pointer shadow-sm">
-                            <div id="disp-${dKey}-${mKey}" class="flex items-center gap-2 overflow-hidden w-full text-left">
+                        <button type="button" onclick="${isLocked ? 'showLockedPopup()' : `openDishPickerModal('${dKey}','${mKey}')`}" class="w-full ${isLocked ? 'bg-slate-50 border-slate-200 text-slate-400' : 'bg-white border-slate-200 hover:border-emerald-500 hover:ring-2 hover:ring-emerald-500/10'} border px-3 py-2.5 rounded-xl flex justify-between items-center h-12 transition-all cursor-pointer shadow-sm">
+                            <div id="disp-${dKey}-${mKey}" class="flex items-center gap-2 overflow-hidden w-full text-left ${isLocked ? 'opacity-60' : ''}">
                               <span class="text-xs text-slate-400 italic font-medium"><i class="fa-solid fa-plus text-slate-300 mr-1.5"></i>Chọn món ăn...</span>
                             </div>
-                            <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 shrink-0 ml-1"></i>
+                            <i class="${isLocked ? 'fa-solid fa-lock' : 'fa-solid fa-chevron-down'} text-[10px] text-slate-400 shrink-0 ml-1"></i>
                         </button>
                       </div>`;
       }
@@ -29305,6 +29517,35 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           closeDishPickerModal();
         }
       }
+
+
+      window.showLockedPopup = function() {
+        const modal = document.getElementById("locked-menu-modal");
+        const container = document.getElementById("locked-menu-mascot-container");
+        if (modal) {
+          if (container && typeof drawMascotSVG === "function") {
+            container.innerHTML = drawMascotSVG("xin_loi", 0);
+          }
+          modal.classList.remove("hidden");
+          setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            modal.querySelector("div").classList.remove("scale-95");
+            modal.querySelector("div").classList.add("scale-100");
+          }, 10);
+        }
+      };
+
+      window.closeLockedMenuModal = function() {
+        const modal = document.getElementById("locked-menu-modal");
+        if (modal) {
+          modal.classList.add("opacity-0");
+          modal.querySelector("div").classList.remove("scale-100");
+          modal.querySelector("div").classList.add("scale-95");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+          }, 300);
+        }
+      };
 
       window.openDishPickerModal = function (dKey, mKey) {
         currentPickerDKey = dKey;
@@ -29344,6 +29585,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
         activeDishes.forEach((d) => {
           if (d.category && !categories.includes(d.category)) {
+            if (d.category === "weekly_special" && !isWeeklySpecialEnabled) return;
             categories.push(d.category);
           }
         });
@@ -29360,6 +29602,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           "Tinh bột": "Tinh Bột",
           complete: "Món theo công thức",
           weekly_special: "Món mới mỗi tuần",
+          protein: "Đạm",
+          carbs: "Tinh bột",
+          veggies: "Rau củ",
+          sauce: "Nước sốt",
         };
 
         const catsContainer = document.getElementById("dish-picker-categories");
@@ -29401,6 +29647,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }
         activeDishes.forEach((d) => {
           if (d.category && !categories.includes(d.category)) {
+            if (d.category === "weekly_special" && !isWeeklySpecialEnabled) return;
             categories.push(d.category);
           }
         });
@@ -30059,10 +30306,23 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (!c.weeklyMenu) c.weeklyMenu = {};
         const aD = dishes.filter((x) => x.isActive);
 
+        const daysMap = { monday: 1, tuesday: 2, wednesday: 3, thursday: 4, friday: 5, saturday: 6, sunday: 7 };
+        const today = new Date();
+        let currentDay = today.getDay();
+        currentDay = currentDay === 0 ? 7 : currentDay;
+
         document.getElementById("weekly-menu-container").innerHTML =
           weekDays
             .map(
-              (d) => `
+              (d) => {
+                let isLocked = false;
+                if (!isFromAdmin) {
+                  let targetDay = daysMap[d.key];
+                  if (targetDay < currentDay) targetDay += 7;
+                  const diff = targetDay - currentDay;
+                  isLocked = diff <= 2;
+                }
+                return `
                       <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm mb-4">
                           <div class="flex justify-between items-center border-b border-slate-100 pb-2.5 mb-3">
                               <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
@@ -30084,8 +30344,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                   <div class="flex justify-between items-center mb-1.5">
                                       <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
                                         Bữa 1
-                                        <button onclick="handleSelfMixClick(${c.id}, '${d.key}', 'meal1')" class="inline-flex items-center gap-1 text-[9px] bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
-                                          Tự mix món
+                                        <button onclick="${isLocked ? 'showLockedPopup()' : `handleSelfMixClick(${c.id}, '${d.key}', 'meal1')`}" class="${isLocked ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'} inline-flex items-center gap-1 text-[9px] border font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
+                                          ${isLocked ? '<i class="fa-solid fa-lock"></i>' : ''} Tự mix món
                                         </button>
                                       </label>
                                       ${
@@ -30098,14 +30358,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                           : ""
                                       }
                                   </div>
-                                  ${renderCustomDishSelect(d.key, "meal1", aD)}
+                                  ${renderCustomDishSelect(d.key, "meal1", aD, isLocked)}
                               </div>
                               <div>
                                   <div class="flex justify-between items-center mb-1.5">
                                       <label class="text-xs font-bold text-slate-500 flex items-center gap-2">
                                         Bữa 2
-                                        <button onclick="handleSelfMixClick(${c.id}, '${d.key}', 'meal2')" class="inline-flex items-center gap-1 text-[9px] bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
-                                          Tự mix món
+                                        <button onclick="${isLocked ? 'showLockedPopup()' : `handleSelfMixClick(${c.id}, '${d.key}', 'meal2')`}" class="${isLocked ? 'bg-slate-50 text-slate-400 border-slate-200' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'} inline-flex items-center gap-1 text-[9px] border font-bold px-1.5 py-0.5 rounded transition-colors shadow-sm">
+                                          ${isLocked ? '<i class="fa-solid fa-lock"></i>' : ''} Tự mix món
                                         </button>
                                       </label>
                                       ${
@@ -30118,10 +30378,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                                           : ""
                                       }
                                   </div>
-                                  ${renderCustomDishSelect(d.key, "meal2", aD)}
+                                  ${renderCustomDishSelect(d.key, "meal2", aD, isLocked)}
                               </div>
                           </div>
-                      </div>`,
+                      </div>`;}
             )
             .join("") + '<div class="h-20"></div>';
 
@@ -30960,7 +31220,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           .filter((d) => d.isActive)
           .map(
             (d) =>
-              `- ${d.name} (${d.category}): Lean ${d.sizes.lean?.price || 0}đ, Balance ${formatCurrency(d.sizes.balance?.price)}đ (${d.sizes.balance?.kcal} Kcal), Power ${formatCurrency(d.sizes.power?.price)}đ`,
+              `- ${d.name} (${d.category}): Lean ${d.sizes?.lean?.price || 0}đ, Balance ${formatCurrency(d.sizes?.balance?.price)}đ (${d.sizes?.balance?.kcal} Kcal), Power ${formatCurrency(d.sizes?.power?.price)}đ`,
           )
           .join("\n");
 
@@ -31007,9 +31267,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           getChatSystemInstruction(storeBrandName) + dynamicKnowledgeBase;
 
         const customKey = localStorage.getItem("nutriadmin_custom_api_key") || window.NURI_GEMINI_API_KEY || "";
-        const url = customKey
-          ? `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`
-          : `/api/gemini`;
+        const url = `/api/gemini`;
         const payload = {
           contents: chatHistory,
           systemInstruction: { parts: [{ text: fullSystemInstruction }] },
@@ -31020,7 +31278,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         for (let i = 0; i < delays.length; i++) {
           try {
             const headers = { "Content-Type": "application/json" };
-            if (!customKey) headers["x-custom-api-key"] = customKey;
+            if (customKey) headers["x-custom-api-key"] = customKey;
 
             const response = await fetch(url, {
               method: "POST",
@@ -31064,6 +31322,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (!message) return;
 
         input.value = "";
+        input.style.height = '46px';
         appendMessageUI("user", message);
 
         const loadingEl = document.getElementById("chatbot-loading");
@@ -31073,7 +31332,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const aiResponse = await fetchGeminiChatAPI(message);
 
         loadingEl.classList.add("hidden");
-        appendMessageUI("model", aiResponse);
+        if (aiResponse) {
+          appendMessageUI("model", aiResponse);
+        } else {
+          appendMessageUI("model", "Xin lỗi, AI không thể trả lời lúc này do sự cố kết nối. Hãy thử lại sau nhé!");
+        }
       }
 
       window.renderCustomerChatMessages = function () {
@@ -34126,6 +34389,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         initGoogleSignIn();
         loadSettings();
+        if (window.loadAllBannerImages) window.loadAllBannerImages();
         initMascotSystem();
         renderCategories();
 
@@ -34192,6 +34456,47 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         });
       };
     </script>
+    
+      <script>
+      function openPricingModal(tabId, param2) {
+        const modal = document.getElementById("pricing-modal");
+        const content = document.getElementById("pricing-modal-content");
+        
+        // Hide all tabs
+        const tabs = document.querySelectorAll('.pricing-tab');
+        tabs.forEach(tab => tab.classList.add('hidden'));
+        
+        // Show selected tab
+        const activeTab = document.getElementById('pricing-tab-' + tabId);
+        if (activeTab) {
+          activeTab.classList.remove('hidden');
+        }
+        
+        if (modal && content) {
+          modal.classList.remove("hidden");
+          // Use flex for centering
+          modal.style.display = "flex";
+          setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            content.classList.remove("scale-95");
+          }, 10);
+        }
+      }
+      
+      function closePricingModal() {
+        const modal = document.getElementById("pricing-modal");
+        const content = document.getElementById("pricing-modal-content");
+        if (modal && content) {
+          modal.classList.add("opacity-0");
+          content.classList.add("scale-95");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.style.display = "";
+          }, 300);
+        }
+      }
+      </script>
+
     <!-- Pricing Modal -->
     <div
       id="pricing-modal"
@@ -35244,1141 +35549,41 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       </div>
     </div>
 
-    <script>
-      let customPromptCallback = null;
-
-      function openCustomPrompt(title, message, callback) {
-        const modal = document.getElementById("custom-prompt-modal");
-        const titleEl = document.getElementById("custom-prompt-title");
-        const msgEl = document.getElementById("custom-prompt-message");
-        const inputEl = document.getElementById("custom-prompt-input");
-        const confirmBtn = document.getElementById("custom-prompt-confirm-btn");
-
-        customPromptCallback = callback;
-
-        titleEl.innerText = title;
-        if (message) {
-          msgEl.innerText = message;
-          msgEl.classList.remove("hidden");
-        } else {
-          msgEl.classList.add("hidden");
-        }
-
-        inputEl.value = "";
-
-        // Remove old event listeners by replacing the node
-        const newConfirmBtn = confirmBtn.cloneNode(true);
-        confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-
-        const newInputEl = inputEl.cloneNode(true);
-        inputEl.parentNode.replaceChild(newInputEl, inputEl);
-
-        newConfirmBtn.addEventListener("click", () => {
-          const val = newInputEl.value;
-          closeCustomPrompt();
-          if (customPromptCallback) customPromptCallback(val);
-        });
-
-        newInputEl.addEventListener("keypress", (e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            newConfirmBtn.click();
-          }
-        });
-
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
-        // Trigger reflow
-        void modal.offsetWidth;
-        modal.classList.remove("opacity-0");
-        modal.classList.add("opacity-100");
-
-        setTimeout(() => {
-          newInputEl.focus();
-        }, 300);
-      }
-
-      function closeCustomPrompt() {
-        const modal = document.getElementById("custom-prompt-modal");
-        modal.classList.remove("opacity-100");
-        modal.classList.add("opacity-0");
-        setTimeout(() => {
-          modal.classList.add("hidden");
-          modal.classList.remove("flex");
-        }, 300);
-      }
-
-      window.openCustomPrompt = openCustomPrompt;
-      window.closeCustomPrompt = closeCustomPrompt;
-
-      function openPricingModal(pkgDays, isEditMode) {
-        // Hide all tabs first
-        document
-          .querySelectorAll(".pricing-tab")
-          .forEach((tab) => tab.classList.add("hidden"));
-        // Show the selected tab
-        const selectedTab = document.getElementById("pricing-tab-" + pkgDays);
-        if (selectedTab) selectedTab.classList.remove("hidden");
-        const modal = document.getElementById("pricing-modal");
-        const content = document.getElementById("pricing-modal-content");
-        const editables = modal.querySelectorAll(".pricing-editable");
-
-        editables.forEach((el) => {
-          if (isEditMode) {
-            el.setAttribute("contenteditable", "true");
-            el.classList.add("cursor-text");
-          } else {
-            el.removeAttribute("contenteditable");
-            el.classList.remove("cursor-text");
-          }
-        });
-
-        modal.classList.remove("hidden");
-        // Trigger reflow
-        void modal.offsetWidth;
-        modal.classList.remove("opacity-0");
-        modal.classList.add("opacity-100");
-        content.classList.remove("scale-95");
-        content.classList.add("scale-100");
-      }
-
-      function closePricingModal() {
-        const modal = document.getElementById("pricing-modal");
-        const content = document.getElementById("pricing-modal-content");
-
-        modal.classList.remove("opacity-100");
-        modal.classList.add("opacity-0");
-        content.classList.remove("scale-100");
-        content.classList.add("scale-95");
-
-        setTimeout(() => {
-          modal.classList.add("hidden");
-        }, 300);
-      }
-
-      // Close when clicking outside
-      document
-        .getElementById("pricing-modal")
-        .addEventListener("click", closePricingModal);
-
-      // =========================================================================
-      // RESET DATA SYSTEM
-      // =========================================================================
-      const resetDataOptions = [
-        { id: "stats", name: "Chỉ số thống kê", icon: "fa-chart-pie" },
-        { id: "marketing", name: "Chỉ số QR & Marketing", icon: "fa-bullhorn" },
-        { id: "orders", name: "Quản lý đơn hàng", icon: "fa-file-invoice" },
-        { id: "kitchen", name: "Quản lý bếp", icon: "fa-kitchen-set" },
-        {
-          id: "inventory",
-          name: "Quản lý nguyên liệu",
-          icon: "fa-boxes-stacked",
-        },
-        { id: "messages", name: "Tin nhắn", icon: "fa-comments" },
-        { id: "reviews", name: "Đánh giá", icon: "fa-star" },
-        { id: "menu", name: "Menu", icon: "fa-utensils" },
-        { id: "leads", name: "Khách hàng tiềm năng", icon: "fa-magnet" },
-        { id: "customers", name: "Khách đã mua gói", icon: "fa-users" },
-        { id: "accounts", name: "Quản lý tài khoản", icon: "fa-user-shield" },
-        {
-          id: "order_history",
-          name: "Lịch sử đơn hàng",
-          icon: "fa-clock-rotate-left",
-        },
-      ];
-
+      <script>
       function openResetDataModal() {
-        const container = document.getElementById("reset-options-container");
-        container.innerHTML = resetDataOptions
-          .map(
-            (opt) => `
-          <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
-            <input type="checkbox" name="reset-option" value="${opt.id}" class="w-5 h-5 text-red-600 border-slate-300 rounded focus:ring-red-500" />
-            <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center"><i class="fa-solid ${opt.icon}"></i></div>
-              <span class="text-sm font-medium text-slate-700">${opt.name}</span>
-            </div>
-          </label>
-        `,
-          )
-          .join("");
-
-        document.getElementById("reset-password-input").value = "";
-
         const modal = document.getElementById("reset-data-modal");
         const content = document.getElementById("reset-data-content");
-
-        modal.classList.remove("hidden");
-        // Force reflow
-        void modal.offsetWidth;
-
-        modal.classList.add("opacity-100");
-        modal.classList.remove("opacity-0");
-        content.classList.add("scale-100");
-        content.classList.remove("scale-95");
+        if(modal && content) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            content.classList.remove("scale-95");
+          }, 10);
+        }
       }
-
       function closeResetDataModal() {
         const modal = document.getElementById("reset-data-modal");
         const content = document.getElementById("reset-data-content");
-
-        modal.classList.remove("opacity-100");
-        modal.classList.add("opacity-0");
-        content.classList.remove("scale-100");
-        content.classList.add("scale-95");
-
-        setTimeout(() => {
-          modal.classList.add("hidden");
-        }, 300);
+        if(modal && content) {
+          modal.classList.add("opacity-0");
+          content.classList.add("scale-95");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }, 300);
+        }
       }
-
       function confirmResetData() {
-        const passwordInput = document.getElementById(
-          "reset-password-input",
-        ).value;
-        if (passwordInput !== "180298") {
-          showToast("Mật khẩu không chính xác!", "error");
-          return;
-        }
-
-        const checkedBoxes = document.querySelectorAll(
-          'input[name="reset-option"]:checked',
-        );
-        if (checkedBoxes.length === 0) {
-          showToast("Vui lòng chọn ít nhất một mục để xóa!", "error");
-          return;
-        }
-
-        let clearedCount = 0;
-        let needsSync = false;
-
-        checkedBoxes.forEach((box) => {
-          const id = box.value;
-          if (id === "stats") {
-            // Stats are computed from orders, but we can clear marketing stats too if they check stats
-          } else if (id === "marketing") {
-            localStorage.removeItem("nutriadmin_marketing_stats");
-          } else if (id === "orders" || id === "order_history") {
-            orders = [];
-            localStorage.removeItem("nutriadmin_orders");
-            needsSync = true;
-          } else if (id === "kitchen") {
-            localStorage.removeItem("nutriadmin_kitchen_states");
-          } else if (id === "inventory") {
-            inventory = [];
-            needsSync = true;
-          } else if (id === "messages") {
-            allChats = {};
-            localStorage.removeItem("nutriadmin_all_chats");
-            needsSync = true;
-          } else if (id === "reviews") {
-            allReviews = {};
-            localStorage.removeItem("nutriadmin_all_reviews");
-            needsSync = true;
-          } else if (id === "menu") {
-            dishes = [];
-            localStorage.removeItem("nutriadmin_dishes");
-            needsSync = true;
-          } else if (id === "leads") {
-            potentialCustomers = [];
-            localStorage.removeItem("nutriadmin_potential_customers");
-            needsSync = true;
-          } else if (id === "customers") {
-            purchasedCustomers = [];
-            localStorage.removeItem("nutriadmin_purchased_customers");
-            needsSync = true;
-          } else if (id === "accounts") {
-            localStorage.removeItem("nutriadmin_local_accounts");
-          }
-          clearedCount++;
+        localStorage.clear();
+        indexedDB.databases().then(dbs => {
+            dbs.forEach(db => {
+                indexedDB.deleteDatabase(db.name);
+            });
         });
-
-        if (needsSync) {
-          if (typeof syncStateToServer === "function") {
-            // Force a state string mismatch so syncStateToServer actually updates localStorage
-            lastStateStr = "";
-            syncStateToServer();
-          }
-
-          // Force Firebase sync immediately if cloudDb is initialized
-          if (typeof cloudDb !== "undefined" && cloudDb !== null) {
-            const settingsRaw = localStorage.getItem("nutriadmin_settings");
-            const currentSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
-            const currentState = {
-              dishes: typeof dishes !== "undefined" ? dishes : [],
-              inventory: typeof inventory !== "undefined" ? inventory : [],
-              trackingSources:
-                typeof trackingSources !== "undefined" ? trackingSources : [],
-              discountCodes:
-                typeof discountCodes !== "undefined" ? discountCodes : [],
-              potentialCustomers:
-                typeof potentialCustomers !== "undefined"
-                  ? potentialCustomers
-                  : [],
-              purchasedCustomers:
-                typeof purchasedCustomers !== "undefined"
-                  ? purchasedCustomers
-                  : [],
-              shippers: typeof shippers !== "undefined" ? shippers : [],
-              orders: typeof orders !== "undefined" ? orders : [],
-              allReviews: typeof allReviews !== "undefined" ? allReviews : {},
-              allChats: typeof allChats !== "undefined" ? allChats : {},
-              settings: currentSettings,
-              mascotExpressions:
-                typeof mascotExpressions !== "undefined"
-                  ? mascotExpressions
-                  : [],
-              mascotActions:
-                typeof mascotActions !== "undefined" ? mascotActions : [],
-              mascotAges: typeof mascotAges !== "undefined" ? mascotAges : [],
-              activeMascotId:
-                typeof activeMascotId !== "undefined"
-                  ? activeMascotId
-                  : "vui_ve",
-            };
-
-            cloudDb
-              .collection("nutriadmin_v1")
-              .doc("system_data")
-              .set({ state: currentState }, { merge: true })
-              .then(() => {
-                showToast(
-                  `Đã xóa thành công ${clearedCount} mục dữ liệu!`,
-                  "success",
-                );
-                closeResetDataModal();
-                setTimeout(() => {
-                  window.location.reload();
-                }, 500);
-              })
-              .catch((err) => {
-                showToast("Lỗi đồng bộ dữ liệu: " + err.message, "error");
-              });
-            return; // Exit early, reload will happen in the .then()
-          }
-        }
-
-        showToast(`Đã xóa thành công ${clearedCount} mục dữ liệu!`, "success");
-        closeResetDataModal();
-
-        // Reload page after a short delay to reflect changes
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+        window.location.reload();
       }
 
-      // Close modal when clicking outside
-      document
-        .getElementById("reset-data-modal")
-        ?.addEventListener("click", (e) => {
-          if (e.target.id === "reset-data-modal") {
-            closeResetDataModal();
-          }
-        });
-
-      window.openResetDataModal = openResetDataModal;
-      window.closeResetDataModal = closeResetDataModal;
-      window.confirmResetData = confirmResetData;
-
-      // ==========================================
-      // DISH CREATION MULTI-STEP LOGIC
-      // ==========================================
-      let createDishStep = 1;
-      let createDishData = {
-        protein: null,
-        method: null,
-        size: "balance",
-        carb: null,
-        veg: null,
-        sauce: null,
-        name: "",
-      };
-
-      let selfMixContext = null;
-
-      window.closeSelfMixErrorModal = function () {
-        document.getElementById("self-mix-error-modal").classList.add("hidden");
-        if (window.selfMixErrorMascotInterval) {
-          clearInterval(window.selfMixErrorMascotInterval);
-          window.selfMixErrorMascotInterval = null;
-        }
-      };
-
-      window.adviceMixContext = null;
-      window.adviceDishOrderSizes = window.adviceDishOrderSizes || {};
-
-      window.openCustomMixFromAdvice = function () {
-        window.adviceMixContext = true;
-        window.openCreateDishModal();
-      };
-
-      window.setAdviceDishOrderSize = function (id, size) {
-        window.adviceDishOrderSizes[id] = size;
-        if (window.renderCustomAdviceDishes) {
-          window.renderCustomAdviceDishes();
-        }
-      };
-
-      window.orderCustomAdviceDish = function (id) {
-        const size = window.adviceDishOrderSizes[id] || "balance";
-        
-        // Add to cart
-        addToCart(id, size);
-        
-        // Switch to order form (trang đặt hàng)
-        switchView("order-form");
-        
-        showToast("Đã thêm món tự mix và chuyển đến trang đặt hàng!", "success");
-      };
-
-      window.renderCustomAdviceDishes = function () {
-        const container = document.getElementById("advice-custom-mix-list-container");
-        if (!container) return;
-
-        let customAdviceDishes = [];
-        try {
-          customAdviceDishes = JSON.parse(localStorage.getItem("nutriadmin_custom_advice_dishes") || "[]");
-        } catch (e) {
-          customAdviceDishes = [];
-        }
-
-        if (!Array.isArray(customAdviceDishes) || customAdviceDishes.length === 0) {
-          container.innerHTML = `<div class="text-center py-4 text-slate-400 text-xs">Chưa có món tự mix nào được tạo.</div>`;
-          return;
-        }
-
-        container.innerHTML = `
-          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 mt-6 text-center md:text-left">Món ăn bạn tự thiết kế</h4>
-          <div class="grid grid-cols-1 gap-4">
-            ${customAdviceDishes.filter(Boolean).map((dish) => {
-              const id = dish.id;
-              const size = window.adviceDishOrderSizes[id] || "balance";
-              const stdPrice = dish.sizes && dish.sizes?.balance ? dish.sizes.balance?.price : 0;
-              const lrgPrice = dish.sizes && dish.sizes?.power ? dish.sizes.power?.price : 0;
-              
-              const currentSizeData = dish.sizes && dish.sizes[size] ? dish.sizes[size] : (dish.sizes && dish.sizes?.balance ? dish.sizes?.balance : {});
-              const proteinG = currentSizeData?.protein || 0;
-              const carbsG = currentSizeData?.carbs || 0;
-              const fatG = currentSizeData?.fat || 0;
-              const kcalVal = currentSizeData?.kcal || 0;
-              
-              return `
-                <div class="relative bg-white rounded-2xl border-2 border-orange-400 hover:shadow-[0_12px_32px_rgba(249,115,22,0.15)] transition-all duration-300 shadow-sm p-3 md:p-4 flex flex-col mb-6">
-                    <div class="absolute -top-3 left-4 bg-[linear-gradient(135deg,#EA580C,#F97316)] text-[#FFFFFF] text-[10px] md:text-xs font-bold px-2 md:px-3 py-1 rounded-full shadow-sm flex items-center gap-1 z-10">
-                        <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> MÓN TỰ THIẾT KẾ
-                    </div>
-                    
-                    <div class="flex flex-row gap-3 md:gap-6">
-                        <div class="w-[35%] md:w-1/3 min-h-[120px] rounded-xl overflow-hidden relative shrink-0">
-                            <img src="${dish.image}" alt="${dish.name}" class="w-full h-full object-cover">
-                            <div class="absolute bottom-1 left-1 md:bottom-2 md:left-2 bg-white/90 backdrop-blur text-slate-800 text-[9px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 rounded shadow-sm">
-                                ${kcalVal} kcal
-                            </div>
-                        </div>
-                        <div class="flex-1 flex flex-col justify-center py-1">
-                            <h4 class="font-bold text-base md:text-xl text-slate-900 mb-1 md:mb-2 leading-tight">${dish.name}</h4>
-                            <p class="text-[11px] md:text-sm text-slate-500 mb-3 md:mb-6 line-clamp-2 md:line-clamp-none">${dish.ingredients}</p>
-                            <div class="grid grid-cols-3 gap-1.5 md:gap-3">
-                                <div class="bg-slate-50 rounded-lg p-1.5 md:p-3 text-center border border-slate-200">
-                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Đạm</p>
-                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(proteinG)}g</p>
-                                </div>
-                                <div class="bg-slate-50 rounded-lg p-1.5 md:p-3 text-center border border-slate-200">
-                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Tinh Bột</p>
-                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(carbsG)}g</p>
-                                </div>
-                                <div class="bg-slate-50 rounded-lg p-1.5 md:p-3 text-center border border-slate-200">
-                                    <p class="text-[9px] md:text-[10px] text-slate-400 font-bold uppercase mb-0.5 md:mb-1">Béo</p>
-                                    <p class="font-bold text-[#0F172A] text-sm md:text-base">${Math.round(fatG)}g</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4 pt-3 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-2">
-                        <button type="button" id="size-btn-${id}-standard" onclick="setAdviceDishOrderSize(${id}, 'balance')" 
-                            class="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
-                              size === "balance" 
-                                ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm" 
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }" style="cursor: pointer;">
-                            <i class="fa-solid fa-circle text-[8px] ${size === "balance" ? "text-orange-500" : "text-transparent"}"></i> Size Balance (M) (${formatCurrency(stdPrice)}đ)
-                        </button>
-                        <button type="button" id="size-btn-${id}-large" onclick="setAdviceDishOrderSize(${id}, 'power')" 
-                            class="py-2.5 px-4 rounded-xl font-bold text-xs transition-all border flex items-center justify-center gap-1.5 ${
-                              size === "power" 
-                                ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm" 
-                                : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                            }" style="cursor: pointer;">
-                            <i class="fa-solid fa-circle text-[8px] ${size === "power" ? "text-orange-500" : "text-transparent"}"></i> Size Power (L) (${formatCurrency(lrgPrice)}đ)
-                        </button>
-                        <button type="button" onclick="orderCustomAdviceDish(${id})" 
-                            class="py-2.5 px-4 bg-orange-500 hover:bg-orange-600 active:scale-[0.98] text-white font-bold rounded-xl text-xs shadow-sm hover:shadow transition-all flex items-center justify-center gap-1.5" style="cursor: pointer;">
-                            <i class="fa-solid fa-cart-shopping"></i> Đặt giao món này
-                        </button>
-                    </div>
-                </div>
-              `;
-            }).join("")}
-          </div>
-        `;
-      };
-
-      window.handleSelfMixClick = function (cId, dKey, mKey) {
-        openCreateDishModal();
-        selfMixContext = { cId, dKey, mKey };
-
-        // Force customer package size default
-        const c =
-          purchasedCustomers.find((x) => x.id == cId) ||
-          potentialCustomers.find((x) => x.id == cId);
-        if (c) {
-          createDishData.size = c.size || "balance";
-        }
-        renderCreateDishStep();
-      };
-
-      window.openCreateDishModal = function () {
-        selfMixContext = null;
-        createDishStep = 1;
-        createDishData = {
-          protein: null,
-          method: null,
-          size: "balance",
-          carb: null,
-          vegs: [],
-          sauce: null,
-          name: "",
-        };
-        renderCreateDishStep();
-        document.getElementById("create-dish-modal").classList.remove("hidden");
-      };
-
-      window.closeCreateDishModal = function () {
-        document.getElementById("create-dish-modal").classList.add("hidden");
-      };
-
-      window.prevCreateDishStep = function () {
-        if (createDishStep > 1) {
-          createDishStep--;
-          renderCreateDishStep();
-        }
-      };
-
-      window.nextCreateDishStep = function () {
-        if (createDishStep === 1) {
-          if (!createDishData?.protein) {
-            showToast("Vui lòng chọn nguồn đạm!", "error");
-            return;
-          }
-          if (!createDishData.method) {
-            showToast("Vui lòng chọn cách chế biến!", "error");
-            return;
-          }
-          createDishStep = 2;
-          renderCreateDishStep();
-        } else if (createDishStep === 2) {
-          if (!createDishData.carb) {
-            showToast("Vui lòng chọn tinh bột!", "error");
-            return;
-          }
-          createDishStep = 3;
-          renderCreateDishStep();
-        } else if (createDishStep === 3) {
-          if (!createDishData.vegs || createDishData.vegs.length === 0) {
-            showToast("Vui lòng chọn ít nhất 1 loại rau củ!", "error");
-            return;
-          }
-          createDishStep = 4;
-          renderCreateDishStep();
-        } else if (createDishStep === 4) {
-          if (!createDishData.sauce) {
-            showToast("Vui lòng chọn nước sốt!", "error");
-            return;
-          }
-          saveCreatedDish();
-        }
-      };
-
-      window.selectProteinInModal = function (id) {
-        const dish = dishes.find((d) => d.id === id);
-        if (dish) {
-          createDishData.protein = dish;
-          const visibleMethods = dish.methods
-            ? dish.methods.filter((m) => !m.isHidden)
-            : [];
-          if (visibleMethods.length > 0) {
-            createDishData.method = visibleMethods[0].name;
-          } else {
-            createDishData.method = "";
-          }
-          renderCreateDishStep();
-        }
-      };
-
-      window.selectMethodInModal = function (methodName) {
-        createDishData.method = methodName;
-        renderCreateDishStep();
-      };
-
-      window.selectSizeInModal = function (sizeKey) {
-        if (selfMixContext) {
-          showToast("Size đã được khóa theo gói đăng ký của khách hàng!", "warning");
-          return;
-        }
-        createDishData.size = sizeKey;
-        renderCreateDishStep();
-      };
-
-      window.selectCarbInModal = function (id) {
-        const dish = dishes.find((d) => d.id === id);
-        if (dish) {
-          createDishData.carb = dish;
-          renderCreateDishStep();
-        }
-      };
-
-      window.selectVegInModal = function (id) {
-        const dish = dishes.find((d) => d.id === id);
-        if (dish) {
-          if (!createDishData.vegs) createDishData.vegs = [];
-          const index = createDishData.vegs.findIndex((v) => v.id === id);
-          if (index !== -1) {
-            createDishData.vegs.splice(index, 1);
-          } else {
-            if (createDishData.vegs.length < 3) {
-              createDishData.vegs.push(dish);
-            } else {
-              showToast("Chỉ được chọn tối đa 3 loại rau củ!", "error");
-              return;
-            }
-          }
-          renderCreateDishStep();
-        }
-      };
-
-      window.selectSauceInModal = function (id) {
-        const dish = dishes.find((d) => d.id === id);
-        if (dish) {
-          createDishData.sauce = dish;
-          renderCreateDishStep();
-        }
-      };
-
-      window.renderCreateDishStep = function () {
-        const container = document.getElementById("create-dish-step-container");
-        if (!container) return;
-
-        // Update step badges & lines
-        for (let i = 1; i <= 4; i++) {
-          const ind = document.getElementById(`step-ind-${i}`);
-          const line = document.getElementById(`step-line-${i - 1}`);
-          if (ind) {
-            const badge = ind.querySelector("span");
-            const text = ind.querySelector("span:last-child");
-            if (i < createDishStep) {
-              // Completed step
-              badge.className =
-                "w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold";
-              badge.innerHTML = '<i class="fa-solid fa-check"></i>';
-              text.className = "text-xs font-bold text-emerald-600";
-            } else if (i === createDishStep) {
-              // Current step
-              badge.className =
-                "w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold";
-              badge.innerHTML = i.toString();
-              text.className = "text-xs font-bold text-orange-600";
-            } else {
-              // Future step
-              badge.className =
-                "w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold";
-              badge.innerHTML = i.toString();
-              text.className = "text-xs font-semibold text-slate-500";
-            }
-          }
-          if (line) {
-            if (i < createDishStep) {
-              line.className = "h-0.5 w-6 bg-emerald-500 shrink-0";
-            } else {
-              line.className = "h-0.5 w-6 bg-slate-200 shrink-0";
-            }
-          }
-        }
-
-        // Show/hide prev button
-        const prevBtn = document.getElementById("create-dish-prev-btn");
-        if (prevBtn) {
-          if (createDishStep === 1) {
-            prevBtn.classList.add("hidden");
-          } else {
-            prevBtn.classList.remove("hidden");
-          }
-        }
-
-        // Update next button label
-        const nextBtn = document.getElementById("create-dish-next-btn");
-        if (nextBtn) {
-          if (createDishStep === 4) {
-            nextBtn.innerHTML =
-              'Hoàn thành <i class="fa-solid fa-square-check ml-1.5 mt-0.5"></i>';
-            nextBtn.className =
-              "inline-flex justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors cursor-pointer";
-          } else {
-            nextBtn.innerHTML =
-              'Tiếp tục <i class="fa-solid fa-arrow-right ml-1.5 mt-0.5"></i>';
-            nextBtn.className =
-              "inline-flex justify-center rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-orange-600 transition-colors cursor-pointer";
-          }
-        }
-
-        let html = "";
-        const sizeKey = createDishData.size;
-
-        if (createDishStep === 1) {
-          // Select protein, cooking method, and size
-          const proteins = dishes.filter((d) => d.category === "protein" && d.isActive !== false);
-          html = `
-            <div class="space-y-6">
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1.5">1. Chọn Nguồn Đạm <span class="text-red-500">*</span></h4>
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  ${proteins
-                    .map((p) => {
-                      const isSel =
-                        createDishData?.protein &&
-                        createDishData?.protein.id === p.id;
-                      return `
-                      <div onclick="selectProteinInModal(${p.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer relative flex flex-col items-center text-center ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
-                        ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
-                        <img src="${p.image}" class="w-16 h-16 rounded-full object-cover border border-slate-100 shadow-sm mb-2">
-                        <span class="text-xs font-bold text-slate-800 leading-tight">${p.name}</span>
-                      </div>
-                    `;
-                    })
-                    .join("")}
-                </div>
-              </div>
-          `;
-
-          if (createDishData?.protein) {
-            const p = createDishData?.protein;
-            const methods = p.methods || [];
-            html += `
-              <div class="animate-fadeIn">
-                <h4 class="font-bold text-slate-800 text-sm mb-1.5">2. Cách Chế Biến <span class="text-red-500">*</span></h4>
-                <div class="flex flex-wrap gap-2">
-                  ${methods
-                    .filter((m) => !m.isHidden)
-                    .map((m) => {
-                      const isSel = createDishData.method === m.name;
-                      return `
-                      <button type="button" onclick="selectMethodInModal('${m.name}')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSel ? "bg-orange-500 text-white border-orange-500 shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"}">
-                        ${m.name}
-                      </button>
-                    `;
-                    })
-                    .join("")}
-                </div>
-              </div>
-            `;
-          }
-
-          let sizeLockedLabel = "";
-          if (selfMixContext) {
-            sizeLockedLabel = `<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 ml-2 animate-pulse"><i class="fa-solid fa-lock text-[9px]"></i> Đã khóa theo gói đăng ký</span>`;
-          }
-
-          html += `
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center">
-                  3. Size Món Ăn (Quyết định mặc định của các bước sau) <span class="text-red-500 ml-1">*</span>
-                  ${sizeLockedLabel}
-                </h4>
-                <div class="grid grid-cols-3 gap-3">
-                  <button type="button" onclick="selectSizeInModal('lean')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "lean" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
-                    <span class="flex items-center gap-1">
-                      Size Lean (S)
-                      ${selfMixContext && sizeKey === "lean" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
-                    </span>
-                    <span class="text-[9px] ${sizeKey === "lean" ? "text-orange-100" : "text-slate-400"} font-medium">Gọn gàng ít năng lượng</span>
-                  </button>
-<button type="button" onclick="selectSizeInModal('balance')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "balance" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
-                    <span class="flex items-center gap-1">
-                      Size Balance (M)
-                      ${selfMixContext && sizeKey === "balance" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
-                    </span>
-                    <span class="text-[9px] ${sizeKey === "balance" ? "text-orange-100" : "text-slate-400"} font-medium">Bữa ăn cân bằng cơ bản</span>
-                  </button>
-                  <button type="button" onclick="selectSizeInModal('power')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "power" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
-                    <span class="flex items-center gap-1">
-                      Size Power (L)
-                      ${selfMixContext && sizeKey === "power" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
-                    </span>
-                    <span class="text-[9px] ${sizeKey === "power" ? "text-orange-100" : "text-slate-400"} font-medium">Tăng cường năng lượng & đạm</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          `;
-        } else if (createDishStep === 2) {
-          // Select carb
-          const carbs = dishes.filter((d) => d.category === "carbs" && d.isActive !== false);
-          html = `
-            <div class="space-y-4 animate-fadeIn">
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Tinh Bột <span class="text-red-500">*</span></h4>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                ${carbs
-                  .map((c) => {
-                    const isSel =
-                      createDishData.carb && createDishData.carb.id === c.id;
-                    const info = c.sizes?.[sizeKey] || c.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
-                    return `
-                    <div onclick="selectCarbInModal(${c.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
-                      ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
-                      <img src="${c.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
-                      <div class="flex-1 min-w-0 flex flex-col justify-center">
-                        <span class="text-xs font-bold text-slate-800 block truncate mb-1">${c.name}</span>
-                        <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
-                          <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
-                          <span>P: ${info?.protein}g</span>
-                          <span>C: ${info?.carbs}g</span>
-                          <span>F: ${info?.fat}g</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+${formatCurrency(info?.price)}đ</span>
-                      </div>
-                    </div>
-                  `;
-                  })
-                  .join("")}
-              </div>
-            </div>
-          `;
-        } else if (createDishStep === 3) {
-          // Select veggie
-          const veggies = dishes.filter((d) => d.category === "veggies" && d.isActive !== false && d.id >= 111);
-          const vegsLength = createDishData.vegs
-            ? createDishData.vegs.length
-            : 0;
-          html = `
-            <div class="space-y-4 animate-fadeIn">
-              <div>
-                <div class="flex justify-between items-end mb-1">
-                  <h4 class="font-bold text-slate-800 text-sm">Chọn Rau Củ <span class="text-red-500">*</span></h4>
-                  <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">${vegsLength}/3</span>
-                </div>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn. <em>(bạn có thể chọn 1 đến 3 loại)</em></p>
-              </div>
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                ${veggies
-                  .map((v) => {
-                    const isSel =
-                      createDishData.vegs &&
-                      createDishData.vegs.some((veg) => veg.id === v.id);
-                    const info = v.sizes?.[sizeKey] || v.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
-                    return `
-                    <div onclick="selectVegInModal(${v.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
-                      ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
-                      <img src="${v.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
-                      <div class="flex-1 min-w-0 flex flex-col justify-center">
-                        <span class="text-xs font-bold text-slate-800 block truncate mb-1">${v.name}</span>
-                        <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
-                          <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
-                          <span>P: ${info?.protein}g</span>
-                          <span>C: ${info?.carbs}g</span>
-                          <span>F: ${info?.fat}g</span>
-                        </div>
-                        <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+${formatCurrency(info?.price)}đ</span>
-                      </div>
-                    </div>
-                  `;
-                  })
-                  .join("")}
-              </div>
-            </div>
-          `;
-        } else if (createDishStep === 4) {
-          // Select sauce and customize name/preview
-          const sauces = dishes.filter((d) => d.category === "sauce" && d.isActive !== false);
-
-          // Generate default name
-          const pName = createDishData?.protein
-            ? createDishData?.protein.name
-            : "";
-          const pMethod = createDishData.method ? createDishData.method : "";
-          const cName = createDishData.carb ? createDishData.carb.name : "";
-          let vName = "";
-          if (createDishData.vegs && createDishData.vegs.length > 0) {
-            vName =
-              createDishData.vegs.length > 1
-                ? "Rau thập cẩm"
-                : createDishData.vegs[0].name;
-          }
-          const sName = createDishData.sauce ? createDishData.sauce.name : "";
-
-          // Clean up the name nicely
-          let defaultGeneratedName = "";
-          if (pName && cName && vName) {
-            defaultGeneratedName = `${pName} ${pMethod} ${cName} ${vName}`;
-            if (sName) {
-              defaultGeneratedName += ` Sốt ${sName}`;
-            }
-          }
-          createDishData.name = defaultGeneratedName;
-
-          // Calculate standard preview
-          const sumLean = getMacrosSum("lean");
-        const sumBalance = getMacrosSum("balance");
-          const sumPower = getMacrosSum("power");
-
-          html = `
-            <div class="space-y-6 animate-fadeIn">
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Nước Sốt <span class="text-red-500">*</span></h4>
-                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-                  ${sauces
-                    .map((s) => {
-                      const isSel =
-                        createDishData.sauce &&
-                        createDishData.sauce.id === s.id;
-                      const info = s.sizes?.[sizeKey] || s.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
-                      return `
-                      <div onclick="selectSauceInModal(${s.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
-                        ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
-                        <img src="${s.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
-                        <div class="flex-1 min-w-0 flex flex-col justify-center">
-                          <span class="text-xs font-bold text-slate-800 block truncate mb-1">${s.name}</span>
-                          <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
-                            <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
-                            <span>P: ${info?.protein}g</span>
-                            <span>C: ${info?.carbs}g</span>
-                            <span>F: ${info?.fat}g</span>
-                          </div>
-                          <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+ ${formatCurrency(info?.price)}đ</span>
-                        </div>
-                      </div>
-                    `;
-                    })
-                    .join("")}
-                </div>
-              </div>
-          `;
-
-          if (createDishData.sauce) {
-            html += `
-              <div>
-                <h4 class="font-bold text-slate-800 text-sm mb-2">Tên Món Ăn Đầy Đủ</h4>
-                <input type="text" id="cd-name-input" value="${defaultGeneratedName}" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm font-semibold focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors shadow-sm bg-white">
-              </div>
-
-              <!-- Real-time Summary Card -->
-              <div class="border border-slate-200 bg-white rounded-2xl overflow-hidden shadow-sm">
-                <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex justify-between items-center">
-                  <h4 class="font-bold text-xs text-slate-600 uppercase tracking-wider">
-                    <i class="fa-solid fa-circle-nodes mr-1 text-slate-400"></i> Tổng Chỉ Số Món Ăn
-                  </h4>
-                  <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">Tính theo Tổng Thành Phần</span>
-                </div>
-                <div class="p-4 grid gap-4 sm:grid-cols-3">
-                  <div class="bg-emerald-50/40 rounded-xl p-3.5 border border-emerald-100/50">
-                    <div class="flex justify-between items-center border-b border-emerald-100 pb-1.5 mb-2">
-                      <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
-                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Lean (S)
-                      </span>
-                      <span class="text-sm font-bold text-emerald-900">${formatCurrency(sumLean?.price)}đ</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                      <div>
-                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Calo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLean?.kcal} kcal</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Đạm</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLean?.protein}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Cacbon</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLean?.carbs}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Béo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumLean?.fat}g</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="bg-orange-50/40 rounded-xl p-3.5 border border-orange-100/50">
-                    <div class="flex justify-between items-center border-b border-orange-100 pb-1.5 mb-2">
-                      <span class="text-xs font-bold text-orange-800 flex items-center gap-1">
-                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Balance (M)
-                      </span>
-                      <span class="text-sm font-bold text-orange-900">${formatCurrency(sumBalance?.price)}đ</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                      <div>
-                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Calo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumBalance?.kcal} kcal</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Đạm</p>
-                        <p class="text-xs font-bold text-slate-800">${sumBalance?.protein}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Cacbon</p>
-                        <p class="text-xs font-bold text-slate-800">${sumBalance?.carbs}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Béo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumBalance?.fat}g</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="bg-indigo-50/40 rounded-xl p-3.5 border border-indigo-100/50">
-                    <div class="flex justify-between items-center border-b border-indigo-100 pb-1.5 mb-2">
-                      <span class="text-xs font-bold text-indigo-800 flex items-center gap-1">
-                        <i class="fa-solid fa-expand text-[10px]"></i> Size Power (L) (L)
-                      </span>
-                      <span class="text-sm font-bold text-indigo-900">${formatCurrency(sumPower?.price)}đ</span>
-                    </div>
-                    <div class="grid grid-cols-4 gap-2 text-center">
-                      <div>
-                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Calo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumPower?.kcal} kcal</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Đạm</p>
-                        <p class="text-xs font-bold text-slate-800">${sumPower?.protein}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Cacbon</p>
-                        <p class="text-xs font-bold text-slate-800">${sumPower?.carbs}g</p>
-                      </div>
-                      <div>
-                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Béo</p>
-                        <p class="text-xs font-bold text-slate-800">${sumPower?.fat}g</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            `;
-          }
-
-          html += `
-            </div>
-          `;
-        }
-
-        container.innerHTML = html;
-      };
-
-      
-      window.recalculateCompleteDishes = function() {
-        if (typeof dishes === "undefined" || !Array.isArray(dishes)) return;
-        let changed = false;
-        dishes.filter(d => d.category === "complete" && d.components).forEach(d => {
-          let sumLean = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
-          let sumBalance = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
-          let sumPower = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
-          const comps = d.components;
-          
-          const addMacros = (sourceSizes) => {
-            if (sourceSizes.lean) {
-              sumLean.kcal += sourceSizes.lean?.kcal || 0;
-              sumLean.protein += sourceSizes.lean?.protein || 0;
-              sumLean.carbs += sourceSizes.lean?.carbs || 0;
-              sumLean.fat += sourceSizes.lean?.fat || 0;
-              sumLean.price += sourceSizes.lean?.price || 0;
-            }
-
-            if (sourceSizes.balance) {
-              sumBalance.kcal += sourceSizes.balance?.kcal || 0;
-              sumBalance.protein += sourceSizes.balance?.protein || 0;
-              sumBalance.carbs += sourceSizes.balance?.carbs || 0;
-              sumBalance.fat += sourceSizes.balance?.fat || 0;
-              sumBalance.price += sourceSizes.balance?.price || 0;
-            }
-            if (sourceSizes.power) {
-              sumPower.kcal += sourceSizes.power?.kcal || 0;
-              sumPower.protein += sourceSizes.power?.protein || 0;
-              sumPower.carbs += sourceSizes.power?.carbs || 0;
-              sumPower.fat += sourceSizes.power?.fat || 0;
-              sumPower.price += sourceSizes.power?.price || 0;
-            }
-          };
-
-          // Protein & Method
-          const protein = dishes.find(x => x.id === comps?.proteinId);
-          if (protein) {
-            let methodObj = null;
-            if (protein.methods) {
-              methodObj = protein.methods.find(m => m.name === comps.methodName);
-            }
-            if (methodObj && methodObj.sizes) {
-              addMacros(methodObj.sizes);
-            } else if (protein.sizes) {
-              addMacros(protein.sizes);
-            }
-          }
-          
-          // Carb
-          const carb = dishes.find(x => x.id === comps.carbId);
-          if (carb && carb.sizes) {
-            addMacros(carb.sizes);
-          }
-
-          // Vegs
-          if (comps.vegIds && Array.isArray(comps.vegIds)) {
-            comps.vegIds.forEach(vId => {
-              const veg = dishes.find(x => x.id === vId);
-              if (veg && veg.sizes) {
-                addMacros(veg.sizes);
-              }
-            });
-          }
-
-          // Sauce
-          const sauce = dishes.find(x => x.id === comps.sauceId);
-          if (sauce && sauce.sizes) {
-            addMacros(sauce.sizes);
-          }
-
-          if (!d.sizes) d.sizes = {};
-          if (!d.sizes.lean) d.sizes.lean = {};
-          
-          d.sizes.lean.kcal = sumLean?.kcal;
-          d.sizes.lean.protein = sumLean?.protein;
-          d.sizes.lean.carbs = sumLean?.carbs;
-          d.sizes.lean.fat = sumLean?.fat;
-          d.sizes.lean.price = sumLean?.price;
-
-          if (!d.sizes.balance) d.sizes.balance = {};
-          if (!d.sizes.power) d.sizes.power = {};
-          
-          d.sizes.balance.kcal = sumBalance?.kcal;
-          d.sizes.balance.protein = sumBalance?.protein;
-          d.sizes.balance.carbs = sumBalance?.carbs;
-          d.sizes.balance.fat = sumBalance?.fat;
-          d.sizes.balance.price = sumBalance?.price;
-
-          d.sizes.power.kcal = sumPower?.kcal;
-          d.sizes.power.protein = sumPower?.protein;
-          d.sizes.power.carbs = sumPower?.carbs;
-          d.sizes.power.fat = sumPower?.fat;
-          d.sizes.power.price = sumPower?.price;
-          
-          changed = true;
-        });
-        
-        if (changed && typeof syncStateToServer === "function") {
-          lastStateStr = "";
-          syncStateToServer();
-        }
-      };
       function getMacrosSum(sizeKey) {
         let sum = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
         if (createDishData?.protein) {
@@ -37065,7 +36270,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           document.getElementById('extra-food-image-preview-container').classList.add('hidden');
       }
 
-      async function compressImage(file, maxWidth, maxHeight, quality) {
+      async function compressImageAsync(file, maxWidth, maxHeight, quality) {
           return new Promise((resolve) => {
               const reader = new FileReader();
               reader.readAsDataURL(file);
@@ -37115,7 +36320,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           const formData = new FormData();
           if (foodName) formData.append('foodName', foodName);
           if (extraFoodImageFile) {
-              const compressedFile = await compressImage(extraFoodImageFile, 800, 800, 0.7);
+              const compressedFile = await compressImageAsync(extraFoodImageFile, 800, 800, 0.7);
               formData.append('image', compressedFile);
           }
 
@@ -39366,7 +38571,333 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }, 1000);
     </script>
 
-    <!-- PWA Install Prompt UI & Logic -->
+    <script>
+      function openShareModal() {
+        const modal = document.getElementById("share-achievement-modal");
+        const content = document.getElementById("share-achievement-modal-content");
+        if(modal && content) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          
+          const streakDays = (typeof getStreakDays === "function") ? getStreakDays() : ((typeof window.getStreakDays === "function") ? window.getStreakDays() : 0);
+          const textArea = document.getElementById("share-text-content");
+          if(textArea) {
+             textArea.value = `Tôi đã duy trì ${streakDays} ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành trình cải thiện sức khỏe tuyệt vời bắt đầu từ hôm nay. 🥗🔥 #NuriKitchen #AnLanhManh`;
+          }
+          
+          setTimeout(() => {
+            modal.classList.remove("opacity-0");
+            if(window.innerWidth >= 640) {
+                content.classList.remove("sm:scale-95");
+            } else {
+                content.classList.remove("translate-y-full");
+            }
+          }, 10);
+        }
+      }
+
+      function closeShareModal() {
+        const modal = document.getElementById("share-achievement-modal");
+        const content = document.getElementById("share-achievement-modal-content");
+        if(modal && content) {
+          modal.classList.add("opacity-0");
+          if(window.innerWidth >= 640) {
+              content.classList.add("sm:scale-95");
+          } else {
+              content.classList.add("translate-y-full");
+          }
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }, 300);
+        }
+      }
+
+      window.openRenewSubscriptionModal = function() {
+        const user = typeof currentUser !== "undefined" ? currentUser : (window.currentUser || null);
+        if (!user) return;
+        
+        // 1. Set package name and phone number
+        const settingsStr = localStorage.getItem("nutriadmin_settings");
+        let pkgTexts = {};
+        if (settingsStr) {
+          try {
+            const settings = JSON.parse(settingsStr);
+            pkgTexts = settings.packagesText || {};
+          } catch (e) {}
+        }
+        
+        let packageName = `Gói đăng ký`;
+        const pkgValStr = String(user.package || "");
+        const pLower = pkgValStr.toLowerCase();
+        
+        if (pLower.includes("trải nghiệm") || pLower.includes("trai nghiem") || pLower === "7" || pLower === "5" || pLower.includes("target_7") || pLower.includes("target_5")) {
+          packageName = pkgTexts["front-pkg4-subtitle"] || "Trải Nghiệm";
+        } else if (pLower.includes("chuyển đổi") || pLower.includes("chuyen doi") || pLower.includes("duy trì") || pLower.includes("duy tri") || pLower === "14" || pLower === "10" || pLower.includes("target_14") || pLower.includes("target_10")) {
+          packageName = pkgTexts["front-pkg5-subtitle"] || "Duy Trì";
+        } else if (pLower.includes("bứt phá") || pLower.includes("but pha") || pLower === "30" || pLower === "28" || pLower === "20" || pLower.includes("target_30") || pLower.includes("target_20")) {
+          packageName = pkgTexts["front-pkg6-subtitle"] || "Bứt Phá";
+        } else {
+          packageName = user.package ? pkgValStr.replace(/\s*\(\d+\s*Ngày\)/i, "").replace(/\d+\s*Ngày/i, "").trim() : "Gói ăn";
+        }
+        
+        const phone = user.phone || "";
+        
+        // 2. Set content instructions
+        const contentText = `gia hạn gói ${packageName} ${phone}`;
+        const instructionContentEl = document.getElementById("renew-instruction-content");
+        if (instructionContentEl) {
+          instructionContentEl.innerText = contentText;
+        }
+        
+        // 3. Set QR images from settings
+        let settings = {};
+        if (settingsStr) {
+          try {
+            settings = JSON.parse(settingsStr);
+          } catch (e) {}
+        }
+        const momoQr = settings.paymentMomoQr || "https://via.placeholder.com/200?text=QR+MoMo";
+        const bankQr = settings.paymentBankQr || "https://via.placeholder.com/200?text=QR+Bank";
+        const momoInfo = settings.paymentMomoInfo || "Ví MoMo";
+        const bankInfo = settings.paymentBankInfo || "Chuyển khoản Ngân hàng";
+        
+        // Store on window dataset
+        window.renewQrData = {
+          momo: { qr: momoQr, info: momoInfo },
+          bank: { qr: bankQr, info: bankInfo }
+        };
+        
+        // Render QR matching selected method
+        window.selectRenewPaymentMethod("momo");
+        
+        // 4. Open modal
+        const modal = document.getElementById("renew-subscription-modal");
+        const content = document.getElementById("renew-subscription-modal-content");
+        if (modal && content) {
+          modal.classList.remove("hidden");
+          modal.classList.add("flex");
+          modal.offsetHeight;
+          modal.classList.remove("opacity-0");
+          content.classList.remove("scale-95");
+        }
+      };
+
+      window.closeRenewSubscriptionModal = function() {
+        const modal = document.getElementById("renew-subscription-modal");
+        const content = document.getElementById("renew-subscription-modal-content");
+        if (modal && content) {
+          modal.classList.add("opacity-0");
+          content.classList.add("scale-95");
+          setTimeout(() => {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+          }, 300);
+        }
+      };
+
+      window.selectRenewPaymentMethod = function(method) {
+        const momoCard = document.getElementById("renew-method-card-momo");
+        const bankCard = document.getElementById("renew-method-card-bank");
+        
+        if (!momoCard || !bankCard) return;
+
+        if (method === "momo") {
+          momoCard.className = "relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 border-pink-500 bg-pink-50/50 dark:bg-pink-950/20 text-slate-850 dark:text-slate-100";
+          bankCard.className = "relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent text-slate-850 dark:text-slate-100";
+          
+          if (window.renewQrData && window.renewQrData.momo) {
+            const qrImg = document.getElementById("renew-qr-image");
+            const infoEl = document.getElementById("renew-payment-info");
+            if (qrImg) qrImg.src = window.renewQrData.momo.qr;
+            if (infoEl) infoEl.innerText = window.renewQrData.momo.info;
+          }
+        } else {
+          bankCard.className = "relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 border-blue-500 bg-blue-50/50 dark:bg-blue-950/20 text-slate-850 dark:text-slate-100";
+          momoCard.className = "relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 bg-transparent text-slate-850 dark:text-slate-100";
+          
+          if (window.renewQrData && window.renewQrData.bank) {
+            const qrImg = document.getElementById("renew-qr-image");
+            const infoEl = document.getElementById("renew-payment-info");
+            if (qrImg) qrImg.src = window.renewQrData.bank.qr;
+            if (infoEl) infoEl.innerText = window.renewQrData.bank.info;
+          }
+        }
+      };
+
+      window.copyRenewInstructionText = function() {
+        const textEl = document.getElementById("renew-instruction-content");
+        if (!textEl) return;
+        const text = textEl.innerText || textEl.textContent || "";
+        if (!text) return;
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(() => {
+            if (typeof showToast === "function") {
+              showToast("Đã sao chép nội dung chuyển khoản!", "success");
+            } else {
+              alert("Đã sao chép nội dung chuyển khoản!");
+            }
+          }).catch(() => {
+            fallbackCopy(text);
+          });
+        } else {
+          fallbackCopy(text);
+        }
+      };
+
+      function fallbackCopy(text) {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "0";
+        textArea.style.left = "0";
+        textArea.style.opacity = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          const successful = document.execCommand("copy");
+          if (successful && typeof showToast === "function") {
+            showToast("Đã sao chép nội dung chuyển khoản!", "success");
+          } else {
+            alert("Đã sao chép nội dung chuyển khoản!");
+          }
+        } catch (err) {
+          console.error("Fallback copy failed", err);
+        }
+        document.body.removeChild(textArea);
+      }
+
+      window.confirmRenewPayment = function() {
+        closeRenewSubscriptionModal();
+        
+        const successModal = document.getElementById("renew-success-modal");
+        const successContent = document.getElementById("renew-success-modal-content");
+        const mascotSvgContainer = document.getElementById("renew-success-mascot-svg");
+        
+        if (!successModal || !successContent) return;
+        
+        successModal.classList.remove("hidden");
+        successModal.classList.add("flex");
+        successModal.offsetHeight;
+        successModal.classList.remove("opacity-0");
+        successContent.classList.remove("scale-95");
+        
+        let frameIndex = 0;
+        const intervalId = setInterval(() => {
+          if (mascotSvgContainer) {
+            let svgStr = typeof drawMascotSVG === "function" ? drawMascotSVG("yeu_thich", frameIndex) : "";
+            if (svgStr) {
+              svgStr = svgStr.replace(
+                'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+                'class="w-full h-full drop-shadow-md"'
+              );
+              mascotSvgContainer.innerHTML = svgStr;
+            }
+          }
+          frameIndex++;
+        }, 100);
+        
+        try {
+          const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3");
+          audio.volume = 0.5;
+          audio.play().catch(() => {});
+        } catch (e) {}
+        
+        setTimeout(() => {
+          clearInterval(intervalId);
+          successModal.classList.add("opacity-0");
+          successContent.classList.add("scale-95");
+          
+          setTimeout(() => {
+            successModal.classList.add("hidden");
+            successModal.classList.remove("flex");
+            
+            if (typeof switchView === "function") switchView("profile");
+            if (typeof renderCustomerProfile === "function") renderCustomerProfile();
+          }, 300);
+        }, 2000);
+      };
+    </script>
+
+    <!-- Renew Subscription Modals -->
+    <div id="renew-subscription-modal" class="fixed inset-0 z-[999] hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm px-4 transition-all duration-300 opacity-0">
+      <div id="renew-subscription-modal-content" class="transform scale-95 transition-all duration-300 w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-slate-800 overflow-hidden relative p-6 md:p-8">
+        <div class="flex justify-between items-center mb-6">
+          <div>
+            <h3 class="font-black text-slate-800 dark:text-slate-100 text-lg md:text-xl font-display">Gia hạn gói ăn</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Chọn phương thức thanh toán & quét mã QR</p>
+          </div>
+          <button onclick="window.closeRenewSubscriptionModal()" class="w-9 h-9 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-red-500 dark:hover:text-red-400 transition-colors shadow-sm">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Payment Method Selection -->
+        <p class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Phương thức thanh toán:</p>
+        <div class="grid grid-cols-2 gap-4 mb-5 font-sans">
+          <!-- Momo card -->
+          <div onclick="window.selectRenewPaymentMethod('momo')" class="relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200" id="renew-method-card-momo">
+            <img src="https://test-payment.momo.vn/v2/gateway/resources/images/logos/momo_logo_pink.png" onerror="this.onerror=null; this.src='https://homepage.momocdn.net/img/momo-upload-api-220810142637-637957383979148092.png';" class="h-8 mb-2 object-contain" alt="MoMo" />
+            <span class="text-xs font-bold text-pink-700 dark:text-pink-400">Ví MoMo</span>
+          </div>
+          <!-- Bank card -->
+          <div onclick="window.selectRenewPaymentMethod('bank')" class="relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200" id="renew-method-card-bank">
+            <div class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 flex items-center justify-center text-blue-600 dark:text-blue-400 mb-2">
+              <i class="fa-solid fa-building-columns text-sm"></i>
+            </div>
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300 font-sans">Ngân hàng</span>
+          </div>
+        </div>
+
+        <!-- QR Display -->
+        <div class="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 flex flex-col items-center mb-5 shadow-inner">
+          <div class="w-44 h-44 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl flex items-center justify-center overflow-hidden p-2 shadow-sm mb-3">
+            <img id="renew-qr-image" src="" class="w-full h-full object-contain" alt="QR Code" />
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-bold text-center font-sans" id="renew-payment-info"></p>
+        </div>
+
+        <!-- Instructions -->
+        <div class="bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/30 rounded-2xl p-4 text-center mb-6">
+          <p class="text-xs text-indigo-800 dark:text-indigo-300 font-bold mb-1.5 uppercase tracking-wider">Nội dung chuyển khoản:</p>
+          <div class="bg-white dark:bg-slate-800 rounded-xl py-2.5 px-3 border border-indigo-100 dark:border-indigo-900/30 font-mono text-xs md:text-sm font-bold text-indigo-600 dark:text-indigo-400 select-all cursor-pointer flex items-center justify-center gap-2 shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-750 active:scale-[0.98]" onclick="window.copyRenewInstructionText()">
+            <span id="renew-instruction-content"></span>
+            <i class="fa-regular fa-copy text-xs text-indigo-400 dark:text-indigo-500 animate-pulse"></i>
+          </div>
+          <p class="text-[10px] text-indigo-500 dark:text-indigo-400 mt-2 font-medium"><i class="fa-solid fa-circle-info mr-1"></i>Vui lòng nhập đúng nội dung để hệ thống duyệt nhanh chóng.</p>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="flex gap-3">
+          <button onclick="window.closeRenewSubscriptionModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold rounded-xl text-sm transition-colors">
+            Hủy bỏ
+          </button>
+          <button onclick="window.confirmRenewPayment()" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]">
+            Xác nhận đã thanh toán
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Renew Success Modal -->
+    <div id="renew-success-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[1000] hidden items-center justify-center opacity-0 transition-opacity duration-300">
+      <div id="renew-success-modal-content" class="bg-white dark:bg-slate-900 w-[90%] sm:w-[380px] rounded-[2.5rem] p-6 md:p-8 transform scale-95 transition-all duration-300 shadow-2xl relative overflow-hidden text-center border border-slate-100 dark:border-slate-850">
+        <div class="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 pointer-events-none"></div>
+        
+        <!-- Mascot Container -->
+        <div class="relative w-36 h-36 mx-auto mb-5 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center p-3 border-4 border-white dark:border-slate-800 shadow-xl">
+          <div id="renew-success-mascot-svg" class="w-full h-full flex items-center justify-center"></div>
+        </div>
+        
+        <h3 class="text-xl font-black text-slate-800 dark:text-slate-100 mb-2 font-display relative z-10">Gửi yêu cầu thành công!</h3>
+        <p class="text-sm text-slate-600 dark:text-slate-400 relative z-10 leading-relaxed mb-1">
+          Nuri đã nhận được yêu cầu gia hạn gói của bạn. Hệ thống đang tiến hành kiểm tra giao dịch chuyển khoản!
+        </p>
+      </div>
+    </div>
+
     <!-- iOS Help Overlay -->
     <div id="pwa-ios-modal" class="fixed inset-0 z-[10000] hidden bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
       <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-slide-up sm:animate-scale-in">
@@ -39455,7 +38986,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               <i class="fa-solid fa-key"></i> Cách 2: Cấu hình trực tiếp trên trình duyệt (100% thành công)
             </h4>
             <ol class="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal pl-4 leading-normal">
-              <li>Nhấp vào <strong>biểu tượng Ổ khóa <i class="fa-solid fa-lock text-slate-400"></i></strong> (hoặc nút Cài đặt trang web) ở thanh địa chỉ phía trên cùng của trình duyệt.</li>
+              <li>Nhấp vào <strong>bi tượng Ổ khóa <i class="fa-solid fa-lock text-slate-400"></i></strong> (hoặc nút Cài đặt trang web) ở thanh địa chỉ phía trên cùng của trình duyệt.</li>
               <li>Chọn dòng <strong>"Cài đặt trang web"</strong> (Site settings).</li>
               <li>Tìm phần <strong>"Thông báo"</strong> (Notifications) và chuyển sang <strong>"Cho phép"</strong> (Allow).</li>
               <li>Quay lại ứng dụng Nuri và tải lại trang để kích hoạt!</li>
