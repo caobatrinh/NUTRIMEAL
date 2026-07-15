@@ -19486,17 +19486,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       async function getShortUrl(longUrl, callback) {
-        // Trực tiếp gọi backend shorten API trước
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000);
           const res = await fetch("/api/shorten", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: longUrl }),
-            signal: controller.signal
+            body: JSON.stringify({ url: longUrl })
           });
-          clearTimeout(timeoutId);
           if (res.ok) {
             const data = await res.json();
             if (data.shortUrl) {
@@ -19504,46 +19499,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             }
           }
         } catch(e) {
-          console.warn("Backend shorten API failed, trying client-side JSONP...", e);
+          console.error("Shorten URL error:", e);
         }
-
-        // Dự phòng: Sử dụng is.gd JSONP (rút gọn cực ngắn, tối ưu cho việc quét QR đơn giản)
-        try {
-          const script = document.createElement("script");
-          const callbackName = "jsonp_callback_" + Math.round(1000000 * Math.random());
-
-          const timeoutId = setTimeout(() => {
-            if (window[callbackName]) {
-              delete window[callbackName];
-              document.body.removeChild(script);
-              callback(longUrl);
-            }
-          }, 3500);
-
-          window[callbackName] = function (data) {
-            clearTimeout(timeoutId);
-            delete window[callbackName];
-            document.body.removeChild(script);
-            if (data && data.shorturl) {
-              callback(data.shorturl);
-            } else {
-              callback(longUrl);
-            }
-          };
-
-          script.onerror = function () {
-            clearTimeout(timeoutId);
-            delete window[callbackName];
-            document.body.removeChild(script);
-            callback(longUrl);
-          };
-
-          script.src = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}&callback=${callbackName}`;
-          document.body.appendChild(script);
-        } catch (err) {
-          console.error("Client-side fallback shorten error:", err);
-          callback(longUrl);
-        }
+        callback(longUrl);
       }
 
       async function openQRModal(sourceCode = null) {
@@ -34134,15 +34092,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
           const shareBtn = document.getElementById("btn-share-qr");
           if (shareBtn) shareBtn.classList.add("hidden");
-          
-          if (currentUser) {
-            switchView("customer-profile");
-          } else {
-            switchView("consulting");
-            setTimeout(() => {
-              openAuthModal("login");
-            }, 600);
-          }
+          switchView("consulting");
 
           // Auto-prompt to enable notifications on user's device
           if (typeof checkAndShowPwaPermissionPrompt === "function") {
@@ -37831,6 +37781,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         </button>
       </div>
       <div class="flex gap-2 justify-end mt-1">
+        <button onclick="showPwaNotificationTroubleModal()" class="mr-auto px-2 py-1.5 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-xl text-[10px] font-semibold transition-all cursor-pointer flex items-center gap-1">
+          <i class="fa-solid fa-circle-question"></i> Hướng dẫn sửa lỗi
+        </button>
         <button onclick="dismissPwaPermissionPrompt()" class="px-3.5 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-semibold transition-all cursor-pointer">
           Lúc khác
         </button>
@@ -38280,6 +38233,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       function updatePageFavicons() {
         const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
         const favicon = document.querySelector('link[rel="icon"]');
+        const manifestLink = document.querySelector('link[rel="manifest"]');
+
         if (pwaCustomIcon) {
           if (appleTouchIcon) appleTouchIcon.href = pwaCustomIcon;
           if (favicon) {
@@ -38292,11 +38247,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               favicon.type = "image/jpeg";
             }
           }
+          if (manifestLink) {
+            manifestLink.href = `/manifest.json?v=${pwaCustomIcon.length || Date.now()}`;
+          }
         } else {
           if (appleTouchIcon) appleTouchIcon.href = "/logo.svg";
           if (favicon) {
             favicon.href = "/logo.svg";
             favicon.type = "image/svg+xml";
+          }
+          if (manifestLink) {
+            manifestLink.href = "/manifest.json";
           }
         }
       }
@@ -38335,7 +38296,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             phoneImg.src = "";
             phoneImg.classList.add("hidden");
           }
-          if (phoneSvg) phoneSvg.classList.add("hidden");
+          if (phoneSvg) phoneSvg.classList.remove("hidden");
 
           if (resetBtn) resetBtn.classList.add("hidden");
         }
@@ -38884,6 +38845,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (permission === "granted") {
               trigger();
             }
+          }).catch((err) => {
+            console.error("Không thể yêu cầu quyền thông báo:", err);
           });
         }
       }
@@ -38952,11 +38915,31 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         showToast("Đã xem thông báo từ Mascot Nuri! 🌱", "success");
       }
 
+      function showPwaNotificationTroubleModal() {
+        const modal = document.getElementById("pwa-noti-trouble-modal");
+        if (modal) modal.classList.remove("hidden");
+      }
+
+      function closePwaNotificationTroubleModal() {
+        const modal = document.getElementById("pwa-noti-trouble-modal");
+        if (modal) modal.classList.add("hidden");
+      }
+
+      window.showPwaNotificationTroubleModal = showPwaNotificationTroubleModal;
+      window.closePwaNotificationTroubleModal = closePwaNotificationTroubleModal;
+
       function requestPwaNotificationPermission() {
         if (!("Notification" in window)) {
           showToast("Trình duyệt không hỗ trợ thông báo đẩy.", "error");
           dismissPwaPermissionPrompt();
           return;
+        }
+
+        // Sửa lỗi "Trang web này không thể yêu cầu bạn cấp quyền" do bị chặn bởi hệ thống lớp phủ bảo mật của Chrome trên Android.
+        // Bằng cách ẩn ngay thanh prompt HTML z-[19999] đè lên màn hình trước khi gọi API, Chrome sẽ không phát hiện "lớp phủ" và không chặn hộp thoại nữa.
+        const prompt = document.getElementById("pwa-permission-prompt");
+        if (prompt) {
+          prompt.classList.add("hidden");
         }
         
         Notification.requestPermission().then((permission) => {
@@ -38968,6 +38951,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           } else if (permission === "denied") {
             showToast("Bạn đã từ chối nhận thông báo. Hãy cho phép trong cài đặt trình duyệt để nhận được nhắc nhở.", "info");
           }
+          dismissPwaPermissionPrompt();
+        }).catch((err) => {
+          console.error("Lỗi yêu cầu quyền thông báo:", err);
+          // Hiện bảng hướng dẫn khắc phục lớp phủ
+          showPwaNotificationTroubleModal();
           dismissPwaPermissionPrompt();
         });
       }
@@ -39244,6 +39232,62 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         <button onclick="closePwaIosModal()" class="w-full mt-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/10 hover:shadow-emerald-600/20 active:scale-[0.98]">
           Tôi đã hiểu
         </button>
+      </div>
+    </div>
+
+    <!-- PWA Push Notification Trouble / Overlay Help Modal -->
+    <div id="pwa-noti-trouble-modal" class="fixed inset-0 z-[10001] hidden bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+      <div class="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl p-6 shadow-2xl border border-slate-100 dark:border-slate-800 animate-slide-up sm:animate-scale-in">
+        <div class="flex justify-between items-start mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/50 text-amber-500 flex items-center justify-center text-xl shadow-inner">
+              <i class="fa-solid fa-triangle-exclamation animate-pulse"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 dark:text-slate-100 text-sm">Khắc phục lỗi cấp quyền</h3>
+              <p class="text-xs text-slate-400">Giải quyết lỗi chặn yêu cầu quyền trên Android</p>
+            </div>
+          </div>
+          <button onclick="closePwaNotificationTroubleModal()" class="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-400 dark:text-slate-300 flex items-center justify-center transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        
+        <p class="text-sm text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
+          Nếu bạn gặp thông báo <strong>"Trang web này không thể yêu cầu bạn cấp quyền"</strong>, nguyên nhân là do Android phát hiện có một <strong>lớp phủ ứng dụng khác</strong> đang hiển thị (ví dụ: bong bóng chat Messenger, Zalo, Twilight, bộ lọc màn hình, ứng dụng quay phim...).
+        </p>
+        
+        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+          <div class="p-3 rounded-xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30">
+            <h4 class="font-bold text-amber-800 dark:text-amber-400 text-xs flex items-center gap-1.5 mb-1">
+              <i class="fa-solid fa-circle-exclamation"></i> Cách 1: Tắt các bong bóng chat/lớp phủ
+            </h4>
+            <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-normal">
+              Hãy tắt bong bóng chat Messenger, Zalo, các ứng dụng lọc ánh sáng màn hình hoặc ứng dụng quay phim màn hình đang chạy. Sau đó nhấp lại nút <strong>"Thử lại ngay"</strong> ở dưới.
+            </p>
+          </div>
+          
+          <div class="p-3 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30">
+            <h4 class="font-bold text-emerald-800 dark:text-emerald-400 text-xs flex items-center gap-1.5 mb-1.5">
+              <i class="fa-solid fa-key"></i> Cách 2: Cấu hình trực tiếp trên trình duyệt (100% thành công)
+            </h4>
+            <ol class="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 list-decimal pl-4 leading-normal">
+              <li>Nhấp vào <strong>biểu tượng Ổ khóa <i class="fa-solid fa-lock text-slate-400"></i></strong> (hoặc nút Cài đặt trang web) ở thanh địa chỉ phía trên cùng của trình duyệt.</li>
+              <li>Chọn dòng <strong>"Cài đặt trang web"</strong> (Site settings).</li>
+              <li>Tìm phần <strong>"Thông báo"</strong> (Notifications) và chuyển sang <strong>"Cho phép"</strong> (Allow).</li>
+              <li>Quay lại ứng dụng Nuri và tải lại trang để kích hoạt!</li>
+            </ol>
+          </div>
+        </div>
+        
+        <div class="flex gap-2.5 mt-5">
+          <button onclick="closePwaNotificationTroubleModal()" class="flex-1 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl text-xs transition-all text-center">
+            Đóng
+          </button>
+          <button onclick="closePwaNotificationTroubleModal(); setTimeout(requestPwaNotificationPermission, 300);" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-md shadow-emerald-500/10 text-center">
+            Thử lại ngay
+          </button>
+        </div>
       </div>
     </div>
 
