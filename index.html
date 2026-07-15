@@ -19499,8 +19499,22 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             }
           }
         } catch(e) {
-          console.error("Shorten URL error:", e);
+          console.warn("Local shorten URL error, trying is.gd:", e);
         }
+
+        // Fallback for static hosting environments (like github pages)
+        try {
+          const res2 = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`);
+          if (res2.ok) {
+            const data2 = await res2.json();
+            if (data2.shorturl) {
+              return callback(data2.shorturl);
+            }
+          }
+        } catch (e2) {
+          console.error("is.gd shorten URL error:", e2);
+        }
+
         callback(longUrl);
       }
 
