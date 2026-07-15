@@ -38545,6 +38545,15 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function renderPwaNotificationsList() {
+        // Gửi lên server để đăng ký Web Push chạy ngầm
+        try {
+          fetch("/api/notifications/schedule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ notifications: pwaNotifications })
+          }).catch(e => {});
+        } catch(e) {}
+
         const container = document.getElementById("pwa-notifications-list-container");
         if (!container) return;
 
@@ -38849,6 +38858,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function triggerPwaWebNotification(title, body, mascotId, customImage) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+          return;
+        }
+
         if (!("Notification" in window)) {
           console.log("Trình duyệt không hỗ trợ Web Notifications.");
           return;
@@ -38909,6 +38923,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       // ==========================================
       let realPwaFloatingTimeout = null;
       function animateRealPwaFloatingNotification(title, body, mascotId, customImage) {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+          return;
+        }
+
         // Play notification sound!
         if (typeof playNotificationSound === "function") {
           playNotificationSound();
@@ -38981,6 +39000,42 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       window.showPwaNotificationTroubleModal = showPwaNotificationTroubleModal;
       window.closePwaNotificationTroubleModal = closePwaNotificationTroubleModal;
 
+      function urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+          .replace(/\-/g, '+')
+          .replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+      }
+
+      async function subscribeToWebPush() {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+        try {
+          const res = await fetch("/api/vapidPublicKey");
+          if (!res.ok) return;
+          const vapidPublicKey = await res.text();
+          const convertedVapidKey = urlBase64ToUint8Array(vapidPublicKey);
+          const registration = await navigator.serviceWorker.ready;
+          const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey
+          });
+          await fetch("/api/subscribe", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(subscription)
+          });
+          console.log("Subscribed to Web Push");
+        } catch (e) {
+          console.error("Web push config error:", e);
+        }
+      }
+
       function requestPwaNotificationPermission() {
         if (!("Notification" in window)) {
           showToast("Trình duyệt không hỗ trợ thông báo đẩy.", "error");
@@ -39001,6 +39056,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             // Test send an immediate welcome notification with the mascot!
             triggerPwaWebNotification("Nuri Đã Sẵn Sàng! 🌱", "Chúc mừng bạn đã kết nối thành công trợ lý ảo Nuri. Tôi sẽ đồng hành cùng sức khỏe của bạn mỗi ngày!", "vui_ve");
             animateRealPwaFloatingNotification("Nuri Đã Sẵn Sàng! 🌱", "Chúc mừng bạn đã kết nối thành công trợ lý ảo Nuri. Tôi sẽ đồng hành cùng sức khỏe của bạn mỗi ngày!", "vui_ve");
+            
+            // Lịch nhắc khi đóng app
+            subscribeToWebPush();
           } else if (permission === "denied") {
             showToast("Bạn đã từ chối nhận thông báo. Hãy cho phép trong cài đặt trình duyệt để nhận được nhắc nhở.", "info");
           }
@@ -39025,7 +39083,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function checkAndShowPwaPermissionPrompt() {
-        if (!("Notification" in window) || Notification.permission === "granted" || Notification.permission === "denied") {
+        if (!("Notification" in window) || Notification.permission === "denied") {
+          return;
+        }
+        if (Notification.permission === "granted") {
+          // If already granted, silently ensure we are subscribed to background pushes
+          subscribeToWebPush();
           return;
         }
 
@@ -39183,6 +39246,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       let pwaLastSentNotifications = {}; // tracks notification_id => YYYY-MM-DD
       function checkPwaScheduledNotifications() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+          return;
+        }
+
         const now = new Date();
         const currentHour = String(now.getHours()).padStart(2, '0');
         const currentMin = String(now.getMinutes()).padStart(2, '0');
