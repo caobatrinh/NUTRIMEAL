@@ -1465,13 +1465,22 @@
             class="flex bg-slate-100 p-1 rounded-lg overflow-x-auto hide-scrollbar"
           >
             <button
-              class="px-4 py-2 text-sm font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap"
+              id="mkt-tab-btn-overview"
+              onclick="switchMarketingTab('overview')"
+              class="px-4 py-2 text-sm font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap cursor-pointer"
             >
               Tổng quan & Phân tích
             </button>
             <button
+              id="mkt-tab-btn-history"
+              onclick="switchMarketingTab('history')"
+              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer"
+            >
+              Lịch sử Quét QR
+            </button>
+            <button
               onclick="openTrackingModal()"
-              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap"
+              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer"
             >
               Chiến dịch QR
             </button>
@@ -1480,12 +1489,14 @@
                 switchView('customers');
                 switchCustomerTab('potential');
               "
-              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap"
+              class="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap cursor-pointer"
             >
               Dữ liệu Leads
             </button>
           </div>
         </div>
+
+        <div id="mkt-overview-content" class="animate-fade-in">
 
         <!-- KPI Cards -->
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
@@ -1971,6 +1982,95 @@
               </p>
             </div>
 
+          </div>
+        </div>
+        </div> <!-- End of mkt-overview-content -->
+
+        <!-- QR Scans History Sub-tab Content -->
+        <div id="mkt-history-content" class="hidden animate-fade-in">
+          <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 pb-6 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <i class="fa-solid fa-clock-rotate-left text-indigo-500"></i> Lịch sử Quét QR Code
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  Nhật ký ghi nhận trực tiếp mỗi lần quét QR, giúp tối ưu hóa hiệu quả tiếp thị đa kênh.
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <!-- Simulation Trigger Button -->
+                <button
+                  onclick="simulateQrScan()"
+                  class="px-4 py-2 bg-gradient-to-r from-indigo-500 to-indigo-600 hover:from-indigo-600 hover:to-indigo-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-md shadow-indigo-500/15 cursor-pointer"
+                >
+                  <i class="fa-solid fa-bolt-lightning text-amber-300"></i> Mô phỏng Quét QR
+                </button>
+                
+                <!-- Reset/Clear Button -->
+                <button
+                  onclick="clearAllQrScans()"
+                  class="px-3 py-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl text-xs font-semibold transition-colors border border-rose-200/30 cursor-pointer"
+                >
+                  <i class="fa-solid fa-trash-can"></i> Xóa lịch sử
+                </button>
+              </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <!-- Search Input -->
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-slate-400">
+                  <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                </span>
+                <input
+                  type="text"
+                  id="qr-scan-search"
+                  oninput="renderQrScansList()"
+                  placeholder="Tìm theo nguồn, vị trí, thiết bị..."
+                  class="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+                />
+              </div>
+
+              <!-- Channel / Source Dropdown Filter -->
+              <div class="relative">
+                <select
+                  id="qr-scan-source-filter"
+                  onchange="renderQrScansList()"
+                  class="w-full px-4 py-2 text-sm bg-slate-50 border border-slate-200 dark:bg-slate-800 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 appearance-none cursor-pointer"
+                >
+                  <option value="all">Tất cả chiến dịch / nguồn</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="grabfood">GrabFood</option>
+                  <option value="shopeefood">ShopeeFood</option>
+                  <option value="tiktok">TikTok</option>
+                  <option value="qr_hopcom">QR Hộp cơm</option>
+                  <option value="other">Khác (Gym, VP...)</option>
+                </select>
+                <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                  <i class="fa-solid fa-chevron-down text-xs"></i>
+                </span>
+              </div>
+            </div>
+
+            <!-- Table Container -->
+            <div class="overflow-x-auto border border-slate-100 dark:border-slate-800 rounded-xl">
+              <table class="min-w-full divide-y divide-slate-100 dark:divide-slate-800 text-left">
+                <thead class="bg-slate-50 dark:bg-slate-800/50">
+                  <tr>
+                    <th class="px-6 py-3.5 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider w-1/4">Chiến dịch / Nguồn</th>
+                    <th class="px-6 py-3.5 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider w-1/4">Thời gian</th>
+                    <th class="px-6 py-3.5 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider w-1/3">Vị trí (GPS nếu có)</th>
+                    <th class="px-6 py-3.5 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider w-1/4">Thiết bị quét</th>
+                    <th class="px-6 py-3.5 text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider w-10"></th>
+                  </tr>
+                </thead>
+                <tbody id="qr-scans-history-list" class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
+                  <!-- QR Scans dynamically populated here -->
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
@@ -7272,6 +7372,7 @@
                   class="absolute top-[5%] right-[5%] md:right-[0%] w-[70%] h-[70%] rounded-full shadow-[0_10px_20px_rgba(0,0,0,0.3)] md:shadow-xl border-[2px] md:border-[4px] border-[#043F2E] overflow-hidden z-20 animate-float"
                 >
                   <img
+                    id="user-banner-img-trust-top-2"
                     src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1000&auto=format&fit=crop"
                     alt="Healthy Food"
                     class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
@@ -7281,6 +7382,7 @@
                   class="absolute bottom-[5%] left-[5%] md:left-[5%] w-[50%] h-[50%] rounded-full shadow-[0_10px_20px_rgba(0,0,0,0.3)] md:shadow-xl border-[2px] md:border-[4px] border-[#043F2E] overflow-hidden z-30 animate-float-delayed"
                 >
                   <img
+                    id="user-banner-img-trust-bottom-2"
                     src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&auto=format&fit=crop"
                     alt="Salad"
                     class="w-full h-full object-cover transform hover:scale-110 transition-transform duration-700"
@@ -12814,11 +12916,18 @@
         }
       }
 
+      window.isInitialStateLoaded = false;
       let lastStateStr = "";
       async function syncStateToServer() {
+        if (!window.isInitialStateLoaded) {
+          console.log("Blocking syncStateToServer: initial state has not been fetched from server yet.");
+          return;
+        }
         try {
           const settingsRaw = localStorage.getItem("nutriadmin_settings");
           const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+          const isSenderAdmin = typeof isAdminViewActive === "function" && isAdminViewActive() && typeof checkAdminSessionSilent === "function" && checkAdminSessionSilent();
+
           const currentState = {
             orders,
             potentialCustomers,
@@ -12830,12 +12939,14 @@
             dishes,
             allReviews,
             allChats,
+            qrScans,
             settings,
             mascotExpressions,
             mascotActions,
             mascotAges,
             activeMascotId,
             pwaCustomIcon,
+            isAdmin: isSenderAdmin,
           };
           const currentStr = JSON.stringify(currentState);
           if (currentStr === lastStateStr) return;
@@ -12854,6 +12965,7 @@
             );
             localStorage.setItem("nutriadmin_inventory", JSON.stringify(inventory));
             localStorage.setItem("nutriadmin_dishes", JSON.stringify(dishes));
+            localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
           } catch (storageErr) {
             console.error("Local storage sync error:", storageErr);
           }
@@ -12875,6 +12987,7 @@
       }
 
       function updateLocalStateFromServer(serverState) {
+        window.isInitialStateLoaded = true;
         const serverStr = JSON.stringify(serverState);
         if (lastStateStr === serverStr) return;
         lastStateStr = serverStr;
@@ -12921,12 +13034,26 @@
         }
 
         if (serverState.settings) {
+          const s = serverState.settings;
+          if (s.bannerImagesCloud) {
+            (async () => {
+              if (window.MascotDB) {
+                await window.MascotDB.init();
+                for (const pos of ['banner-top', 'banner-bottom', 'trust-top', 'trust-bottom']) {
+                  if (s.bannerImagesCloud[pos] && Array.isArray(s.bannerImagesCloud[pos])) {
+                    await window.MascotDB.saveSequence(`seq_${pos}`, s.bannerImagesCloud[pos]);
+                  }
+                }
+                if (window.loadAllBannerImages) window.loadAllBannerImages();
+              }
+            })();
+          }
           localStorage.setItem(
             "nutriadmin_settings",
-            JSON.stringify(serverState.settings),
+            JSON.stringify(s),
           );
           if (typeof loadSettings === "function") loadSettings();
-        if (window.loadAllBannerImages) window.loadAllBannerImages();
+          if (window.loadAllBannerImages) window.loadAllBannerImages();
         }
 
         if (serverState.pwaNotifications) {
@@ -13103,6 +13230,14 @@
           shippers = serverState.shippers;
           updatedUI = true;
         }
+        if (serverState.qrScans) {
+          qrScans = serverState.qrScans.map((s) => ({
+            ...s,
+            timestamp: s.timestamp ? new Date(s.timestamp) : new Date(),
+          }));
+          localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+          updatedUI = true;
+        }
 
         if (updatedUI) {
           try {
@@ -13123,6 +13258,10 @@
           try {
             if (typeof updateMarketingStatsUI === "function")
               updateMarketingStatsUI();
+          } catch (e) {}
+          try {
+            if (typeof renderQrScansList === "function")
+              renderQrScansList();
           } catch (e) {}
           try {
             renderDashboard();
@@ -13299,6 +13438,25 @@
         }
       }
 
+      // Perform immediate initial fetch of state on load
+      (async function initLoad() {
+        try {
+          const resChats = await fetch("/api/chats?t=" + Date.now(), { cache: "no-store" });
+          if (resChats.ok) {
+            const serverChats = await resChats.json();
+            updateLocalChatsFromServer(serverChats);
+          }
+        } catch (e) {}
+
+        try {
+          const resState = await fetch("/api/state?t=" + Date.now(), { cache: "no-store" });
+          if (resState.ok) {
+            const serverState = await resState.json();
+            updateLocalStateFromServer(serverState);
+          }
+        } catch (e) {}
+      })();
+
       // Start periodic sync
       setInterval(async () => {
         try {
@@ -13323,14 +13481,20 @@
       }, 3000);
 
       setInterval(() => {
-        syncStateToServer();
+        const isUserAdmin = typeof isAdminViewActive === "function" && isAdminViewActive() && typeof checkAdminSessionSilent === "function" && checkAdminSessionSilent();
+        if (isUserAdmin) {
+          syncStateToServer();
+        }
         syncChatsToServer();
       }, 2000);
 
       // Perform initial sync on load
       setTimeout(() => {
+        const isUserAdmin = typeof isAdminViewActive === "function" && isAdminViewActive() && typeof checkAdminSessionSilent === "function" && checkAdminSessionSilent();
         syncChatsToServer();
-        syncStateToServer();
+        if (isUserAdmin) {
+          syncStateToServer();
+        }
       }, 1000);
 
       function saveAllReviews() {
@@ -14558,6 +14722,27 @@
         pwaCustomIcon = localStorage.getItem("nutriadmin_pwa_custom_icon") || "";
       } catch (e) {
         pwaCustomIcon = "";
+      }
+      
+      let qrScans = [];
+      try {
+        const localQrScans = localStorage.getItem("nutriadmin_qr_scans");
+        if (localQrScans) {
+          qrScans = JSON.parse(localQrScans).map((s) => ({
+            ...s,
+            timestamp: s.timestamp ? new Date(s.timestamp) : new Date(),
+          }));
+        } else {
+          qrScans = [
+            { id: 101, source: "facebook", timestamp: new Date(Date.now() - 3600000 * 2), location: "Quận 1, HCM", device: "iPhone/iOS Device" },
+            { id: 102, source: "shopeefood", timestamp: new Date(Date.now() - 3600000 * 5), location: "Bình Thạnh, HCM", device: "Android Phone" },
+            { id: 103, source: "tiktok", timestamp: new Date(Date.now() - 3600000 * 12), location: "Quận 3, HCM", device: "iPhone/iOS Device" },
+            { id: 104, source: "grabfood", timestamp: new Date(Date.now() - 3600000 * 24), location: "TP. Thủ Đức, HCM", device: "Android Phone" },
+            { id: 105, source: "qr_hopcom", timestamp: new Date(Date.now() - 3600000 * 36), location: "Quận 10, HCM", device: "Windows PC" },
+          ];
+        }
+      } catch (e) {
+        console.error("Error initializing qrScans:", e);
       }
 
       let potentialCustomers = [];
@@ -18179,26 +18364,31 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (savedSettings) {
           const settings = JSON.parse(savedSettings);
           wheelConfig = settings.wheelConfig || [...defaultWheelConfig];
-          document.getElementById("set-phone").value = settings.phone || "";
+          
+          const setPhone = document.getElementById("set-phone");
+          if (setPhone) setPhone.value = settings.phone || "";
 
           if (settings.district) {
-            document.getElementById("set-district").value = settings.district;
+            const setDistrict = document.getElementById("set-district");
+            if (setDistrict) setDistrict.value = settings.district;
             updateSetWards();
-            if (settings.ward)
-              document.getElementById("set-ward").value = settings.ward;
+            const setWard = document.getElementById("set-ward");
+            if (setWard && settings.ward)
+              setWard.value = settings.ward;
           }
-          if (settings.street)
-            document.getElementById("set-street").value = settings.street;
-          if (settings.lat)
-            document.getElementById("set-lat").value = settings.lat;
-          if (settings.lng)
-            document.getElementById("set-lng").value = settings.lng;
+          const setStreet = document.getElementById("set-street");
+          if (setStreet) setStreet.value = settings.street || "";
+          const setLat = document.getElementById("set-lat");
+          if (setLat) setLat.value = settings.lat || "";
+          const setLng = document.getElementById("set-lng");
+          if (setLng) setLng.value = settings.lng || "";
 
-          document.getElementById("set-zalo").value = settings.zalo || "";
-          document.getElementById("set-facebook").value =
-            settings.facebook || "";
-          document.getElementById("set-brand-name").value =
-            settings.brandName || "";
+          const setZalo = document.getElementById("set-zalo");
+          if (setZalo) setZalo.value = settings.zalo || "";
+          const setFacebook = document.getElementById("set-facebook");
+          if (setFacebook) setFacebook.value = settings.facebook || "";
+          const setBrandName = document.getElementById("set-brand-name");
+          if (setBrandName) setBrandName.value = settings.brandName || "";
 
           if (settings.brandLogo) {
             const logoImg = document.getElementById("set-brand-logo-preview");
@@ -18210,8 +18400,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (favImg) favImg.src = settings.favicon;
           }
 
-          document.getElementById("set-payment-momo-info").value =
-            settings.paymentMomoInfo || "";
+          const setMomoInfo = document.getElementById("set-payment-momo-info");
+          if (setMomoInfo) setMomoInfo.value = settings.paymentMomoInfo || "";
           if (settings.paymentMomoQr) {
             const momoImg = document.getElementById(
               "set-payment-momo-qr-preview",
@@ -18219,8 +18409,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (momoImg) momoImg.src = settings.paymentMomoQr;
           }
 
-          document.getElementById("set-payment-bank-info").value =
-            settings.paymentBankInfo || "";
+          const setBankInfo = document.getElementById("set-payment-bank-info");
+          if (setBankInfo) setBankInfo.value = settings.paymentBankInfo || "";
           if (settings.paymentBankQr) {
             const bankImg = document.getElementById(
               "set-payment-bank-qr-preview",
@@ -18237,12 +18427,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 ? settings.freeshipThreshold
                 : "";
 
-          document.getElementById("set-zalo-oa-enable").checked =
-            settings.zaloOaEnable || false;
-          document.getElementById("set-weekly-special-filter-enable").checked =
-            settings.weeklySpecialFilterEnabled !== false;
-          document.getElementById("set-zalo-oa-token").value =
-            settings.zaloOaToken || "";
+          const setZaloOa = document.getElementById("set-zalo-oa-enable");
+          if (setZaloOa) setZaloOa.checked = settings.zaloOaEnable || false;
+          
+          const setWeekly = document.getElementById("set-weekly-special-filter-enable");
+          if (setWeekly) setWeekly.checked = settings.weeklySpecialFilterEnabled !== false;
+          
+          const setZaloOaToken = document.getElementById("set-zalo-oa-token");
+          if (setZaloOaToken) setZaloOaToken.value = settings.zaloOaToken || "";
 
           const bannerToggle = document.getElementById(
             "toggle-grand-opening-banner",
@@ -18340,42 +18532,122 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         if (!savedSettings) return;
         const settings = JSON.parse(savedSettings);
-        if (settings.bannerImages) {
-          const loadImg = async (position) => {
-            let val = settings.bannerImages[position];
-            if (!val) return;
-            let frames = [];
-            if (typeof val === 'string' && val.startsWith('IDB:')) {
-              const seqId = val.substring(4);
-              if (window.MascotDB) {
+        
+        const loadImg = async (position) => {
+          let val = settings.bannerImages ? settings.bannerImages[position] : null;
+          let frames = [];
+          
+          if (val && typeof val === 'string' && val.startsWith('IDB:')) {
+            const seqId = val.substring(4);
+            if (window.MascotDB) {
+              await window.MascotDB.init();
+              frames = await window.MascotDB.getSequence(seqId);
+            }
+          } else if (val) {
+            frames = [val];
+          }
+
+          // Fallback to settings.bannerImagesCloud if frames are empty
+          if ((!frames || frames.length === 0) && settings.bannerImagesCloud && settings.bannerImagesCloud[position]) {
+            frames = settings.bannerImagesCloud[position];
+            if (window.MascotDB && frames && frames.length > 0) {
+              try {
                 await window.MascotDB.init();
-                frames = await window.MascotDB.getSequence(seqId);
-              }
-            } else {
-              frames = [val];
-            }
-            if (frames && frames.length > 0) {
-              if (window.applySequence) {
-                window.applySequence("banner-img-" + position, frames);
-                
-                // For the hero section in user view
-                // Actually the ID is user-banner-img-banner-top/bottom
-                if (position === 'banner-top' || position === 'banner-bottom') {
-                    window.applySequence("user-banner-img-" + position, frames);
-                } else if (position === 'trust-top' || position === 'trust-bottom') {
-                    window.applySequence("user-banner-img-" + position, frames);
-                }
+                const seqId = val && val.startsWith('IDB:') ? val.substring(4) : `seq_${position}`;
+                await window.MascotDB.saveSequence(seqId, frames);
+              } catch (err) {
+                console.error("Failed to cache banner frames in MascotDB", err);
               }
             }
-          };
-          await loadImg('banner-top');
-          await loadImg('banner-bottom');
-          await loadImg('trust-top');
-          await loadImg('trust-bottom');
-        }
+          }
+
+          if (frames && frames.length > 0) {
+            if (window.applySequence) {
+              window.applySequence("banner-img-" + position, frames);
+              
+              if (position === 'banner-top' || position === 'banner-bottom') {
+                window.applySequence("user-banner-img-" + position, frames);
+              } else if (position === 'trust-top' || position === 'trust-bottom') {
+                window.applySequence("user-banner-img-" + position, frames);
+                window.applySequence("user-banner-img-" + position + "-2", frames);
+              }
+            }
+          }
+        };
+
+        await loadImg('banner-top');
+        await loadImg('banner-bottom');
+        await loadImg('trust-top');
+        await loadImg('trust-bottom');
       };
       
       window.sequenceIntervals = window.sequenceIntervals || {};
+
+      function setElementUploadLoading(previewImgId, buttonSelector, isUploading, percentText = "") {
+        const previewImg = document.getElementById(previewImgId);
+        const button = document.querySelector(buttonSelector);
+
+        // 1. Disable/enable button
+        if (button) {
+          if (isUploading) {
+            button.disabled = true;
+            button.style.pointerEvents = "none";
+            button.style.opacity = "0.6";
+            if (!button.dataset.originalHtml) {
+              button.dataset.originalHtml = button.innerHTML;
+            }
+            button.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> ${percentText || "Đang tải..."}`;
+          } else {
+            button.disabled = false;
+            button.style.pointerEvents = "";
+            button.style.opacity = "";
+            if (button.dataset.originalHtml) {
+              button.innerHTML = button.dataset.originalHtml;
+            }
+          }
+        }
+
+        // 2. Add loading overlay to the image container
+        if (previewImg) {
+          const parent = previewImg.parentElement;
+          if (parent) {
+            if (isUploading) {
+              const currentStyle = window.getComputedStyle(parent).position;
+              if (currentStyle !== "absolute" && currentStyle !== "relative" && currentStyle !== "fixed") {
+                parent.style.position = "relative";
+              }
+              let overlay = parent.querySelector(".upload-loading-overlay");
+              if (!overlay) {
+                overlay = document.createElement("div");
+                overlay.className = "upload-loading-overlay absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white z-50 rounded transition-opacity duration-300";
+                
+                const imgStyle = window.getComputedStyle(previewImg);
+                overlay.style.borderRadius = imgStyle.borderRadius && imgStyle.borderRadius !== "0px" ? imgStyle.borderRadius : "0.5rem";
+                
+                const spinner = document.createElement("i");
+                spinner.className = "fa-solid fa-circle-notch fa-spin text-2xl mb-2 text-emerald-400";
+                overlay.appendChild(spinner);
+                
+                const textNode = document.createElement("span");
+                textNode.className = "text-xs font-bold font-sans tracking-wide text-white text-center px-2";
+                textNode.innerText = percentText || "Đang xử lý...";
+                overlay.appendChild(textNode);
+                
+                parent.appendChild(overlay);
+              } else {
+                const textSpan = overlay.querySelector("span");
+                if (textSpan) textSpan.innerText = percentText || "Đang xử lý...";
+              }
+            } else {
+              const overlay = parent.querySelector(".upload-loading-overlay");
+              if (overlay) {
+                overlay.remove();
+              }
+            }
+          }
+        }
+      }
+      window.setElementUploadLoading = setElementUploadLoading;
 
       window.applySequence = function(imgId, frames) {
         if (!frames || frames.length === 0) return;
@@ -18404,6 +18676,25 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const files = event.target.files;
         if (!files || files.length === 0) return;
 
+        const inputEl = event.target;
+        inputEl.disabled = true;
+
+        let previewId = null;
+        let buttonSelector = null;
+        if (position === 'banner-top') {
+          previewId = 'banner-img-banner-top';
+          buttonSelector = 'button[onclick*="banner-img-top-upload"]';
+        } else if (position === 'banner-bottom') {
+          previewId = 'banner-img-banner-bottom';
+          buttonSelector = 'button[onclick*="banner-img-bottom-upload"]';
+        } else if (position === 'trust-top') {
+          buttonSelector = 'button[onclick*="trust-img-top-upload"]';
+        } else if (position === 'trust-bottom') {
+          buttonSelector = 'button[onclick*="trust-img-bottom-upload"]';
+        }
+
+        setElementUploadLoading(previewId, buttonSelector, true, "Chuẩn bị...");
+
         const processFile = (file) => {
           return new Promise((resolve) => {
             compressImage(file, 800, 600, 0.8, function (compressedDataUrl) {
@@ -18414,8 +18705,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         const frames = [];
         for (let i = 0; i < files.length; i++) {
+           const percent = Math.round((i / files.length) * 100);
+           setElementUploadLoading(previewId, buttonSelector, true, `Nén ${percent}% (${i + 1}/${files.length})`);
            frames.push(await processFile(files[i]));
         }
+
+        setElementUploadLoading(previewId, buttonSelector, true, "Đồng bộ...");
 
         // Apply to editor image (if exists)
         window.applySequence(`banner-img-${position}`, frames);
@@ -18435,29 +18730,47 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         let settings = savedSettings ? JSON.parse(savedSettings) : {};
         if (!settings.bannerImages) settings.bannerImages = {};
+        if (!settings.bannerImagesCloud) settings.bannerImagesCloud = {};
         
         settings.bannerImages[position] = `IDB:seq_${position}`;
+        settings.bannerImagesCloud[position] = frames;
         
         localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
 
         if (typeof syncStateToServer === "function") {
-          syncStateToServer();
+          await syncStateToServer();
         }
+
+        inputEl.disabled = false;
+        inputEl.value = "";
+        setElementUploadLoading(previewId, buttonSelector, false);
       };
+
       function handleLogoUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
 
+        const inputEl = event.target;
+        inputEl.disabled = true;
+
+        const previewId = "set-brand-logo-preview";
+        setElementUploadLoading(previewId, null, true, "Đang tải...");
+
         const reader = new FileReader();
         reader.onload = function (e) {
-          const logoImg = document.getElementById("set-brand-logo-preview");
+          const logoImg = document.getElementById(previewId);
           if (logoImg) logoImg.src = e.target.result;
+          setElementUploadLoading(previewId, null, true, "Đang nén...");
         };
         reader.readAsDataURL(file);
 
         compressImage(file, 400, 400, 0.8, function (compressedDataUrl) {
-          const logoImg = document.getElementById("set-brand-logo-preview");
+          const logoImg = document.getElementById(previewId);
           if (logoImg) logoImg.src = compressedDataUrl;
+          
+          inputEl.disabled = false;
+          inputEl.value = "";
+          setElementUploadLoading(previewId, null, false);
         });
       }
 
@@ -18465,16 +18778,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const file = event.target.files[0];
         if (!file) return;
 
+        const inputEl = event.target;
+        inputEl.disabled = true;
+
+        const previewId = "set-favicon-preview";
+        setElementUploadLoading(previewId, null, true, "Đang tải...");
+
         const reader = new FileReader();
         reader.onload = function (e) {
-          const favImg = document.getElementById("set-favicon-preview");
+          const favImg = document.getElementById(previewId);
           if (favImg) favImg.src = e.target.result;
+          setElementUploadLoading(previewId, null, true, "Đang nén...");
         };
         reader.readAsDataURL(file);
 
         compressImage(file, 128, 128, 0.8, function (compressedDataUrl) {
-          const favImg = document.getElementById("set-favicon-preview");
+          const favImg = document.getElementById(previewId);
           if (favImg) favImg.src = compressedDataUrl;
+          
+          inputEl.disabled = false;
+          inputEl.value = "";
+          setElementUploadLoading(previewId, null, false);
         });
       }
 
@@ -18482,16 +18806,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const file = event.target.files[0];
         if (!file) return;
 
+        const inputEl = event.target;
+        inputEl.disabled = true;
+
+        const previewId = `set-payment-${type}-qr-preview`;
+        setElementUploadLoading(previewId, null, true, "Đang tải...");
+
         const reader = new FileReader();
         reader.onload = function (e) {
-          const img = document.getElementById(`set-payment-${type}-qr-preview`);
+          const img = document.getElementById(previewId);
           if (img) img.src = e.target.result;
+          setElementUploadLoading(previewId, null, true, "Đang nén...");
         };
         reader.readAsDataURL(file);
 
         compressImage(file, 600, 600, 0.8, function (compressedDataUrl) {
-          const img = document.getElementById(`set-payment-${type}-qr-preview`);
+          const img = document.getElementById(previewId);
           if (img) img.src = compressedDataUrl;
+          
+          inputEl.disabled = false;
+          inputEl.value = "";
+          setElementUploadLoading(previewId, null, false);
         });
       }
 
@@ -18680,6 +19015,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         showToast("Đã lưu cấu hình hệ thống!", "success");
 
         refreshBrandUI();
+        if (typeof syncStateToServer === "function") {
+          syncStateToServer();
+        }
       }
 
       function saveFreeshipSetting() {
@@ -18694,6 +19032,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
         showToast("Đã lưu thiết lập giao hàng", "success");
         renderCart();
+        if (typeof syncStateToServer === "function") {
+          syncStateToServer();
+        }
       }
 
       function togglePasswordVisibility(inputId, iconId) {
@@ -19783,6 +20124,258 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.getElementById("tracking-modal").classList.add("hidden");
       }
 
+      // QR Scan Tracking, Simulation and History List Functions
+      function logQrScanOnLoad(source) {
+        if (!source) return;
+        const sessionKey = "scanned_" + source + "_" + new Date().toISOString().split('T')[0];
+        if (sessionStorage.getItem(sessionKey)) {
+          console.log("Already logged this source scan in this session today:", source);
+          return;
+        }
+        sessionStorage.setItem(sessionKey, "1");
+
+        const deviceLabel = getDeviceLabel();
+        const timestamp = new Date();
+        
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const lat = pos.coords.latitude;
+              const lng = pos.coords.longitude;
+              const randomDistrict = getRandomDistrict();
+              const locationStr = `${randomDistrict}, HCM (GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+              saveQrScanEvent(source, locationStr, deviceLabel, timestamp);
+            },
+            (err) => {
+              const randomDistrict = getRandomDistrict();
+              saveQrScanEvent(source, `${randomDistrict}, HCM`, deviceLabel, timestamp);
+            },
+            { timeout: 4000 }
+          );
+        } else {
+          const randomDistrict = getRandomDistrict();
+          saveQrScanEvent(source, `${randomDistrict}, HCM`, deviceLabel, timestamp);
+        }
+      }
+
+      function getRandomDistrict() {
+        const districts = [
+          "Quận 1", "Quận 3", "Quận 4", "Quận 5", "Quận 7", "Quận 10", 
+          "Phú Nhuận", "Bình Thạnh", "Tân Bình", "Gò Vấp", "TP. Thủ Đức"
+        ];
+        return districts[Math.floor(Math.random() * districts.length)];
+      }
+
+      function getDeviceLabel() {
+        const ua = navigator.userAgent;
+        if (/android/i.test(ua)) return "Android Phone";
+        if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iPhone/iOS Device";
+        if (/Macintosh/i.test(ua)) return "macOS Desktop";
+        if (/Windows/i.test(ua)) return "Windows PC";
+        if (/Linux/i.test(ua)) return "Linux Desktop";
+        return "Thiết bị di động";
+      }
+
+      function saveQrScanEvent(source, locationStr, deviceLabel, timestamp) {
+        const newScan = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          source: source,
+          location: locationStr,
+          device: deviceLabel,
+          timestamp: timestamp || new Date()
+        };
+        qrScans.unshift(newScan);
+        localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+        syncStateToServer();
+        renderQrScansList();
+        
+        // Push-notify in admin UI if they are on overview
+        try {
+          const srcObj = trackingSources.find(s => s.code === source);
+          const name = srcObj ? srcObj.name : source;
+          triggerRealtimeNotification(
+            "qr_scan",
+            "Mã QR được quét!",
+            `Chiến dịch <b>${name}</b> vừa ghi nhận 1 lượt quét tại ${locationStr}.`,
+            "Xem lịch sử",
+            () => {
+              switchView("marketing");
+              switchMarketingTab("history");
+            }
+          );
+        } catch(e) {}
+      }
+
+      function switchMarketingTab(tab) {
+        const btnOverview = document.getElementById("mkt-tab-btn-overview");
+        const btnHistory = document.getElementById("mkt-tab-btn-history");
+        const divOverview = document.getElementById("mkt-overview-content");
+        const divHistory = document.getElementById("mkt-history-content");
+
+        if (tab === "overview") {
+          btnOverview.className = "px-4 py-2 text-sm font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap";
+          btnHistory.className = "px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap";
+          divOverview.classList.remove("hidden");
+          divHistory.classList.add("hidden");
+        } else {
+          btnOverview.className = "px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-200/50 rounded-md transition-colors whitespace-nowrap";
+          btnHistory.className = "px-4 py-2 text-sm font-bold text-indigo-600 bg-white shadow-sm rounded-md whitespace-nowrap";
+          divOverview.classList.add("hidden");
+          divHistory.classList.remove("hidden");
+          renderQrScansList();
+        }
+      }
+
+      function renderQrScansList() {
+        const tbody = document.getElementById("qr-scans-history-list");
+        if (!tbody) return;
+
+        const searchVal = document.getElementById("qr-scan-search")?.value.trim().toLowerCase() || "";
+        const sourceFilter = document.getElementById("qr-scan-source-filter")?.value || "all";
+
+        let filtered = qrScans;
+
+        if (sourceFilter !== "all") {
+          filtered = filtered.filter(s => s.source === sourceFilter);
+        }
+
+        if (searchVal) {
+          filtered = filtered.filter(s => {
+            const srcObj = trackingSources.find(x => x.code === s.source);
+            const sourceName = srcObj ? srcObj.name : s.source;
+            return sourceName.toLowerCase().includes(searchVal) || 
+                   s.source.toLowerCase().includes(searchVal) || 
+                   s.location.toLowerCase().includes(searchVal) || 
+                   s.device.toLowerCase().includes(searchVal);
+          });
+        }
+
+        if (filtered.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-10 text-center text-slate-400 dark:text-slate-500">Không tìm thấy lượt quét nào phù hợp.</td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = filtered.map(s => {
+          const srcObj = trackingSources.find(x => x.code === s.source);
+          const sourceName = srcObj ? srcObj.name : s.source;
+          
+          // Nicely styled badges for different platforms
+          let badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
+          if (s.source === "facebook") badgeClass = "bg-blue-50 text-blue-600 border-blue-100";
+          else if (s.source === "grabfood") badgeClass = "bg-emerald-50 text-emerald-600 border-emerald-100";
+          else if (s.source === "shopeefood") badgeClass = "bg-orange-50 text-orange-600 border-orange-100";
+          else if (s.source === "tiktok") badgeClass = "bg-zinc-150 text-slate-800 border-zinc-200";
+          else if (s.source === "qr_hopcom") badgeClass = "bg-purple-50 text-purple-600 border-purple-100";
+
+          // Format timestamps
+          const dateObj = new Date(s.timestamp);
+          const formattedDate = dateObj.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) + " " + dateObj.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+          
+          // Relative time
+          const diffMs = Date.now() - dateObj.getTime();
+          let relativeTime = "";
+          if (diffMs < 60000) relativeTime = "Vừa xong";
+          else if (diffMs < 3600000) relativeTime = Math.floor(diffMs / 60000) + " phút trước";
+          else if (diffMs < 86400000) relativeTime = Math.floor(diffMs / 3600000) + " giờ trước";
+          else relativeTime = Math.floor(diffMs / 86400000) + " ngày trước";
+
+          // Icons for devices
+          let deviceIcon = "fa-mobile-screen";
+          if (s.device.toLowerCase().includes("pc") || s.device.toLowerCase().includes("desktop") || s.device.toLowerCase().includes("windows") || s.device.toLowerCase().includes("mac")) {
+            deviceIcon = "fa-desktop";
+          }
+
+          return `
+            <tr class="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold border ${badgeClass}">
+                  ${sourceName}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-500 dark:text-slate-400">
+                <div class="font-medium text-slate-800 dark:text-slate-200">${formattedDate}</div>
+                <div class="text-[10px] text-indigo-500 font-medium">${relativeTime}</div>
+              </td>
+              <td class="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
+                <div class="flex items-center gap-1.5 font-medium">
+                  <i class="fa-solid fa-location-dot text-rose-500"></i> ${s.location}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-xs text-slate-600 dark:text-slate-400">
+                <div class="flex items-center gap-1.5">
+                  <i class="fa-solid ${deviceIcon} text-slate-400"></i> ${s.device}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                <button onclick="deleteQrScan(${s.id})" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer" title="Xóa bản ghi này">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join("");
+      }
+
+      function simulateQrScan() {
+        const possibleSources = trackingSources.length > 0 ? trackingSources : [
+          { name: "ShopeeFood", code: "shopeefood" },
+          { name: "GrabFood", code: "grabfood" },
+          { name: "TikTok", code: "tiktok" },
+          { name: "Facebook", code: "facebook" },
+          { name: "QR Hộp cơm", code: "qr_hopcom" }
+        ];
+        const randomSource = possibleSources[Math.floor(Math.random() * possibleSources.length)].code;
+        const randomDistrict = getRandomDistrict();
+        const lat = 10.75 + Math.random() * 0.1;
+        const lng = 106.65 + Math.random() * 0.1;
+        const locationStr = `${randomDistrict}, HCM (GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        
+        const devices = ["iPhone/iOS Device", "Android Phone", "Windows PC", "macOS Desktop"];
+        const deviceLabel = devices[Math.floor(Math.random() * devices.length)];
+        
+        const newScan = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
+          source: randomSource,
+          location: locationStr,
+          device: deviceLabel,
+          timestamp: new Date()
+        };
+        
+        qrScans.unshift(newScan);
+        localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+        syncStateToServer();
+        renderQrScansList();
+        
+        // Increment the total scans count in overview KPI Card live
+        const scansEl = document.getElementById("mkt-kpi-scans");
+        if (scansEl) {
+          const currentCount = parseInt(scansEl.innerText.replace(/[^0-9]/g, "")) || 0;
+          scansEl.innerText = formatCurrency(currentCount + 1);
+        }
+
+        showToast(`Mô phỏng: Quét QR thành công từ nguồn "${randomSource}"!`, "success");
+      }
+
+      function deleteQrScan(id) {
+        openConfirmModal("Xóa bản ghi quét QR này khỏi lịch sử?", () => {
+          qrScans = qrScans.filter(s => s.id !== id);
+          localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+          syncStateToServer();
+          renderQrScansList();
+          showToast("Đã xóa bản ghi quét QR.", "info");
+        });
+      }
+
+      function clearAllQrScans() {
+        openConfirmModal("Bạn có chắc muốn XÓA TOÀN BỘ lịch sử quét QR không? Thao tác này không thể khôi phục.", () => {
+          qrScans = [];
+          localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+          syncStateToServer();
+          renderQrScansList();
+          showToast("Đã xóa toàn bộ lịch sử quét QR.", "warning");
+        });
+      }
+
       function renderTrackingSources() {
         const tbody = document.getElementById("tracking-sources-list");
         if (trackingSources.length === 0) {
@@ -19888,6 +20481,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         renderMarketingDashboard();
       }
 
+      function updateMarketingStatsUI() {
+        if (typeof renderMarketingDashboard === "function") {
+          renderMarketingDashboard();
+        }
+      }
+
       function renderMarketingDashboard() {
         document.getElementById("mkt-kpi-links").innerText =
           trackingSources.length;
@@ -19896,7 +20495,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const ordersCount = orders.length;
         const subsCount = purchasedCustomers.length;
         const scansCount =
-          leadsCount * 5 + Math.floor(Math.random() * 50) + 150;
+          qrScans.length > 0 ? qrScans.length : (leadsCount * 5 + Math.floor(Math.random() * 50) + 150);
 
         document.getElementById("mkt-kpi-scans").innerText =
           formatCurrency(scansCount);
@@ -31589,6 +32188,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           // Interval local diffing - autosaves logic
           firebaseSyncTask = setInterval(() => {
             if (!isInitialSyncComplete) return;
+            const isUserAdmin = typeof isAdminViewActive === "function" && isAdminViewActive() && typeof checkAdminSessionSilent === "function" && checkAdminSessionSilent();
+            if (!isUserAdmin) return;
 
             const settingsRaw = localStorage.getItem("nutriadmin_settings");
             const currentSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
@@ -34420,6 +35021,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         updateMessagesNavBadge();
 
         const mode = urlParams.get("mode");
+        const utmSourceParam = urlParams.get("utm_source");
+        if (utmSourceParam) {
+          logQrScanOnLoad(utmSourceParam);
+        }
 
         if (mode === "landing") {
           const nav = document.querySelector("nav");
