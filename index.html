@@ -19486,12 +19486,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       async function getShortUrl(longUrl, callback) {
+        // Trực tiếp gọi backend shorten API trước
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 3000);
           const res = await fetch("/api/shorten", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: longUrl })
+            body: JSON.stringify({ url: longUrl }),
+            signal: controller.signal
           });
+          clearTimeout(timeoutId);
           if (res.ok) {
             const data = await res.json();
             if (data.shortUrl) {
@@ -19499,9 +19504,46 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             }
           }
         } catch(e) {
-          console.error("Shorten URL error:", e);
+          console.warn("Backend shorten API failed, trying client-side JSONP...", e);
         }
-        callback(longUrl);
+
+        // Dự phòng: Sử dụng is.gd JSONP (rút gọn cực ngắn, tối ưu cho việc quét QR đơn giản)
+        try {
+          const script = document.createElement("script");
+          const callbackName = "jsonp_callback_" + Math.round(1000000 * Math.random());
+
+          const timeoutId = setTimeout(() => {
+            if (window[callbackName]) {
+              delete window[callbackName];
+              document.body.removeChild(script);
+              callback(longUrl);
+            }
+          }, 3500);
+
+          window[callbackName] = function (data) {
+            clearTimeout(timeoutId);
+            delete window[callbackName];
+            document.body.removeChild(script);
+            if (data && data.shorturl) {
+              callback(data.shorturl);
+            } else {
+              callback(longUrl);
+            }
+          };
+
+          script.onerror = function () {
+            clearTimeout(timeoutId);
+            delete window[callbackName];
+            document.body.removeChild(script);
+            callback(longUrl);
+          };
+
+          script.src = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}&callback=${callbackName}`;
+          document.body.appendChild(script);
+        } catch (err) {
+          console.error("Client-side fallback shorten error:", err);
+          callback(longUrl);
+        }
       }
 
       async function openQRModal(sourceCode = null) {
