@@ -19453,21 +19453,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function buildUrlWithCredentials(base) {
-        const customKey = localStorage.getItem("nutriadmin_custom_api_key");
-        const customFb = (localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG);
-
-        if (!customKey && !customFb) return base;
-
-        try {
-          const cfg = {};
-          if (customKey) cfg.ak = customKey;
-          if (customFb) cfg.fb = typeof customFb === "string" ? customFb : JSON.stringify(customFb);
-
-          const hash = btoa(encodeURIComponent(JSON.stringify(cfg)));
-          return base + (base.includes("?") ? "&" : "?") + "cfg=" + hash;
-        } catch (e) {
-          return base;
-        }
+        // Khi chạy trên máy chủ thực tế, không cần nhúng config vào URL
+        // để URL ngắn gọn, giúp mã QR đơn giản và dễ quét hơn.
+        return base;
       }
 
       function copyLandingUrl() {
@@ -19486,35 +19474,54 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       async function getShortUrl(longUrl, callback) {
+        // 1. Try is.gd first (Best client-side shortener, no CORS issues, works on static pages)
         try {
-          const res = await fetch("/api/shorten", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url: longUrl })
-          });
+          const res = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`);
           if (res.ok) {
             const data = await res.json();
-            if (data.shortUrl) {
-              return callback(data.shortUrl);
+            if (data.shorturl) {
+              return callback(data.shorturl);
             }
           }
-        } catch(e) {
-          console.warn("Local shorten URL error, trying is.gd:", e);
+        } catch (e) {
+          console.warn("is.gd shorten URL error:", e);
         }
 
-        // Fallback for static hosting environments (like github pages)
+        // 2. Try tinyurl via allorigins proxy as a robust fallback
         try {
-          const res2 = await fetch(`https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`);
-          if (res2.ok) {
-            const data2 = await res2.json();
-            if (data2.shorturl) {
-              return callback(data2.shorturl);
+          const tinyUrlApi = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`;
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(tinyUrlApi)}`;
+          const res = await fetch(proxyUrl);
+          if (res.ok) {
+            const shortUrl = await res.text();
+            if (shortUrl && shortUrl.startsWith("http")) {
+              return callback(shortUrl);
             }
           }
-        } catch (e2) {
-          console.error("is.gd shorten URL error:", e2);
+        } catch (e) {
+          console.warn("tinyurl proxy shorten error:", e);
         }
 
+        // 3. Fallback to local API (Works on dynamic servers like Express)
+        if (window.location.hostname !== "nurikitchen.github.io") {
+          try {
+            const res = await fetch("/api/shorten", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ url: longUrl })
+            });
+            if (res.ok) {
+              const data = await res.json();
+              if (data.shortUrl) {
+                return callback(data.shortUrl);
+              }
+            }
+          } catch(e) {
+            console.warn("Local shorten URL error:", e);
+          }
+        }
+
+        // 4. If all fails, return longUrl
         callback(longUrl);
       }
 
@@ -38262,13 +38269,26 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             }
           }
           if (manifestLink) {
+            if ('caches' in window) {
+              fetch(pwaCustomIcon)
+                .then(res => res.blob())
+                .then(blob => {
+                  caches.open('pwa-dynamic-assets').then(cache => {
+                    cache.put('/dynamic-pwa-icon.png', new Response(blob, {
+                      headers: { 'Content-Type': blob.type, 'Cache-Control': 'no-cache' }
+                    }));
+                  });
+                })
+                .catch(e => console.error("Error caching PWA icon:", e));
+            }
+
             const manifestObj = {
               "short_name": "Nuri",
               "name": "Nuri - Tư Vấn Dinh Dưỡng",
               "description": "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
               "icons": [
                 {
-                  "src": pwaCustomIcon,
+                  "src": "/dynamic-pwa-icon.png",
                   "type": pwaCustomIcon.startsWith("data:image/svg") ? "image/svg+xml" : (pwaCustomIcon.startsWith("data:image/png") ? "image/png" : "image/jpeg"),
                   "sizes": "192x192 512x512",
                   "purpose": "any maskable"
