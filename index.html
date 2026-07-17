@@ -2627,7 +2627,7 @@
                         class="font-bold text-slate-700 mb-3 flex items-center gap-2"
                       >
                         <img
-                          src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png"
+                          src="https://upload.wikimedia.org/wikipedia/commons/a/af/Vi_Momo_logo.png"
                           class="h-5 rounded-md"
                           alt="MoMo"
                         />
@@ -13559,10 +13559,52 @@
           updatedUI = true;
         }
         if (serverState.qrScans) {
-          qrScans = serverState.qrScans.map((s) => ({
+          const prevScansCount = qrScans ? qrScans.length : 0;
+          const newScans = serverState.qrScans.map((s) => ({
             ...s,
             timestamp: s.timestamp ? new Date(s.timestamp) : new Date(),
           }));
+
+          // Sort scans by timestamp descending so the latest is first
+          newScans.sort((a, b) => b.timestamp - a.timestamp);
+
+          const urlParams = new URLSearchParams(window.location.search);
+          const isNotLanding = urlParams.get("mode") !== "landing";
+
+          if (isNotLanding && qrScans && qrScans.length > 0 && newScans.length > prevScansCount) {
+            window.notifiedScanIds = window.notifiedScanIds || [];
+            const newUnnotifiedScans = newScans.filter(s => !window.notifiedScanIds.includes(s.id));
+            if (newUnnotifiedScans.length > 0) {
+              const latestScan = newUnnotifiedScans[0];
+              window.notifiedScanIds.push(latestScan.id);
+              try {
+                const srcObj = trackingSources.find(s => s.code === latestScan.source);
+                const name = srcObj ? srcObj.name : latestScan.source;
+                triggerRealtimeNotification(
+                  "qr_scan",
+                  "Mã QR được quét!",
+                  `Chiến dịch <b>${name}</b> vừa ghi nhận 1 lượt quét tại ${latestScan.location}.`,
+                  "Xem lịch sử",
+                  () => {
+                    switchView("marketing");
+                    switchMarketingTab("history");
+                  }
+                );
+              } catch (e) {
+                console.error("Error triggering admin QR notification:", e);
+              }
+            }
+          }
+
+          // Mark all received scan IDs as notified
+          window.notifiedScanIds = window.notifiedScanIds || [];
+          newScans.forEach(s => {
+            if (!window.notifiedScanIds.includes(s.id)) {
+              window.notifiedScanIds.push(s.id);
+            }
+          });
+
+          qrScans = newScans;
           localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
           updatedUI = true;
         }
@@ -15053,6 +15095,7 @@
       }
       
       let qrScans = [];
+      window.notifiedScanIds = [];
       try {
         const localQrScans = localStorage.getItem("nutriadmin_qr_scans");
         if (localQrScans) {
@@ -15069,6 +15112,7 @@
             { id: 105, source: "qr_hopcom", timestamp: new Date(Date.now() - 3600000 * 36), location: "Quận 10, HCM", device: "Windows PC" },
           ];
         }
+        window.notifiedScanIds = qrScans.map(s => s.id);
       } catch (e) {
         console.error("Error initializing qrScans:", e);
       }
@@ -18595,7 +18639,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function updateSetWards() {
-        const d = document.getElementById("set-district").value,
+        const setDistrict = document.getElementById("set-district");
+        if (!setDistrict) return;
+        const d = setDistrict.value,
           w = document.getElementById("set-ward");
         if (!w) return;
         w.innerHTML = '<option value="">Phường/Xã</option>';
@@ -18962,163 +19008,172 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         initSettingsLocation();
         const savedSettings = localStorage.getItem("nutriadmin_settings");
         if (savedSettings) {
-          const settings = JSON.parse(savedSettings);
-          wheelConfig = settings.wheelConfig || [...defaultWheelConfig];
-          
-          const setPhone = document.getElementById("set-phone");
-          if (setPhone) setPhone.value = settings.phone || "";
+          try {
+            const settings = JSON.parse(savedSettings);
+            wheelConfig = settings.wheelConfig || [...defaultWheelConfig];
+            
+            const setPhone = document.getElementById("set-phone");
+            if (setPhone) setPhone.value = settings.phone || "";
 
-          if (settings.district) {
-            const setDistrict = document.getElementById("set-district");
-            if (setDistrict) setDistrict.value = settings.district;
-            updateSetWards();
-            const setWard = document.getElementById("set-ward");
-            if (setWard && settings.ward)
-              setWard.value = settings.ward;
-          }
-          const setStreet = document.getElementById("set-street");
-          if (setStreet) setStreet.value = settings.street || "";
-          const setLat = document.getElementById("set-lat");
-          if (setLat) setLat.value = settings.lat || "";
-          const setLng = document.getElementById("set-lng");
-          if (setLng) setLng.value = settings.lng || "";
-
-          const setZalo = document.getElementById("set-zalo");
-          if (setZalo) setZalo.value = settings.zalo || "";
-          const setFacebook = document.getElementById("set-facebook");
-          if (setFacebook) setFacebook.value = settings.facebook || "";
-          const setBrandName = document.getElementById("set-brand-name");
-          if (setBrandName) setBrandName.value = settings.brandName || "";
-
-          if (settings.brandLogo) {
-            const logoImg = document.getElementById("set-brand-logo-preview");
-            if (logoImg) logoImg.src = settings.brandLogo;
-          }
-
-          if (settings.favicon) {
-            const favImg = document.getElementById("set-favicon-preview");
-            if (favImg) favImg.src = settings.favicon;
-          }
-
-          const setMomoInfo = document.getElementById("set-payment-momo-info");
-          if (setMomoInfo) setMomoInfo.value = settings.paymentMomoInfo || "";
-          if (settings.paymentMomoQr) {
-            const momoImg = document.getElementById(
-              "set-payment-momo-qr-preview",
-            );
-            if (momoImg) momoImg.src = settings.paymentMomoQr;
-          }
-
-          const setBankInfo = document.getElementById("set-payment-bank-info");
-          if (setBankInfo) setBankInfo.value = settings.paymentBankInfo || "";
-          if (settings.paymentBankQr) {
-            const bankImg = document.getElementById(
-              "set-payment-bank-qr-preview",
-            );
-            if (bankImg) bankImg.src = settings.paymentBankQr;
-          }
-
-          const freeshipEl = document.getElementById(
-            "setting-freeship-threshold",
-          );
-          if (freeshipEl)
-            freeshipEl.value =
-              settings.freeshipThreshold !== undefined
-                ? settings.freeshipThreshold
-                : "";
-
-          const setZaloOa = document.getElementById("set-zalo-oa-enable");
-          if (setZaloOa) setZaloOa.checked = settings.zaloOaEnable || false;
-          
-          const setWeekly = document.getElementById("set-weekly-special-filter-enable");
-          if (setWeekly) setWeekly.checked = settings.weeklySpecialFilterEnabled !== false;
-          
-          const setZaloOaToken = document.getElementById("set-zalo-oa-token");
-          if (setZaloOaToken) setZaloOaToken.value = settings.zaloOaToken || "";
-
-          const bannerToggle = document.getElementById(
-            "toggle-grand-opening-banner",
-          );
-          if (bannerToggle) {
-            bannerToggle.checked = settings.bannerGrandOpeningEnabled !== false;
-            const el = document.getElementById(
-              "user-grand-opening-banner-container",
-            );
-            if (el) el.classList.toggle("hidden", !bannerToggle.checked);
-          }
-
-          // Restore Package texts
-          if (settings.packagesText) {
-            Object.entries(settings.packagesText).forEach(([id, text]) => {
-              const el = document.querySelector(`[oninput*="${id}"]`);
-              if (el && el !== document.activeElement) {
-                if (id === "user-banner-badge2-line2") el.innerHTML = text;
-                else el.innerText = text;
-              }
-              const elId = document.getElementById(id);
-              if (elId && elId !== document.activeElement) {
-                if (id === "user-banner-badge2-line2") elId.innerHTML = text;
-                else elId.innerText = text;
-              }
-            });
-          }
-
-          if (settings.bannerTexts) {
-            Object.entries(settings.bannerTexts).forEach(([id, text]) => {
-              const el = document.querySelector(`[oninput*="${id}"]`);
-              if (el && el !== document.activeElement) {
-                if (id === "user-banner-badge2-line2") el.innerHTML = text;
-                else el.innerText = text;
-              }
-              const elId = document.getElementById(id);
-              if (elId && elId !== document.activeElement) {
-                if (id === "user-banner-badge2-line2") elId.innerHTML = text;
-                else elId.innerText = text;
-              }
-            });
-          }
-
-          if (window.loadAllBannerImages) window.loadAllBannerImages();
-          if (settings.bannerGrandOpeningText) {
-            const bannerGrandOpeningTextEl = document.getElementById(
-              "banner-grand-opening-text",
-            );
-            if (
-              bannerGrandOpeningTextEl &&
-              bannerGrandOpeningTextEl !== document.activeElement
-            ) {
-              bannerGrandOpeningTextEl.innerText =
-                settings.bannerGrandOpeningText;
-              bannerGrandOpeningTextEl.dispatchEvent(new Event("input"));
+            if (settings.district) {
+              const setDistrict = document.getElementById("set-district");
+              if (setDistrict) setDistrict.value = settings.district;
+              updateSetWards();
+              const setWard = document.getElementById("set-ward");
+              if (setWard && settings.ward)
+                setWard.value = settings.ward;
             }
-            const userBannerGrandOpeningTextEl = document.getElementById(
-              "user-banner-grand-opening-text",
-            );
-            if (
-              userBannerGrandOpeningTextEl &&
-              userBannerGrandOpeningTextEl !== document.activeElement
-            )
-              userBannerGrandOpeningTextEl.innerText =
-                settings.bannerGrandOpeningText;
-          }
+            const setStreet = document.getElementById("set-street");
+            if (setStreet) setStreet.value = settings.street || "";
+            const setLat = document.getElementById("set-lat");
+            if (setLat) setLat.value = settings.lat || "";
+            const setLng = document.getElementById("set-lng");
+            if (setLng) setLng.value = settings.lng || "";
 
-          if (settings.revenueGoal) {
-            const revenueGoalEl = document.getElementById("revenue-goal");
-            if (revenueGoalEl && revenueGoalEl !== document.activeElement) {
-              revenueGoalEl.innerText = settings.revenueGoal;
+            const setZalo = document.getElementById("set-zalo");
+            if (setZalo) setZalo.value = settings.zalo || "";
+            const setFacebook = document.getElementById("set-facebook");
+            if (setFacebook) setFacebook.value = settings.facebook || "";
+            const setBrandName = document.getElementById("set-brand-name");
+            if (setBrandName) setBrandName.value = settings.brandName || "";
+
+            if (settings.brandLogo) {
+              const logoImg = document.getElementById("set-brand-logo-preview");
+              if (logoImg) logoImg.src = settings.brandLogo;
             }
+
+            if (settings.favicon) {
+              const favImg = document.getElementById("set-favicon-preview");
+              if (favImg) favImg.src = settings.favicon;
+            }
+
+            const setMomoInfo = document.getElementById("set-payment-momo-info");
+            if (setMomoInfo) setMomoInfo.value = settings.paymentMomoInfo || "";
+            if (settings.paymentMomoQr) {
+              const momoImg = document.getElementById(
+                "set-payment-momo-qr-preview",
+              );
+              if (momoImg) momoImg.src = settings.paymentMomoQr;
+            }
+
+            const setBankInfo = document.getElementById("set-payment-bank-info");
+            if (setBankInfo) setBankInfo.value = settings.paymentBankInfo || "";
+            if (settings.paymentBankQr) {
+              const bankImg = document.getElementById(
+                "set-payment-bank-qr-preview",
+              );
+              if (bankImg) bankImg.src = settings.paymentBankQr;
+            }
+
+            const freeshipEl = document.getElementById(
+              "setting-freeship-threshold",
+            );
+            if (freeshipEl)
+              freeshipEl.value =
+                settings.freeshipThreshold !== undefined
+                  ? settings.freeshipThreshold
+                  : "";
+
+            const setZaloOa = document.getElementById("set-zalo-oa-enable");
+            if (setZaloOa) setZaloOa.checked = settings.zaloOaEnable || false;
+            
+            const setWeekly = document.getElementById("set-weekly-special-filter-enable");
+            if (setWeekly) setWeekly.checked = settings.weeklySpecialFilterEnabled !== false;
+            
+            const setZaloOaToken = document.getElementById("set-zalo-oa-token");
+            if (setZaloOaToken) setZaloOaToken.value = settings.zaloOaToken || "";
+
+            const bannerToggle = document.getElementById(
+              "toggle-grand-opening-banner",
+            );
+            if (bannerToggle) {
+              bannerToggle.checked = settings.bannerGrandOpeningEnabled !== false;
+              const el = document.getElementById(
+                "user-grand-opening-banner-container",
+              );
+              if (el) el.classList.toggle("hidden", !bannerToggle.checked);
+            }
+
+            // Restore Package texts
+            if (settings.packagesText) {
+              Object.entries(settings.packagesText).forEach(([id, text]) => {
+                const el = document.querySelector(`[oninput*="${id}"]`);
+                if (el && el !== document.activeElement) {
+                  if (id === "user-banner-badge2-line2") el.innerHTML = text;
+                  else el.innerText = text;
+                }
+                const elId = document.getElementById(id);
+                if (elId && elId !== document.activeElement) {
+                  if (id === "user-banner-badge2-line2") elId.innerHTML = text;
+                  else elId.innerText = text;
+                }
+              });
+            }
+
+            if (settings.bannerTexts) {
+              Object.entries(settings.bannerTexts).forEach(([id, text]) => {
+                const el = document.querySelector(`[oninput*="${id}"]`);
+                if (el && el !== document.activeElement) {
+                  if (id === "user-banner-badge2-line2") el.innerHTML = text;
+                  else el.innerText = text;
+                }
+                const elId = document.getElementById(id);
+                if (elId && elId !== document.activeElement) {
+                  if (id === "user-banner-badge2-line2") elId.innerHTML = text;
+                  else elId.innerText = text;
+                }
+              });
+            }
+
+            if (window.loadAllBannerImages) window.loadAllBannerImages();
+            if (settings.bannerGrandOpeningText) {
+              const bannerGrandOpeningTextEl = document.getElementById(
+                "banner-grand-opening-text",
+              );
+              if (
+                bannerGrandOpeningTextEl &&
+                bannerGrandOpeningTextEl !== document.activeElement
+              ) {
+                bannerGrandOpeningTextEl.innerText =
+                  settings.bannerGrandOpeningText;
+                bannerGrandOpeningTextEl.dispatchEvent(new Event("input"));
+              }
+              const userBannerGrandOpeningTextEl = document.getElementById(
+                "user-banner-grand-opening-text",
+              );
+              if (
+                userBannerGrandOpeningTextEl &&
+                userBannerGrandOpeningTextEl !== document.activeElement
+              )
+                userBannerGrandOpeningTextEl.innerText =
+                  settings.bannerGrandOpeningText;
+            }
+
+            if (settings.revenueGoal) {
+              const revenueGoalEl = document.getElementById("revenue-goal");
+              if (revenueGoalEl && revenueGoalEl !== document.activeElement) {
+                revenueGoalEl.innerText = settings.revenueGoal;
+              }
+            }
+          } catch (err) {
+            console.error("Error inside loadSettings settings processing:", err);
           }
         }
 
-        const customKey = localStorage.getItem("nutriadmin_custom_api_key");
-        if (customKey) {
-          document.getElementById("custom-api-key").value = customKey;
-        }
+        try {
+          const customKey = localStorage.getItem("nutriadmin_custom_api_key");
+          if (customKey) {
+            const el = document.getElementById("custom-api-key");
+            if (el) el.value = customKey;
+          }
 
-        const customFirebase = (localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG);
-        if (customFirebase) {
-          document.getElementById("custom-firebase-config").value =
-            customFirebase;
+          const customFirebase = (localStorage.getItem("nutriadmin_custom_firebase_config") || window.NURI_FIREBASE_CONFIG);
+          if (customFirebase) {
+            const el = document.getElementById("custom-firebase-config");
+            if (el) el.value = customFirebase;
+          }
+        } catch (err) {
+          console.error("Error setting custom api/firebase elements:", err);
         }
 
         refreshBrandUI();
@@ -19126,9 +19181,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           updateSecurityStatusUI();
         }
 
-        const savedSettingsObj = savedSettings ? JSON.parse(savedSettings) : {};
-        if (typeof applyTrustBannerSettings === "function") {
-          applyTrustBannerSettings(savedSettingsObj);
+        try {
+          const savedSettingsObj = savedSettings ? JSON.parse(savedSettings) : {};
+          if (typeof applyTrustBannerSettings === "function") {
+            applyTrustBannerSettings(savedSettingsObj);
+          }
+        } catch (err) {
+          console.error("Error in applyTrustBannerSettings in loadSettings:", err);
         }
       }
 
@@ -20768,6 +20827,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           return;
         }
 
+        // Nhận diện thiết bị: Mỗi thiết bị chỉ ghi nhận và thông báo 1 lần duy nhất
+        const hasScannedBefore = localStorage.getItem("nutriadmin_qr_scanned_recorded") === "true" ||
+                                 (qrScans && qrScans.some(s => s.deviceId === customerDeviceId));
+        if (hasScannedBefore) {
+          console.log("Thiết bị này đã được ghi nhận quét QR trước đó. Bỏ qua lượt quét này.");
+          return;
+        }
+
+        // Đánh dấu thiết bị đã được ghi nhận quét QR
+        localStorage.setItem("nutriadmin_qr_scanned_recorded", "true");
+
         const sessionKey = "scanned_" + source + "_" + new Date().toISOString().split('T')[0];
         if (sessionStorage.getItem(sessionKey)) {
           console.log("Already logged this source scan in this session today:", source);
@@ -20832,11 +20902,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       }
 
       function saveQrScanEvent(source, locationStr, deviceLabel, timestamp) {
+        const scanId = Date.now() + Math.floor(Math.random() * 1000);
         const newScan = {
-          id: Date.now() + Math.floor(Math.random() * 1000),
+          id: scanId,
           source: source,
           location: locationStr,
           device: deviceLabel,
+          deviceId: customerDeviceId,
           timestamp: timestamp || new Date()
         };
         qrScans.unshift(newScan);
@@ -20844,20 +20916,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         syncStateToServer();
         renderQrScansList();
         
-        // Push-notify in admin UI if they are on overview
+        // Push-notify in admin UI if they are on overview (and avoid duplicate alerts)
         try {
-          const srcObj = trackingSources.find(s => s.code === source);
-          const name = srcObj ? srcObj.name : source;
-          triggerRealtimeNotification(
-            "qr_scan",
-            "Mã QR được quét!",
-            `Chiến dịch <b>${name}</b> vừa ghi nhận 1 lượt quét tại ${locationStr}.`,
-            "Xem lịch sử",
-            () => {
-              switchView("marketing");
-              switchMarketingTab("history");
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get("mode") !== "landing") {
+            window.notifiedScanIds = window.notifiedScanIds || [];
+            if (!window.notifiedScanIds.includes(scanId)) {
+              window.notifiedScanIds.push(scanId);
+              const srcObj = trackingSources.find(s => s.code === source);
+              const name = srcObj ? srcObj.name : source;
+              triggerRealtimeNotification(
+                "qr_scan",
+                "Mã QR được quét!",
+                `Chiến dịch <b>${name}</b> vừa ghi nhận 1 lượt quét tại ${locationStr}.`,
+                "Xem lịch sử",
+                () => {
+                  switchView("marketing");
+                  switchMarketingTab("history");
+                }
+              );
             }
-          );
+          }
         } catch(e) {}
       }
 
@@ -20988,11 +21067,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const devices = ["iPhone/iOS Device", "Android Phone", "Windows PC", "macOS Desktop"];
         const deviceLabel = devices[Math.floor(Math.random() * devices.length)];
         
+        const scanId = Date.now() + Math.floor(Math.random() * 1000);
         const newScan = {
-          id: Date.now() + Math.floor(Math.random() * 1000),
+          id: scanId,
           source: randomSource,
           location: locationStr,
           device: deviceLabel,
+          deviceId: "DEV_SIM_" + Math.random().toString(36).substring(2, 11),
           timestamp: new Date()
         };
         
@@ -25639,12 +25720,20 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           instructionTag.innerText = settings.paymentMomoInfo
             ? `Chuyển tiền MoMo: ${settings.paymentMomoInfo}`
             : "Quét mã MoMo để thanh toán";
-          qrImage.src =
-            settings.paymentMomoQr ||
-            "https://via.placeholder.com/200?text=QR+MoMo";
+          
+          const isMomoQrEmpty = !settings.paymentMomoQr || settings.paymentMomoQr.includes("placeholder.com") || settings.paymentMomoQr.includes("via.placeholder.com");
+          if (isMomoQrEmpty) {
+            const phone = document.getElementById("cust-phone") ? document.getElementById("cust-phone").value.trim() : "";
+            const totalVal = document.getElementById("checkout-total") ? document.getElementById("checkout-total").innerText.trim() : "";
+            const momoDesc = `Thanh toan don hang ${phone ? phone : ""}`;
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`MoMo: ${settings.paymentMomoInfo || "Ví MoMo"}\nNoi dung: ${momoDesc}\nTong: ${totalVal}`);
+          } else {
+            qrImage.src = settings.paymentMomoQr;
+          }
+          
           if (logoContainer) {
             logoContainer.innerHTML = `
-              <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" class="h-10 w-10 object-contain rounded-xl shadow-sm" alt="MoMo" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/a/af/Vi_Momo_logo.png" class="h-10 w-10 object-contain rounded-xl shadow-sm" alt="MoMo" />
             `;
           }
         } else if (method === "bank") {
@@ -25652,9 +25741,16 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           instructionTag.innerText = settings.paymentBankInfo
             ? `Chuyển khoản Ngân hàng: ${settings.paymentBankInfo}`
             : "Quét mã Ngân hàng để thanh toán";
-          qrImage.src =
-            settings.paymentBankQr ||
-            "https://via.placeholder.com/200x200.png?text=QR+Bank";
+          
+          const isBankQrEmpty = !settings.paymentBankQr || settings.paymentBankQr.includes("placeholder.com") || settings.paymentBankQr.includes("via.placeholder.com");
+          if (isBankQrEmpty) {
+            const phone = document.getElementById("cust-phone") ? document.getElementById("cust-phone").value.trim() : "";
+            const totalVal = document.getElementById("checkout-total") ? document.getElementById("checkout-total").innerText.trim() : "";
+            const bankDesc = `Chuyen khoan ${phone ? phone : ""}`;
+            qrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`Ngan hang: ${settings.paymentBankInfo || "Chuyen khoan"}\nNoi dung: ${bankDesc}\nTong: ${totalVal}`);
+          } else {
+            qrImage.src = settings.paymentBankQr;
+          }
           if (logoContainer) {
             logoContainer.innerHTML = `
               <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
@@ -39932,10 +40028,18 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             settings = JSON.parse(settingsStr);
           } catch (e) {}
         }
-        const momoQr = settings.paymentMomoQr || "https://via.placeholder.com/200?text=QR+MoMo";
-        const bankQr = settings.paymentBankQr || "https://via.placeholder.com/200?text=QR+Bank";
         const momoInfo = settings.paymentMomoInfo || "Ví MoMo";
         const bankInfo = settings.paymentBankInfo || "Chuyển khoản Ngân hàng";
+        
+        const isMomoQrEmpty = !settings.paymentMomoQr || settings.paymentMomoQr.includes("placeholder.com") || settings.paymentMomoQr.includes("via.placeholder.com");
+        const momoQr = isMomoQrEmpty
+          ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`MoMo: ${momoInfo}\nNoi dung: ${contentText}`)
+          : settings.paymentMomoQr;
+          
+        const isBankQrEmpty = !settings.paymentBankQr || settings.paymentBankQr.includes("placeholder.com") || settings.paymentBankQr.includes("via.placeholder.com");
+        const bankQr = isBankQrEmpty
+          ? `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=` + encodeURIComponent(`Ngan hang: ${bankInfo}\nNoi dung: ${contentText}`)
+          : settings.paymentBankQr;
         
         // Store on window dataset
         window.renewQrData = {
@@ -40050,6 +40154,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const successModal = document.getElementById("renew-success-modal");
         const successContent = document.getElementById("renew-success-modal-content");
         const mascotSvgContainer = document.getElementById("renew-success-mascot-svg");
+        const mascotImg = document.getElementById("renew-success-mascot-img");
         
         if (!successModal || !successContent) return;
         
@@ -40061,14 +40166,42 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         
         let frameIndex = 0;
         const intervalId = setInterval(() => {
-          if (mascotSvgContainer) {
-            let svgStr = typeof drawMascotSVG === "function" ? drawMascotSVG("yeu_thich", frameIndex) : "";
-            if (svgStr) {
-              svgStr = svgStr.replace(
-                'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
-                'class="w-full h-full drop-shadow-md"'
-              );
-              mascotSvgContainer.innerHTML = svgStr;
+          let frames = [];
+          if (
+            typeof mascotLoadedSequences !== "undefined" &&
+            mascotLoadedSequences["yeu_thich"] &&
+            mascotLoadedSequences["yeu_thich"].length > 0
+          ) {
+            frames = mascotLoadedSequences["yeu_thich"];
+          } else if (
+            typeof mascotLoadedSequences !== "undefined" &&
+            mascotLoadedSequences["vui_ve"] &&
+            mascotLoadedSequences["vui_ve"].length > 0
+          ) {
+            frames = mascotLoadedSequences["vui_ve"];
+          }
+
+          if (frames.length > 0) {
+            if (mascotSvgContainer) mascotSvgContainer.classList.add("hidden");
+            if (mascotImg) {
+              mascotImg.classList.remove("hidden");
+              if (frameIndex >= frames.length) {
+                frameIndex = 0;
+              }
+              mascotImg.src = frames[frameIndex];
+            }
+          } else {
+            if (mascotImg) mascotImg.classList.add("hidden");
+            if (mascotSvgContainer) {
+              mascotSvgContainer.classList.remove("hidden");
+              let svgStr = typeof drawMascotSVG === "function" ? drawMascotSVG("yeu_thich", frameIndex) : "";
+              if (svgStr) {
+                svgStr = svgStr.replace(
+                  'class="w-40 h-40 filter drop-shadow-[0_0_20px_rgba(16,185,129,0.4)]"',
+                  'class="w-full h-full drop-shadow-md"'
+                );
+                mascotSvgContainer.innerHTML = svgStr;
+              }
             }
           }
           frameIndex++;
@@ -40114,7 +40247,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         <div class="grid grid-cols-2 gap-4 mb-5 font-sans">
           <!-- Momo card -->
           <div onclick="window.selectRenewPaymentMethod('momo')" class="relative flex flex-col items-center justify-center p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200" id="renew-method-card-momo">
-            <img src="https://upload.wikimedia.org/wikipedia/vi/f/fe/MoMo_Logo.png" class="h-8 w-8 mb-2 object-contain rounded-lg" alt="MoMo" />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/af/Vi_Momo_logo.png" class="h-8 w-8 mb-2 object-contain rounded-lg" alt="MoMo" />
             <span class="text-xs font-bold text-pink-700 dark:text-pink-400">Ví MoMo</span>
           </div>
           <!-- Bank card -->
@@ -40163,6 +40296,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         
         <!-- Mascot Container -->
         <div class="relative w-36 h-36 mx-auto mb-5 bg-emerald-50/50 dark:bg-emerald-950/30 rounded-full flex items-center justify-center p-3 border-4 border-white dark:border-slate-800 shadow-xl">
+          <img id="renew-success-mascot-img" class="w-full h-full object-contain hidden" />
           <div id="renew-success-mascot-svg" class="w-full h-full flex items-center justify-center"></div>
         </div>
         
