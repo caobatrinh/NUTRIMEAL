@@ -10411,8 +10411,71 @@
           <p class="text-sm text-slate-600 mb-4 font-medium">
             Chọn các mục dữ liệu bạn muốn xóa:
           </p>
-          <div class="space-y-3" id="reset-options-container">
-            <!-- Rendered by JS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3" id="reset-options-container">
+            <!-- Option 1: tổng quan & thống kê -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-stats" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Tổng quan & thống kê</div>
+                <div class="text-[10px] text-slate-500">Xóa các đánh giá & dữ liệu thống kê</div>
+              </div>
+            </label>
+            <!-- Option 2: QR & tracking -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-qr" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">QR & tracking</div>
+                <div class="text-[10px] text-slate-500">Xóa lịch sử quét & nguồn traffic</div>
+              </div>
+            </label>
+            <!-- Option 3: quản lý đơn hàng -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-orders" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Quản lý đơn hàng</div>
+                <div class="text-[10px] text-slate-500">Xóa các đơn hàng hiện có (chờ/đang xử lý...)</div>
+              </div>
+            </label>
+            <!-- Option 4: tin nhắn -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-chats" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Tin nhắn</div>
+                <div class="text-[10px] text-slate-500">Xóa toàn bộ hội thoại & chat hỗ trợ</div>
+              </div>
+            </label>
+            <!-- Option 5: khách hàng tiềm năng -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-potential" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Khách hàng tiềm năng</div>
+                <div class="text-[10px] text-slate-500">Xóa dữ liệu khách chưa kích hoạt gói</div>
+              </div>
+            </label>
+            <!-- Option 6: khách đã mua gói -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-purchased" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Khách đã mua gói</div>
+                <div class="text-[10px] text-slate-500">Xóa dữ liệu khách đã đăng ký gói</div>
+              </div>
+            </label>
+            <!-- Option 7: quản lý tài khoản -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-accounts" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Quản lý tài khoản</div>
+                <div class="text-[10px] text-slate-500">Xóa mật khẩu, tích lũy điểm & xếp hạng</div>
+              </div>
+            </label>
+            <!-- Option 8: lịch sử đơn hàng -->
+            <label class="flex items-start gap-3 p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 cursor-pointer transition-all">
+              <input type="checkbox" id="reset-option-history" class="mt-1 rounded border-slate-300 text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+              <div>
+                <div class="text-xs font-bold text-slate-800">Lịch sử đơn hàng</div>
+                <div class="text-[10px] text-slate-500">Xóa đơn hàng đã xong hoặc đã hủy</div>
+              </div>
+            </label>
           </div>
 
           <div class="mt-6 pt-6 border-t border-slate-100">
@@ -40350,14 +40413,171 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }, 300);
         }
       }
-      function confirmResetData() {
-        localStorage.clear();
-        indexedDB.databases().then((dbs) => {
-          dbs.forEach((db) => {
-            indexedDB.deleteDatabase(db.name);
+      async function confirmResetData() {
+        const passwordInput = document.getElementById("reset-password-input");
+        const password = passwordInput ? passwordInput.value.trim() : "";
+        
+        if (!password) {
+          showToast("Vui lòng nhập mật khẩu xác nhận!", "warning");
+          return;
+        }
+        if (password !== "180298" && password !== "1613757") {
+          showToast("Mật khẩu xác nhận không chính xác!", "error");
+          return;
+        }
+
+        const deleteStats = document.getElementById("reset-option-stats")?.checked;
+        const deleteQr = document.getElementById("reset-option-qr")?.checked;
+        const deleteOrders = document.getElementById("reset-option-orders")?.checked;
+        const deleteChats = document.getElementById("reset-option-chats")?.checked;
+        const deletePotential = document.getElementById("reset-option-potential")?.checked;
+        const deletePurchased = document.getElementById("reset-option-purchased")?.checked;
+        const deleteAccounts = document.getElementById("reset-option-accounts")?.checked;
+        const deleteHistory = document.getElementById("reset-option-history")?.checked;
+
+        const anyChecked = deleteStats || deleteQr || deleteOrders || deleteChats || deletePotential || deletePurchased || deleteAccounts || deleteHistory;
+        if (!anyChecked) {
+          showToast("Vui lòng chọn ít nhất một mục để xóa!", "warning");
+          return;
+        }
+
+        const overwriteKeys = [];
+        const clientStateUpdates = {};
+
+        // 1. Tổng quan & Thống kê
+        if (deleteStats) {
+          allReviews = {};
+          localStorage.removeItem("nutriadmin_all_reviews");
+          clientStateUpdates.allReviews = {};
+          overwriteKeys.push("allReviews");
+        }
+
+        // 2. QR & Tracking
+        if (deleteQr) {
+          qrScans = [];
+          localStorage.removeItem("nutriadmin_qr_scans");
+          clientStateUpdates.qrScans = [];
+          overwriteKeys.push("qrScans");
+
+          trackingSources = [
+            { id: 1, name: "ShopeeFood", code: "shopeefood" },
+            { id: 2, name: "GrabFood", code: "grabfood" },
+            { id: 3, name: "TikTok", code: "tiktok" },
+            { id: 4, name: "Facebook", code: "facebook" },
+            { id: 5, name: "QR Hộp cơm", code: "qr_hopcom" },
+            { id: 6, name: "Khác (Gym, VP...)", code: "other" },
+          ];
+          localStorage.setItem("nutriadmin_tracking_sources", JSON.stringify(trackingSources));
+          clientStateUpdates.trackingSources = trackingSources;
+          overwriteKeys.push("trackingSources");
+        }
+
+        // 3. Quản lý đơn hàng (active orders)
+        // 8. Lịch sử đơn hàng (completed/cancelled orders)
+        if (deleteOrders || deleteHistory) {
+          let updatedOrders = [...orders];
+          if (deleteOrders && deleteHistory) {
+            updatedOrders = [];
+          } else if (deleteOrders) {
+            // Delete active orders only (pending, preparing, shipping, delivering, etc.)
+            updatedOrders = updatedOrders.filter(o => o.status === 'completed' || o.status === 'cancelled');
+          } else if (deleteHistory) {
+            // Delete history/completed/cancelled orders
+            updatedOrders = updatedOrders.filter(o => o.status !== 'completed' && o.status !== 'cancelled');
+          }
+          orders = updatedOrders;
+          localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+          clientStateUpdates.orders = orders;
+          overwriteKeys.push("orders");
+        }
+
+        // 4. Tin nhắn
+        if (deleteChats) {
+          allChats = {};
+          localStorage.removeItem("nutriadmin_all_chats");
+          clientStateUpdates.allChats = {};
+          overwriteKeys.push("allChats");
+        }
+
+        // 5. Khách hàng tiềm năng
+        if (deletePotential) {
+          potentialCustomers = [];
+          localStorage.removeItem("nutriadmin_potential_customers");
+          clientStateUpdates.potentialCustomers = [];
+          overwriteKeys.push("potentialCustomers");
+        }
+
+        // 6. Khách đã mua gói
+        if (deletePurchased) {
+          purchasedCustomers = [];
+          localStorage.removeItem("nutriadmin_purchased_customers");
+          clientStateUpdates.purchasedCustomers = [];
+          overwriteKeys.push("purchasedCustomers");
+        }
+
+        // 7. Quản lý tài khoản (Clear password, points, and rank)
+        if (deleteAccounts) {
+          potentialCustomers = potentialCustomers.map(c => {
+            const copy = { ...c };
+            delete copy.password;
+            copy.points = 0;
+            copy.rank = "Hạt mầm";
+            return copy;
           });
-        });
-        window.location.reload();
+          purchasedCustomers = purchasedCustomers.map(c => {
+            const copy = { ...c };
+            delete copy.password;
+            copy.points = 0;
+            copy.rank = "Hạt mầm";
+            return copy;
+          });
+          localStorage.setItem("nutriadmin_potential_customers", JSON.stringify(potentialCustomers));
+          localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+          clientStateUpdates.potentialCustomers = potentialCustomers;
+          clientStateUpdates.purchasedCustomers = purchasedCustomers;
+          if (!overwriteKeys.includes("potentialCustomers")) overwriteKeys.push("potentialCustomers");
+          if (!overwriteKeys.includes("purchasedCustomers")) overwriteKeys.push("purchasedCustomers");
+        }
+
+        // Send to server with isOverwriteKeys
+        if (overwriteKeys.length > 0) {
+          try {
+            clientStateUpdates.isOverwriteKeys = overwriteKeys;
+            clientStateUpdates.isAdmin = typeof isAdminViewActive === "function" && isAdminViewActive();
+
+            // Sync using /api/state
+            const res = await fetch("/api/state", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(clientStateUpdates),
+            });
+            if (res.ok) {
+              const data = await res.json();
+              // Update cloud too if enabled
+              if (typeof cloudDb !== "undefined" && cloudDb !== null) {
+                try {
+                  const updateObj = {};
+                  overwriteKeys.forEach(k => {
+                    updateObj[`state.${k}`] = clientStateUpdates[k];
+                  });
+                  await cloudDb
+                    .collection("nutriadmin_v1")
+                    .doc("system_data")
+                    .update(updateObj);
+                } catch (fbErr) {
+                  console.error("Firebase selective clear error:", fbErr);
+                }
+              }
+            }
+          } catch (syncErr) {
+            console.error("Selective delete sync error:", syncErr);
+          }
+        }
+
+        showToast("Khôi phục dữ liệu đã chọn thành công!", "success");
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
 
       function getMacrosSum(sizeKey) {
