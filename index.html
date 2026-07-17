@@ -821,6 +821,10 @@
               if (data.appUrl) {
                 window.APP_URL = data.appUrl;
               }
+              const localAppUrl = localStorage.getItem("nutriadmin_custom_app_url");
+              if (localAppUrl) {
+                window.APP_URL = localAppUrl;
+              }
               window.NURI_CONFIG_SOURCE = "server";
               loaded = true;
               if (typeof initFirebaseSync === "function") initFirebaseSync();
@@ -3429,6 +3433,59 @@
                   <p class="text-xs text-slate-400">
                     <i class="fa-solid fa-circle-info mr-1"></i> Để trống nếu
                     muốn sử dụng Key mặc định của hệ thống.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Cấu hình Địa chỉ Tên miền Ứng dụng (App Domain URL) -->
+            <div
+              class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mt-6 animate-fade-in"
+            >
+              <div class="p-6">
+                <h2
+                  class="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-3"
+                >
+                  <div
+                    class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg"
+                  >
+                    <i class="fa-solid fa-globe"></i>
+                  </div>
+                  <div>
+                    Địa chỉ Tên miền Ứng dụng (App URL)
+                    <p class="text-sm text-slate-500 font-normal mt-0.5">
+                      Cấu hình đường dẫn URL chính thức của bạn để tạo mã QR marketing chính xác nhất.
+                    </p>
+                  </div>
+                </h2>
+
+                <div class="mt-6 pl-0 sm:pl-12 space-y-4">
+                  <div class="relative">
+                    <input
+                      type="url"
+                      id="custom-app-url"
+                      placeholder="VD: https://my-nurikitchen.com/"
+                      class="w-full rounded-xl border-2 border-slate-200 py-3 px-4 text-sm focus:border-indigo-400 focus:ring-0 outline-none transition-colors font-mono font-normal"
+                    />
+                  </div>
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <button
+                      onclick="saveCustomAppUrl()"
+                      type="button"
+                      class="w-full sm:w-auto px-6 py-2.5 bg-indigo-500 text-white rounded-xl hover:bg-indigo-600 font-bold transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <i class="fa-solid fa-floppy-disk"></i> Lưu địa chỉ URL
+                    </button>
+                    <button
+                      onclick="detectAppUrl()"
+                      type="button"
+                      class="w-full sm:w-auto px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 font-bold transition-colors shadow-sm flex items-center justify-center gap-2 border border-slate-300 cursor-pointer"
+                    >
+                      <i class="fa-solid fa-wand-magic-sparkles"></i> Tự động nhận diện
+                    </button>
+                  </div>
+                  <p class="text-xs text-slate-400">
+                    <i class="fa-solid fa-circle-info mr-1"></i> Khi chạy thực tế, hãy cấu hình URL này (VD: tên miền Cloud Run hoặc Vercel của bạn) để các thiết bị di động quét mã QR có thể truy cập đúng vào trang tư vấn.
                   </p>
                 </div>
               </div>
@@ -14574,6 +14631,41 @@
             typeof checkAdminSessionSilent === "function" &&
             checkAdminSessionSilent();
 
+          if (isSenderAdmin) {
+            let settingsChanged = false;
+            const localCustomFb = localStorage.getItem("nutriadmin_custom_firebase_config");
+            const localCustomGemini = localStorage.getItem("nutriadmin_custom_api_key");
+            const localCustomAppUrl = localStorage.getItem("nutriadmin_custom_app_url");
+            
+            if (localCustomFb !== settings.customFirebaseConfig) {
+              if (localCustomFb) {
+                settings.customFirebaseConfig = localCustomFb;
+              } else {
+                delete settings.customFirebaseConfig;
+              }
+              settingsChanged = true;
+            }
+            if (localCustomGemini !== settings.customGeminiApiKey) {
+              if (localCustomGemini) {
+                settings.customGeminiApiKey = localCustomGemini;
+              } else {
+                delete settings.customGeminiApiKey;
+              }
+              settingsChanged = true;
+            }
+            if (localCustomAppUrl !== settings.customAppUrl) {
+              if (localCustomAppUrl) {
+                settings.customAppUrl = localCustomAppUrl;
+              } else {
+                delete settings.customAppUrl;
+              }
+              settingsChanged = true;
+            }
+            if (settingsChanged) {
+              localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+            }
+          }
+
           const currentState = {
             orders,
             potentialCustomers,
@@ -21337,6 +21429,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             const el = document.getElementById("custom-firebase-config");
             if (el) el.value = customFirebase;
           }
+
+          const customAppUrl =
+            localStorage.getItem("nutriadmin_custom_app_url") ||
+            window.APP_URL;
+          if (customAppUrl) {
+            const el = document.getElementById("custom-app-url");
+            if (el) el.value = customAppUrl;
+          }
         } catch (err) {
           console.error("Error setting custom api/firebase elements:", err);
         }
@@ -22105,6 +22205,46 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
       }
 
+      function saveCustomAppUrl() {
+        let url = document.getElementById("custom-app-url").value.trim();
+        if (url) {
+          if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            url = "https://" + url;
+          }
+          if (!url.endsWith("/")) {
+            url = url + "/";
+          }
+          window.APP_URL = url;
+          localStorage.setItem("nutriadmin_custom_app_url", url);
+          
+          const settingsRaw = localStorage.getItem("nutriadmin_settings");
+          const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+          settings.customAppUrl = url;
+          localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+          
+          showToast("Đã lưu địa chỉ URL ứng dụng thành công.", "success");
+        } else {
+          window.APP_URL = null;
+          localStorage.removeItem("nutriadmin_custom_app_url");
+          
+          const settingsRaw = localStorage.getItem("nutriadmin_settings");
+          const settings = settingsRaw ? JSON.parse(settingsRaw) : {};
+          delete settings.customAppUrl;
+          localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+          
+          showToast("Đã xóa cấu hình URL ứng dụng. Hệ thống sẽ tự động nhận diện.", "info");
+        }
+        if (typeof syncStateToServer === "function") {
+          syncStateToServer();
+        }
+      }
+
+      function detectAppUrl() {
+        const currentUrl = window.location.href.split("?")[0].split("#")[0];
+        document.getElementById("custom-app-url").value = currentUrl;
+        showToast("Đã nhận diện URL hiện tại: " + currentUrl, "info");
+      }
+
       function saveGoogleClientId() {
         const clientId = document
           .getElementById("custom-google-client-id")
@@ -22235,6 +22375,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const apiKey = localStorage.getItem("nutriadmin_custom_api_key") || "";
         const firebaseConfigStr =
           localStorage.getItem("nutriadmin_custom_firebase_config") || "";
+        const appUrl = localStorage.getItem("nutriadmin_custom_app_url") || "";
 
         let firebaseConfig = null;
         if (firebaseConfigStr) {
@@ -22248,6 +22389,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         const configObj = {
           geminiApiKey: apiKey,
           firebaseConfig: firebaseConfig,
+          appUrl: appUrl,
         };
 
         const dataStr =
@@ -22284,6 +22426,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               localStorage.setItem(
                 "nutriadmin_custom_firebase_config",
                 fbConfig.trim(),
+              );
+            }
+            if (config.appUrl !== undefined) {
+              localStorage.setItem(
+                "nutriadmin_custom_app_url",
+                config.appUrl.trim(),
               );
             }
             showToast(
@@ -38992,6 +39140,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             logQrScanOnLoad(utmSourceParam);
           }
         });
+
+        // Start polling server state if Firebase is not active
+        setInterval(() => {
+          if (typeof cloudDb === "undefined" || cloudDb === null) {
+            pollStateFromServer();
+          }
+        }, 5000);
 
         if (mode === "landing" || utmSourceParam) {
           const nav = document.querySelector("nav");
