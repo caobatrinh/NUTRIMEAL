@@ -93,23 +93,41 @@
     ></script>
 
     <script>
+      // Safe, loop-protected error logging to server
+      const reportedErrors = new Set();
+      function logErrorToServer(errorType, message, stack) {
+        const errorKey = `${errorType}:${message}`;
+        if (reportedErrors.has(errorKey)) return;
+        reportedErrors.add(errorKey);
+        
+        // Prevent reporting of api/state or common fetch failures to avoid loops
+        if (message && (message.includes("/api/state") || message.includes("Failed to fetch") || message.includes("Load failed"))) {
+          return;
+        }
+
+        fetch("/api/state", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            errorLog: `${errorType}: ${message} | Stack: ${stack || ''}`
+          }),
+        }).catch(err => {
+          // Silent catch to prevent infinite unhandledrejection loops
+          console.warn("Failed to report error to server:", err);
+        });
+      }
+
       window.onerror = function (msg, url, line, col, err) {
-        fetch("/api/state", {
-          method: "POST",
-          body: JSON.stringify({
-            errorLog: msg + " " + (err ? err.stack : "") + " line: " + line,
-          }),
-        });
+        const message = String(msg || "");
+        const stack = err ? err.stack : `line: ${line}, col: ${col}, url: ${url}`;
+        logErrorToServer("UncaughtError", message, stack);
       };
+
       window.addEventListener("unhandledrejection", function (event) {
-        fetch("/api/state", {
-          method: "POST",
-          body: JSON.stringify({
-            errorLog:
-              "Unhandled Promise: " +
-              (event.reason ? event.reason.stack : event.reason),
-          }),
-        });
+        const reason = event.reason;
+        const message = reason ? (reason.message || String(reason)) : "Unknown rejection";
+        const stack = reason ? (reason.stack || "") : "";
+        logErrorToServer("UnhandledPromise", message, stack);
       });
 
       tailwind.config = {
@@ -13087,7 +13105,7 @@
       // ==========================================
       const apiKey = ""; // Gemini API Key is provided by execution environment
 
-      let pwaCustomIcon = "";
+      var pwaCustomIcon = "";
       try {
         pwaCustomIcon = localStorage.getItem("nutriadmin_pwa_custom_icon") || "";
       } catch (e) {}
@@ -13097,7 +13115,7 @@
       let currentSubFilter = "all";
       let currentCustomerFilter = "complete";
       let currentCustomerSubFilter = "all";
-      let isSimulating = false;
+      var isSimulating = false;
       let isSystemProcessing = false;
       let confirmActionCallback = null;
       let latestAIAssignments = [];
@@ -13304,6 +13322,35 @@
             console.error("Local storage sync error:", storageErr);
           }
 
+          // Try to sync via Firebase if configured
+          if (typeof cloudDb !== "undefined" && cloudDb !== null) {
+            try {
+              if (isSenderAdmin) {
+                const firebaseState = { ...currentState };
+                if (firebaseState.settings) {
+                  firebaseState.settings = { ...firebaseState.settings };
+                  delete firebaseState.settings.bannerImagesCloud;
+                  delete firebaseState.settings.bannerImages;
+                }
+                await cloudDb.collection("nutriadmin_v1").doc("system_data").set({ state: firebaseState }, { merge: true });
+              } else {
+                // If not admin, only merge data that customers generate to avoid overwriting admin settings
+                await cloudDb.collection("nutriadmin_v1").doc("system_data").set({ 
+                  state: {
+                    orders: currentState.orders,
+                    potentialCustomers: currentState.potentialCustomers,
+                    purchasedCustomers: currentState.purchasedCustomers,
+                    allChats: currentState.allChats,
+                    qrScans: currentState.qrScans,
+                    allReviews: currentState.allReviews
+                  }
+                }, { merge: true });
+              }
+            } catch (err) {
+              console.error("Firebase sync error in syncStateToServer:", err);
+            }
+          }
+
           const res = await fetch("/api/state", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -13368,8 +13415,17 @@
         }
 
         if (serverState.settings) {
-          const s = serverState.settings;
+          const savedSettingsRaw = localStorage.getItem("nutriadmin_settings");
+          const savedSettings = savedSettingsRaw ? JSON.parse(savedSettingsRaw) : {};
+          const s = { ...savedSettings, ...serverState.settings };
+          if (!serverState.settings.bannerImagesCloud && savedSettings.bannerImagesCloud) {
+            s.bannerImagesCloud = savedSettings.bannerImagesCloud;
+          }
+          if (!serverState.settings.bannerImages && savedSettings.bannerImages) {
+            s.bannerImages = savedSettings.bannerImages;
+          }
           window.appSettings = s;
+          localStorage.setItem("nutriadmin_settings", JSON.stringify(s));
           if (s.bannerImagesCloud) {
             (async () => {
               if (window.MascotDB) {
@@ -13579,7 +13635,7 @@
           const urlParams = new URLSearchParams(window.location.search);
           const isNotLanding = urlParams.get("mode") !== "landing";
 
-          if (isNotLanding && qrScans && qrScans.length > 0 && newScans.length > prevScansCount) {
+          if (isNotLanding && window.hasProcessedInitialScans && newScans.length > prevScansCount) {
             window.notifiedScanIds = window.notifiedScanIds || [];
             const newUnnotifiedScans = newScans.filter(s => !window.notifiedScanIds.includes(s.id));
             if (newUnnotifiedScans.length > 0) {
@@ -13603,6 +13659,8 @@
               }
             }
           }
+          
+          window.hasProcessedInitialScans = true;
 
           // Mark all received scan IDs as notified
           window.notifiedScanIds = window.notifiedScanIds || [];
@@ -13827,12 +13885,21 @@
         } catch (e) {}
 
         try {
-          const resState = await fetch("/api/state?t=" + Date.now(), { cache: "no-store" });
-          if (resState.ok) {
-            const serverState = await resState.json();
-            updateLocalStateFromServer(serverState);
+          let resState = await fetch("/api/state?t=" + Date.now(), { cache: "no-store" });
+          if (!resState.ok) {
+            throw new Error("API not ok");
           }
-        } catch (e) {}
+          const serverState = await resState.json();
+          updateLocalStateFromServer(serverState);
+        } catch (e) {
+          try {
+             let fallbackRes = await fetch("state.json?t=" + Date.now(), { cache: "no-store" });
+             if (fallbackRes.ok) {
+               const serverState = await fallbackRes.json();
+               updateLocalStateFromServer(serverState);
+             }
+          } catch(err2) {}
+        }
       })();
 
       // Start periodic sync
@@ -13848,14 +13915,23 @@
         } catch (e) {}
 
         try {
-          const resState = await fetch("/api/state?t=" + Date.now(), {
+          let resState = await fetch("/api/state?t=" + Date.now(), {
             cache: "no-store",
           });
-          if (resState.ok) {
-            const serverState = await resState.json();
-            updateLocalStateFromServer(serverState);
+          if (!resState.ok) {
+             throw new Error("API not ok");
           }
-        } catch (e) {}
+          const serverState = await resState.json();
+          updateLocalStateFromServer(serverState);
+        } catch (e) {
+          try {
+             let fallbackRes = await fetch("state.json?t=" + Date.now(), { cache: "no-store" });
+             if (fallbackRes.ok) {
+               const serverState = await fallbackRes.json();
+               updateLocalStateFromServer(serverState);
+             }
+          } catch(err2) {}
+        }
       }, 3000);
 
       setInterval(() => {
@@ -29045,8 +29121,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function showShipperQR(id) {
         currentShipperAppId = id;
-        const shipper = shippers.find((s) => s.id === id);
-        if (!shipper) return;
+        const shipper = shippers.find((s) => s.id == id);
+        if (!shipper) {
+          showToast("Không tìm thấy thông tin tài xế", "error");
+          return;
+        }
 
         let appUrl = getBaseUrl() + "?mode=shipper-app&id=" + id;
         appUrl = buildUrlWithCredentials(appUrl);
@@ -29056,8 +29135,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           "https://via.placeholder.com/250x250.png?text=Loading...";
 
         getShortUrl(appUrl, function (shortUrl) {
-          document.getElementById("shipper-qr-img").src =
-            `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
+          if (shortUrl) {
+            document.getElementById("shipper-qr-img").src =
+              `https://api.qrserver.com/v1/create-qr-code/?size=250x250&ecc=L&data=${encodeURIComponent(shortUrl)}&margin=0`;
+          }
         });
 
         document.getElementById("shipper-qr-modal").classList.remove("hidden");
@@ -32979,7 +33060,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               pwaBadgeActive,
             };
 
-            const currentStr = JSON.stringify(currentState);
+            const firebaseState = { ...currentState };
+            if (firebaseState.settings) {
+              firebaseState.settings = { ...firebaseState.settings };
+              delete firebaseState.settings.bannerImagesCloud;
+              delete firebaseState.settings.bannerImages;
+            }
+
+            const currentStr = JSON.stringify(firebaseState);
             if (cloudStateString !== currentStr) {
               cloudStateString = currentStr;
               cloudDb
