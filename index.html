@@ -43179,31 +43179,36 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
           return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          const base64String = e.target.result;
-          pwaNotiUploadedCustomImageBase64 = base64String;
+        const previewBox = document.getElementById(
+          "pwa-noti-custom-preview-box",
+        );
+        const previewImg = document.getElementById(
+          "pwa-noti-custom-preview-img",
+        );
+        const fileNameLabel = document.getElementById(
+          "pwa-noti-custom-file-name",
+        );
 
-          const previewBox = document.getElementById(
-            "pwa-noti-custom-preview-box",
-          );
-          const previewImg = document.getElementById(
-            "pwa-noti-custom-preview-img",
-          );
-          const fileNameLabel = document.getElementById(
-            "pwa-noti-custom-file-name",
-          );
+        if (previewBox && previewImg) {
+          previewImg.src = "";
+          previewBox.classList.remove("hidden");
+        }
+        if (fileNameLabel) {
+          fileNameLabel.innerText = "Đang nén ảnh...";
+        }
+
+        compressImage(file, 400, 400, 0.7, function (compressedDataUrl) {
+          pwaNotiUploadedCustomImageBase64 = compressedDataUrl;
 
           if (previewBox && previewImg) {
-            previewImg.src = base64String;
+            previewImg.src = compressedDataUrl;
             previewBox.classList.remove("hidden");
           }
           if (fileNameLabel) {
             fileNameLabel.innerText = file.name;
           }
-          showToast("Đã tải ảnh thông báo tùy chỉnh thành công!", "success");
-        };
-        reader.readAsDataURL(file);
+          showToast("Đã tải ảnh và nén thông báo tùy chỉnh thành công!", "success");
+        });
       }
 
       function clearPwaNotiCustomImage() {
