@@ -94,6 +94,10 @@
       crossorigin="anonymous"
     ></script>
     <script
+      src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth-compat.js"
+      crossorigin="anonymous"
+    ></script>
+    <script
       src="https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore-compat.js"
       crossorigin="anonymous"
     ></script>
@@ -36357,36 +36361,54 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         if (!config.apiKey || !config.projectId) return;
 
+        let isInitialSyncComplete = false;
+
         try {
           if (firebase.apps.length === 0) {
             firebase.initializeApp(config);
           }
-          cloudDb = firebase.firestore();
-          if (typeof syncMissingMascotSequences === "function")
-            syncMissingMascotSequences();
-
-          let isInitialSyncComplete = false;
-
-          // Load snapshot
-          cloudDb
-            .collection("nutriadmin_v1")
-            .doc("system_data")
-            .onSnapshot((snap) => {
-              const data = snap.data();
-              isInitialSyncComplete = true;
-
-              if (data && data.state) {
-                const incomingStr = JSON.stringify(data.state);
-                if (incomingStr !== cloudStateString) {
-                  cloudStateString = incomingStr;
-
-                  updateLocalStateFromServer(data.state);
-                  try {
-                    renderGrandOpeningCustomers();
-                  } catch (e) {}
-                }
-              }
+          console.log("Firebase initialized on client. Initiating anonymous authentication...");
+          
+          firebase.auth().signInAnonymously()
+            .then(() => {
+              console.log("Client authenticated anonymously with Firebase successfully.");
+              setupFirestoreSync();
+            })
+            .catch((authErr) => {
+              console.warn("Client failed to sign in anonymously. Attempting Firestore sync without auth...", authErr);
+              setupFirestoreSync();
             });
+
+          function setupFirestoreSync() {
+            cloudDb = firebase.firestore();
+            if (typeof syncMissingMascotSequences === "function")
+              syncMissingMascotSequences();
+
+            isInitialSyncComplete = false;
+
+            // Load snapshot
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("system_data")
+              .onSnapshot((snap) => {
+                const data = snap.data();
+                isInitialSyncComplete = true;
+
+                if (data && data.state) {
+                  const incomingStr = JSON.stringify(data.state);
+                  if (incomingStr !== cloudStateString) {
+                    cloudStateString = incomingStr;
+
+                    updateLocalStateFromServer(data.state);
+                    try {
+                      renderGrandOpeningCustomers();
+                    } catch (e) {}
+                  }
+                }
+              }, (snapErr) => {
+                console.error("Firestore onSnapshot subscription failed on client:", snapErr);
+              });
+          }
 
           // Interval local diffing - autosaves logic
           firebaseSyncTask = setInterval(() => {
