@@ -14390,6 +14390,28 @@
       } catch (e) {}
       window.pwaCustomIcon = pwaCustomIcon;
 
+      // Áp dụng icon tùy chỉnh vào manifest ngay lập tức từ localStorage
+      // để trình duyệt dùng đúng icon kể cả trước khi Firebase sync về
+      if (pwaCustomIcon) {
+        try {
+          const _appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+          const _favicon = document.querySelector('link[rel="icon"]');
+          const _manifestLink = document.querySelector('link[rel="manifest"]');
+          if (_appleTouchIcon) _appleTouchIcon.href = pwaCustomIcon;
+          if (_favicon) { _favicon.href = pwaCustomIcon; _favicon.type = pwaCustomIcon.startsWith('data:image/svg') ? 'image/svg+xml' : pwaCustomIcon.startsWith('data:image/png') ? 'image/png' : 'image/jpeg'; }
+          if (_manifestLink) {
+            const _manifestObj = {
+              short_name: "Nuri", name: "Nuri - Tư Vấn Dinh Dưỡng",
+              description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
+              icons: [{ src: pwaCustomIcon, type: pwaCustomIcon.startsWith('data:image/svg') ? 'image/svg+xml' : 'image/png', sizes: "192x192 512x512", purpose: "any maskable" }],
+              start_url: "/?mode=landing", background_color: "#f8fafc", theme_color: "#10b981", display: "standalone", orientation: "portrait"
+            };
+            const _blob = new Blob([JSON.stringify(_manifestObj)], { type: "application/json" });
+            _manifestLink.href = URL.createObjectURL(_blob);
+          }
+        } catch (e) {}
+      }
+
       let currentFilter = "complete";
       let currentSubFilter = "all";
       let currentCustomerFilter = "complete";
@@ -14419,14 +14441,56 @@
       let revenueChartInst, statusChartInst, topDishesChartInst;
       let mktSourceChartInst, mktFunnelChartInst;
 
+
+      // Dùng số điện thoại làm key ổn định nếu người dùng đã đăng nhập
+      // Đảm bảo cùng 1 người dù dùng nhiều thiết bị vẫn chỉ có 1 đoạn hội thoại
       let customerDeviceId = localStorage.getItem("customer_device_id");
       if (!customerDeviceId) {
         customerDeviceId = "DEV_" + Math.random().toString(36).substr(2, 9);
         localStorage.setItem("customer_device_id", customerDeviceId);
       }
 
-      // Initialize mock chats if empty
-      if (Object.keys(allChats).length === 0) {
+      // Nếu người dùng đã đăng nhập và có số điện thoại, dùng key dựa trên phone
+      if (currentUser && currentUser.phone) {
+        const stableId = "USER_" + currentUser.phone.replace(/\D/g, "");
+        if (stableId !== customerDeviceId) {
+          // Migrate lịch sử từ key cũ (random) sang key mới (phone-based)
+          const oldEntry = allChats[customerDeviceId];
+          const existingEntry = allChats[stableId];
+          if (oldEntry && oldEntry.history && oldEntry.history.length > 0) {
+            if (existingEntry) {
+              // Gộp lịch sử: kết hợp 2 mảng, ưu tiên entry mới hơn theo lastUpdated
+              const mergedHistory = [...(existingEntry.history || [])];
+              (oldEntry.history || []).forEach(msg => {
+                // Tránh trùng tin nhắn bằng cách kiểm tra nội dung
+                const isDuplicate = mergedHistory.some(m =>
+                  JSON.stringify(m) === JSON.stringify(msg)
+                );
+                if (!isDuplicate) mergedHistory.push(msg);
+              });
+              mergedHistory.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+              allChats[stableId].history = mergedHistory;
+              allChats[stableId].lastUpdated = Math.max(
+                existingEntry.lastUpdated || 0,
+                oldEntry.lastUpdated || 0
+              );
+              allChats[stableId].name = currentUser.name || existingEntry.name;
+              allChats[stableId].needsSupport = existingEntry.needsSupport || oldEntry.needsSupport;
+              allChats[stableId].hasUnread = existingEntry.hasUnread || oldEntry.hasUnread;
+            } else {
+              // Chuyển entry cũ sang key mới
+              allChats[stableId] = { ...oldEntry, id: stableId };
+            }
+            // Xóa entry cũ để không còn 2 đoạn hội thoại riêng biệt
+            delete allChats[customerDeviceId];
+          }
+          customerDeviceId = stableId;
+          localStorage.setItem("customer_device_id", customerDeviceId);
+        }
+      }
+
+      // Initialize mock chats if empty (chỉ khi không có dữ liệu thật từ Firebase)
+      if (Object.keys(allChats).filter(k => !k.startsWith("DEV_MOCK")).length === 0) {
         allChats["DEV_MOCK1"] = {
           id: "DEV_MOCK1",
           name: "Nguyễn Thị Mai",
@@ -14481,6 +14545,7 @@
         allChats[customerDeviceId].name = currentUser.name;
       }
       chatHistory = allChats[customerDeviceId].history;
+
 
       function saveAllChats() {
         if (customerDeviceId && allChats[customerDeviceId]) {
@@ -14723,10 +14788,21 @@
                       currentState.qrScans,
                       "id",
                     );
-                    finalState.allChats = {
+                    // Gộp allChats và loại bỏ entry DEV_xxx trùng lặp với USER_phone
+                    const rawMergedChats = {
                       ...(serverData.allChats || {}),
                       ...(currentState.allChats || {}),
                     };
+                    // Xóa entry DEV_xxx bị trùng với USER_xxx (cùng tên)
+                    const userKeys = Object.keys(rawMergedChats).filter(k => k.startsWith("USER_"));
+                    const userNames = new Set(userKeys.map(k => rawMergedChats[k]?.name).filter(Boolean));
+                    Object.keys(rawMergedChats).forEach(k => {
+                      if (k.startsWith("DEV_") && !k.startsWith("DEV_MOCK") && rawMergedChats[k]?.name && userNames.has(rawMergedChats[k].name)) {
+                        delete rawMergedChats[k];
+                      }
+                    });
+                    finalState.allChats = rawMergedChats;
+
                     finalState.allReviews = {
                       ...(serverData.allReviews || {}),
                       ...(currentState.allReviews || {}),
@@ -14846,6 +14922,15 @@
 
       function updateLocalStateFromServer(serverState) {
         window.isInitialStateLoaded = true;
+        
+        function parseSafeDate(ts) {
+          if (!ts) return new Date();
+          if (ts.toDate && typeof ts.toDate === "function") return ts.toDate();
+          if (ts.seconds !== undefined) return new Date(ts.seconds * 1000);
+          const d = new Date(ts);
+          return isNaN(d.getTime()) ? new Date() : d;
+        }
+
         const serverStr = JSON.stringify(serverState);
         if (lastStateStr === serverStr) return;
         lastStateStr = serverStr;
@@ -14985,7 +15070,9 @@
           pwaCustomIcon = serverState.pwaCustomIcon || "";
           window.pwaCustomIcon = pwaCustomIcon;
           localStorage.setItem("nutriadmin_pwa_custom_icon", pwaCustomIcon);
+          // Cập nhật UI và manifest ngay sau khi nhận icon từ Firebase
           if (typeof updatePwaIconUI === "function") updatePwaIconUI();
+          // updatePwaIconUI gọi updatePageFavicons bên trong => manifest cũng được rebuild
         }
         if (serverState.allReviews) {
           const prevReviewsCount = Object.keys(allReviews || {}).length;
@@ -15062,9 +15149,9 @@
 
           orders = mergedOrders.map((o) => ({
             ...o,
-            timestamp: new Date(o.timestamp),
+            timestamp: parseSafeDate(o.timestamp),
           }));
-          orders.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+          orders.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
           if (orders.length > prevCount) {
             const latestOrder = orders[0];
@@ -15123,8 +15210,12 @@
             }
           });
 
-          potentialCustomers = mergedPotential;
-          potentialCustomers.sort((a, b) => new Date(b.date || b.timestamp || 0).getTime() - new Date(a.date || a.timestamp || 0).getTime());
+          potentialCustomers = mergedPotential.map(p => ({
+            ...p,
+            timestamp: p.timestamp ? parseSafeDate(p.timestamp) : undefined,
+            date: p.date ? parseSafeDate(p.date) : undefined
+          }));
+          potentialCustomers.sort((a, b) => (b.date || b.timestamp || new Date(0)).getTime() - (a.date || a.timestamp || new Date(0)).getTime());
 
           if (potentialCustomers.length > prevPotCount) {
             const latestPot = potentialCustomers[0];
@@ -15170,7 +15261,11 @@
               mergedPurchased.push(sPur);
             }
           });
-          purchasedCustomers = mergedPurchased;
+          purchasedCustomers = mergedPurchased.map(p => ({
+            ...p,
+            timestamp: p.timestamp ? parseSafeDate(p.timestamp) : undefined,
+            date: p.date ? parseSafeDate(p.date) : undefined
+          }));
           updatedUI = true;
         }
         if (serverState.shippers) {
@@ -15181,11 +15276,11 @@
           const prevScansCount = qrScans ? qrScans.length : 0;
           const newScans = serverState.qrScans.map((s) => ({
             ...s,
-            timestamp: s.timestamp ? new Date(s.timestamp) : new Date(),
+            timestamp: parseSafeDate(s.timestamp),
           }));
 
           // Sort scans by timestamp descending so the latest is first
-          newScans.sort((a, b) => b.timestamp - a.timestamp);
+          newScans.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
           const urlParams = new URLSearchParams(window.location.search);
           const isNotLanding = urlParams.get("mode") !== "landing";
@@ -15287,43 +15382,84 @@
       function updateLocalChatsFromServer(serverChats) {
         let updated = false;
         let newCustomerMsg = null;
+
+        // Bước 1: Xóa mock data khi nhận được dữ liệu thật từ server
+        const realServerKeys = Object.keys(serverChats || {}).filter(k => !k.startsWith("DEV_MOCK"));
+        if (realServerKeys.length > 0) {
+          if (allChats["DEV_MOCK1"]) { delete allChats["DEV_MOCK1"]; updated = true; }
+          if (allChats["DEV_MOCK2"]) { delete allChats["DEV_MOCK2"]; updated = true; }
+        }
+
         for (let key in serverChats) {
           if (!serverChats[key]) continue;
-          if (!allChats[key]) {
-            allChats[key] = serverChats[key];
+          // Bỏ qua mock data từ server
+          if (key.startsWith("DEV_MOCK")) continue;
+
+          // Bước 2: Kiểm tra xem server có gửi entry DEV_xxx cho user hiện tại không
+          // Nếu có, merge vào key USER_phone ổn định thay vì tạo entry mới
+          let targetKey = key;
+          if (currentUser && currentUser.phone) {
+            const myStableId = "USER_" + currentUser.phone.replace(/\D/g, "");
+            // Nếu key từ server là entry DEV_xxx cũ của chính khách hàng này
+            // (cùng tên hoặc đây là key cũ của thiết bị này)
+            if (key !== myStableId && (
+              (allChats[key] && allChats[key].id === localStorage.getItem("customer_device_id") && key !== myStableId) ||
+              (serverChats[key].name === (currentUser.name) && key.startsWith("DEV_"))
+            )) {
+              targetKey = myStableId;
+            }
+          }
+
+          if (!allChats[targetKey]) {
+            allChats[targetKey] = { ...serverChats[key], id: targetKey };
+            // Xóa entry cũ nếu đã đổi key
+            if (targetKey !== key && allChats[key]) delete allChats[key];
             updated = true;
-            const hist = serverChats[key].history || [];
+            const hist = allChats[targetKey].history || [];
             if (hist.length > 0) {
               const lastMsg = hist[hist.length - 1];
               if (lastMsg.sender === "customer" || lastMsg.role === "user") {
                 newCustomerMsg = {
-                  senderName: serverChats[key].name || "Khách hàng ẩn danh",
-                  text:
-                    lastMsg.text || lastMsg.content || "Gửi tin nhắn mới...",
-                  deviceId: key,
+                  senderName: allChats[targetKey].name || "Khách hàng ẩn danh",
+                  text: lastMsg.text || lastMsg.content || "Gửi tin nhắn mới...",
+                  deviceId: targetKey,
                 };
               }
             }
           } else {
             const sHistoryLen = serverChats[key].history?.length || 0;
-            const cHistoryLen = allChats[key]?.history?.length || 0;
+            const cHistoryLen = allChats[targetKey]?.history?.length || 0;
             if (
               sHistoryLen > cHistoryLen ||
-              serverChats[key].lastUpdated > (allChats[key]?.lastUpdated || 0)
+              serverChats[key].lastUpdated > (allChats[targetKey]?.lastUpdated || 0)
             ) {
-              const prevHistLen = allChats[key]?.history?.length || 0;
-              allChats[key] = serverChats[key];
+              const prevHistLen = allChats[targetKey]?.history?.length || 0;
+              // Gộp history nếu đổi key (merge thay vì ghi đè)
+              if (targetKey !== key) {
+                const mergedHistory = [...(allChats[targetKey].history || [])];
+                (serverChats[key].history || []).forEach(msg => {
+                  const isDuplicate = mergedHistory.some(m => JSON.stringify(m) === JSON.stringify(msg));
+                  if (!isDuplicate) mergedHistory.push(msg);
+                });
+                allChats[targetKey].history = mergedHistory;
+                allChats[targetKey].lastUpdated = Math.max(allChats[targetKey].lastUpdated || 0, serverChats[key].lastUpdated || 0);
+                allChats[targetKey].needsSupport = allChats[targetKey].needsSupport || serverChats[key].needsSupport;
+                allChats[targetKey].hasUnread = allChats[targetKey].hasUnread || serverChats[key].hasUnread;
+                if (allChats[key]) delete allChats[key];
+              } else {
+                allChats[targetKey] = serverChats[key];
+              }
               updated = true;
 
-              const hist = serverChats[key].history || [];
+              const hist = allChats[targetKey].history || [];
               if (hist.length > prevHistLen) {
                 for (let i = prevHistLen; i < hist.length; i++) {
                   const m = hist[i];
                   if (m.sender === "customer" || m.role === "user") {
                     newCustomerMsg = {
-                      senderName: serverChats[key].name || "Khách hàng ẩn danh",
+                      senderName: allChats[targetKey].name || "Khách hàng ẩn danh",
                       text: m.text || m.content || "Gửi tin nhắn mới...",
-                      deviceId: key,
+                      deviceId: targetKey,
                     };
                   }
                 }
@@ -17121,77 +17257,84 @@
       const locationData = {
         "TP. Hồ Chí Minh": {
           "Quận 1": [
-            "Phường Tân Định",
-            "Phường Đa Kao",
-            "Phường Bến Nghé",
-            "Phường Bến Thành",
-            "Phường Nguyễn Thái Bình",
-            "Phường Phạm Ngũ Lão",
-            "Phường Cầu Ông Lãnh",
-            "Phường Cô Giang",
-            "Phường Nguyễn Cư Trinh",
-            "Phường Cầu Kho",
+            "Phường Tân Định (P. Tân Định mới)",
+            "Phường Đa Kao (P. Sài Gòn mới)",
+            "Phường Đa Kao (P. Tân Định mới)",
+            "Phường Bến Nghé (P. Sài Gòn mới)",
+            "Phường Bến Thành (P. Bến Thành mới)",
+            "Phường Nguyễn Thái Bình (P. Sài Gòn mới)",
+            "Phường Nguyễn Thái Bình (P. Bến Thành mới)",
+            "Phường Phạm Ngũ Lão (P. Bến Thành mới)",
+            "Phường Cầu Ông Lãnh (P. Bến Thành mới)",
+            "Phường Cầu Ông Lãnh (P. Cầu Ông Lãnh mới)",
+            "Phường Cô Giang (P. Cầu Ông Lãnh mới)",
+            "Phường Nguyễn Cư Trinh (P. Cầu Ông Lãnh mới)",
+            "Phường Cầu Kho (P. Cầu Ông Lãnh mới)",
           ],
           "Quận 3": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
-            "Phường 4",
-            "Phường 5",
-            "Phường Võ Thị Sáu",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
+            "Phường 1 (P. Bàn Cờ mới)",
+            "Phường 2 (P. Bàn Cờ mới)",
+            "Phường 3 (P. Bàn Cờ mới)",
+            "Phường 4 (P. Bàn Cờ mới)",
+            "Phường 4 (P. Xuân Hòa mới)",
+            "Phường 5 (P. Bàn Cờ mới)",
+            "Phường Võ Thị Sáu (P. Xuân Hòa mới)",
+            "Phường 9 (P. Nhiêu Lộc mới)",
+            "Phường 10 (P. Nhiêu Lộc mới)",
+            "Phường 11 (P. Nhiêu Lộc mới)",
+            "Phường 12 (P. Nhiêu Lộc mới)",
+            "Phường 13 (P. Nhiêu Lộc mới)",
+            "Phường 14 (P. Nhiêu Lộc mới)",
           ],
           "Quận 4": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
-            "Phường 4",
+            "Phường 1 (P. Vĩnh Hội mới)",
+            "Phường 2 (P. Vĩnh Hội mới)",
+            "Phường 2 (P. Khánh Hội mới)",
+            "Phường 3 (P. Vĩnh Hội mới)",
+            "Phường 4 (P. Vĩnh Hội mới)",
+            "Phường 4 (P. Khánh Hội mới)",
             "Phường 6",
-            "Phường 8",
-            "Phường 9",
+            "Phường 8 (P. Khánh Hội mới)",
+            "Phường 9 (P. Khánh Hội mới)",
             "Phường 10",
-            "Phường 13",
+            "Phường 13 (P. Xóm Chiếu mới)",
             "Phường 14",
-            "Phường 15",
-            "Phường 16",
-            "Phường 18",
+            "Phường 15 (P. Khánh Hội mới)",
+            "Phường 15 (P. Xóm Chiếu mới)",
+            "Phường 16 (P. Xóm Chiếu mới)",
+            "Phường 18 (P. Xóm Chiếu mới)",
           ],
           "Quận 5": [
-            "Phường 1",
-            "Phường 2",
+            "Phường 1 (P. Chợ Quán mới)",
+            "Phường 2 (P. Chợ Quán mới)",
             "Phường 3",
-            "Phường 4",
-            "Phường 5",
+            "Phường 4 (P. Chợ Quán mới)",
+            "Phường 5 (P. An Đông mới)",
             "Phường 6",
-            "Phường 7",
+            "Phường 7 (P. An Đông mới)",
             "Phường 8",
-            "Phường 9",
+            "Phường 9 (P. An Đông mới)",
             "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
+            "Phường 11 (P. Chợ Lớn mới)",
+            "Phường 12 (P. Chợ Lớn mới)",
+            "Phường 13 (P. Chợ Lớn mới)",
+            "Phường 14 (P. Chợ Lớn mới)",
           ],
           "Quận 6": [
-            "Phường 1",
-            "Phường 2",
+            "Phường 1 (P. Bình Tiên mới)",
+            "Phường 2 (P. Bình Tây mới)",
             "Phường 3",
             "Phường 4",
             "Phường 5",
             "Phường 6",
-            "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
+            "Phường 7 (P. Bình Tiên mới)",
+            "Phường 8 (P. Bình Tiên mới)",
+            "Phường 9 (P. Bình Tây mới)",
+            "Phường 10 (P. Bình Phú mới)",
+            "Phường 11 (P. Bình Phú mới)",
+            "Phường 12 (P. Phú Lâm mới)",
+            "Phường 13 (P. Phú Lâm mới)",
+            "Phường 14 (P. Phú Lâm mới)",
           ],
           "Quận 7": [
             "Phường Tân Thuận Đông",
@@ -17206,202 +17349,214 @@
             "Phường Phú Mỹ",
           ],
           "Quận 8": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
+            "Phường 1 (P. Chánh Hưng mới)",
+            "Phường 2 (P. Chánh Hưng mới)",
+            "Phường 3 (P. Chánh Hưng mới)",
             "Phường 4",
             "Phường 5",
             "Phường 6",
             "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
+            "Phường 8 (P. Chánh Hưng mới)",
+            "Phường 9 (P. Chánh Hưng mới)",
+            "Phường 10 (P. Chánh Hưng mới)",
             "Phường 11",
             "Phường 12",
-            "Phường 13",
-            "Phường 14",
-            "Phường 15",
-            "Phường 16",
+            "Phường 13 (P. Bình Đông mới)",
+            "Phường 14 (P. Bình Đông mới)",
+            "Phường 15 (P. Phú Định mới)",
+            "Phường 16 (P. Bình Phú mới)",
           ],
           "Quận 10": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 4",
-            "Phường 5",
-            "Phường 6",
-            "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
+            "Phường 1 (P. Diên Hồng mới)",
+            "Phường 2 (P. Diên Hồng mới)",
+            "Phường 4 (P. Diên Hồng mới)",
+            "Phường 5 (P. Vườn Lài mới)",
+            "Phường 6 (P. Vườn Lài mới)",
+            "Phường 7 (P. Vườn Lài mới)",
+            "Phường 8 (P. Vườn Lài mới)",
+            "Phường 9 (P. Vườn Lài mới)",
+            "Phường 10 (P. Hòa Hưng mới)",
+            "Phường 11 (P. Hòa Hưng mới)",
+            "Phường 12 (P. Hòa Hưng mới)",
+            "Phường 13 (P. Hòa Hưng mới)",
             "Phường 14",
             "Phường 15",
           ],
           "Quận 11": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
-            "Phường 4",
-            "Phường 5",
-            "Phường 6",
-            "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
-            "Phường 15",
-            "Phường 16",
+            "Phường 1 (P. Minh Phụng mới)",
+            "Phường 2 (P. Minh Phụng mới)",
+            "Phường 3 (P. Minh Phụng mới)",
+            "Phường 4 (P. Minh Phụng mới)",
+            "Phường 5 (P. Bình Thới mới)",
+            "Phường 6 (P. Bình Thới mới)",
+            "Phường 7 (P. Bình Thới mới)",
+            "Phường 8 (P. Hòa Bình mới)",
+            "Phường 9 (P. Hòa Bình mới)",
+            "Phường 10 (P. Hòa Bình mới)",
+            "Phường 11 (P. Hòa Bình mới)",
+            "Phường 12 (P. Phú Thọ mới)",
+            "Phường 13 (P. Phú Thọ mới)",
+            "Phường 14 (P. Phú Thọ mới)",
+            "Phường 15 (P. Phú Thọ mới)",
+            "Phường 16 (P. Phú Thọ mới)",
           ],
           "Quận 12": [
-            "Phường Thạnh Xuân",
-            "Phường Thạnh Lộc",
-            "Phường Hiệp Thành",
-            "Phường Thới An",
-            "Phường Tân Chánh Hiệp",
-            "Phường An Phú Đông",
-            "Phường Tân Thới Hiệp",
-            "Phường Trung Mỹ Tây",
-            "Phường Tân Hưng Thuận",
-            "Phường Đông Hưng Thuận",
-            "Phường Tân Thới Nhất",
+            "Phường Thạnh Xuân (P. Thới An mới)",
+            "Phường Thạnh Lộc (P. An Phú Đông mới)",
+            "Phường Hiệp Thành (P. Tân Thới Hiệp mới)",
+            "Phường Thới An (P. Thới An mới)",
+            "Phường Tân Chánh Hiệp (P. Trung Mỹ Tây mới)",
+            "Phường An Phú Đông (P. An Phú Đông mới)",
+            "Phường Tân Thới Hiệp (P. Tân Thới Hiệp mới)",
+            "Phường Trung Mỹ Tây (P. Trung Mỹ Tây mới)",
+            "Phường Tân Hưng Thuận (P. Đông Hưng Thuận mới)",
+            "Phường Đông Hưng Thuận (P. Đông Hưng Thuận mới)",
+            "Phường Tân Thới Nhất (P. Đông Hưng Thuận mới)",
           ],
           "Quận Bình Tân": [
-            "Phường Bình Hưng Hòa",
-            "Phường Bình Hưng Hòa A",
-            "Phường Bình Hưng Hòa B",
-            "Phường Bình Trị Đông",
-            "Phường Bình Trị Đông A",
-            "Phường Bình Trị Đông B",
-            "Phường Tân Tạo",
-            "Phường Tân Tạo A",
-            "Phường An Lạc",
-            "Phường An Lạc A",
+            "Phường Bình Hưng Hòa (P. Bình Hưng Hòa mới)",
+            "Phường Bình Hưng Hòa A (P. Bình Trị Đông mới)",
+            "Phường Bình Hưng Hòa A (P. Bình Hưng Hòa mới)",
+            "Phường Bình Hưng Hòa B (P. Bình Tân mới)",
+            "Phường Bình Trị Đông (P. Bình Trị Đông mới)",
+            "Phường Bình Trị Đông A (P. Bình Tân mới)",
+            "Phường Bình Trị Đông A (P. Bình Trị Đông mới)",
+            "Phường Bình Trị Đông B (P. An Lạc mới)",
+            "Phường Tân Tạo (P. Bình Tân mới)",
+            "Phường Tân Tạo (P. Tân Tạo mới)",
+            "Phường Tân Tạo A (P. Tân Tạo mới)",
+            "Phường An Lạc (P. An Lạc mới)",
+            "Phường An Lạc A (P. An Lạc mới)",
           ],
           "Quận Bình Thạnh": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
-            "Phường 5",
-            "Phường 6",
-            "Phường 7",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
-            "Phường 15",
-            "Phường 17",
-            "Phường 19",
-            "Phường 21",
-            "Phường 22",
-            "Phường 24",
-            "Phường 25",
-            "Phường 26",
-            "Phường 27",
-            "Phường 28",
+            "Phường 1 (P. Gia Định mới)",
+            "Phường 2 (P. Gia Định mới)",
+            "Phường 3 (P. Gia Định mới)",
+            "Phường 5 (P. Bình Lợi Trung mới)",
+            "Phường 6 (P. Bình Lợi Trung mới)",
+            "Phường 7 (P. Gia Định mới)",
+            "Phường 11 (P. Bình Lợi Trung mới)",
+            "Phường 12 (P. Bình Thạnh mới)",
+            "Phường 13 (P. Bình Lợi Trung mới)",
+            "Phường 14 (P. Bình Thạnh mới)",
+            "Phường 15 (P. Gia Định mới)",
+            "Phường 17 (P. Gia Định mới)",
+            "Phường 19 (P. Thạnh Mỹ Tây mới)",
+            "Phường 21 (P. Thạnh Mỹ Tây mới)",
+            "Phường 22 (P. Thạnh Mỹ Tây mới)",
+            "Phường 24 (P. Bình Thạnh mới)",
+            "Phường 25 (P. Thạnh Mỹ Tây mới)",
+            "Phường 26 (P. Bình Thạnh mới)",
+            "Phường 27 (P. Bình Quới mới)",
+            "Phường 28 (P. Bình Quới mới)",
           ],
           "Quận Gò Vấp": [
-            "Phường 1",
-            "Phường 3",
+            "Phường 1 (P. Hạnh Thông mới)",
+            "Phường 3 (P. Hạnh Thông mới)",
             "Phường 4",
-            "Phường 5",
-            "Phường 6",
+            "Phường 5 (P. An Nhơn mới)",
+            "Phường 6 (P. An Nhơn mới)",
             "Phường 7",
-            "Phường 8",
+            "Phường 8 (P. Thông Tây Hội mới)",
             "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
+            "Phường 10 (P. Gò Vấp mới)",
+            "Phường 11 (P. Thông Tây Hội mới)",
+            "Phường 12 (P. An Hội Tây mới)",
             "Phường 13",
-            "Phường 14",
-            "Phường 15",
-            "Phường 16",
-            "Phường 17",
+            "Phường 14 (P. An Hội Tây mới)",
+            "Phường 15 (P. An Hội Đông mới)",
+            "Phường 16 (P. An Hội Đông mới)",
+            "Phường 17 (P. Gò Vấp mới)",
           ],
           "Quận Phú Nhuận": [
-            "Phường 1",
-            "Phường 2",
+            "Phường 1 (P. Cầu Kiệu mới)",
+            "Phường 2 (P. Cầu Kiệu mới)",
             "Phường 3",
-            "Phường 4",
-            "Phường 5",
-            "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 13",
-            "Phường 15",
+            "Phường 4 (P. Đức Nhuận mới)",
+            "Phường 5 (P. Đức Nhuận mới)",
+            "Phường 7 (P. Cầu Kiệu mới)",
+            "Phường 8 (P. Phú Nhuận mới)",
+            "Phường 9 (P. Đức Nhuận mới)",
+            "Phường 10 (P. Phú Nhuận mới)",
+            "Phường 11 (P. Phú Nhuận mới)",
+            "Phường 13 (P. Phú Nhuận mới)",
+            "Phường 15 (P. Cầu Kiệu mới)",
+            "Phường 15 (P. Phú Nhuận mới)",
             "Phường 17",
           ],
           "Quận Tân Bình": [
-            "Phường 1",
-            "Phường 2",
-            "Phường 3",
-            "Phường 4",
-            "Phường 5",
-            "Phường 6",
-            "Phường 7",
-            "Phường 8",
-            "Phường 9",
-            "Phường 10",
-            "Phường 11",
-            "Phường 12",
-            "Phường 13",
-            "Phường 14",
-            "Phường 15",
+            "Phường 1 (P. Tân Sơn Hòa mới)",
+            "Phường 2 (P. Tân Sơn Hòa mới)",
+            "Phường 3 (P. Tân Sơn Hòa mới)",
+            "Phường 4 (P. Tân Sơn Nhất mới)",
+            "Phường 5 (P. Tân Sơn Nhất mới)",
+            "Phường 6 (P. Tân Hòa mới)",
+            "Phường 7 (P. Tân Sơn Nhất mới)",
+            "Phường 8 (P. Tân Hòa mới)",
+            "Phường 9 (P. Tân Hòa mới)",
+            "Phường 10 (P. Bảy Hiền mới)",
+            "Phường 11 (P. Bảy Hiền mới)",
+            "Phường 12 (P. Bảy Hiền mới)",
+            "Phường 13 (P. Tân Bình mới)",
+            "Phường 14 (P. Tân Bình mới)",
+            "Phường 15 (P. Tân Bình mới)",
+            "Phường 15 (P. Tân Sơn mới)",
           ],
           "Quận Tân Phú": [
-            "Phường Tân Sơn Nhì",
-            "Phường Tây Thạnh",
-            "Phường Sơn Kỳ",
-            "Phường Tân Quý",
-            "Phường Tân Thành",
-            "Phường Phú Thọ Hòa",
-            "Phường Phú Thạnh",
-            "Phường Phú Trung",
-            "Phường Hòa Thạnh",
-            "Phường Hiệp Tân",
-            "Phường Tân Thới Hòa",
+            "Phường Tân Sơn Nhì (P. Tân Sơn Nhì mới)",
+            "Phường Tây Thạnh (P. Tây Thạnh mới)",
+            "Phường Sơn Kỳ (P. Tây Thạnh mới)",
+            "Phường Sơn Kỳ (P. Tân Sơn Nhì mới)",
+            "Phường Tân Quý (P. Tân Sơn Nhì mới)",
+            "Phường Tân Quý (P. Phú Thọ Hòa mới)",
+            "Phường Tân Thành (P. Tân Sơn Nhì mới)",
+            "Phường Tân Thành (P. Phú Thọ Hòa mới)",
+            "Phường Tân Thành (P. Tân Phú mới)",
+            "Phường Phú Thọ Hòa (P. Phú Thọ Hòa mới)",
+            "Phường Phú Thạnh (P. Phú Thạnh mới)",
+            "Phường Phú Trung (P. Tân Phú mới)",
+            "Phường Hòa Thạnh (P. Tân Phú mới)",
+            "Phường Hiệp Tân (P. Phú Thạnh mới)",
+            "Phường Tân Thới Hòa (P. Tân Phú mới)",
+            "Phường Tân Thới Hòa (P. Phú Thạnh mới)",
           ],
           "TP. Thủ Đức": [
-            "Phường An Khánh",
-            "Phường An Lợi Đông",
-            "Phường An Phú",
-            "Phường Bình Chiểu",
-            "Phường Bình Thọ",
-            "Phường Bình Trưng Đông",
-            "Phường Bình Trưng Tây",
+            "Phường An Khánh (P. An Khánh mới)",
+            "Phường An Lợi Đông (P. An Khánh mới)",
+            "Phường An Phú (P. An Khánh mới)",
+            "Phường Bình Chiểu (P. Tam Bình mới)",
+            "Phường Bình Thọ (P. Thủ Đức mới)",
+            "Phường Bình Trưng Đông (P. Bình Trưng mới)",
+            "Phường Bình Trưng Tây (P. Bình Trưng mới)",
             "Phường Cát Lái",
-            "Phường Hiệp Bình Chánh",
-            "Phường Hiệp Bình Phước",
-            "Phường Hiệp Phú",
-            "Phường Linh Chiểu",
-            "Phường Linh Đông",
-            "Phường Linh Tây",
-            "Phường Linh Trung",
-            "Phường Linh Xuân",
+            "Phường Hiệp Bình Chánh (P. Hiệp Bình mới)",
+            "Phường Hiệp Bình Phước (P. Hiệp Bình mới)",
+            "Phường Hiệp Phú (P. Tăng Nhơn Phú mới)",
+            "Phường Linh Chiểu (P. Thủ Đức mới)",
+            "Phường Linh Đông (P. Hiệp Bình mới)",
+            "Phường Linh Đông (P. Thủ Đức mới)",
+            "Phường Linh Tây (P. Thủ Đức mới)",
+            "Phường Linh Tây (P. Linh Xuân mới)",
+            "Phường Linh Trung (P. Linh Xuân mới)",
+            "Phường Linh Xuân (P. Linh Xuân mới)",
             "Phường Long Bình",
             "Phường Long Phước",
-            "Phường Long Thạnh Mỹ",
+            "Phường Long Thạnh Mỹ (P. Tăng Nhơn Phú mới)",
             "Phường Long Trường",
             "Phường Phú Hữu",
             "Phường Phước Bình",
-            "Phường Phước Long A",
-            "Phường Phước Long B",
-            "Phường Tam Bình",
-            "Phường Tam Phú",
-            "Phường Tân Phú",
-            "Phường Tăng Nhơn Phú A",
-            "Phường Tăng Nhơn Phú B",
+            "Phường Phước Long A (P. Phước Long mới)",
+            "Phường Phước Long B (P. Phước Long mới)",
+            "Phường Tam Bình (P. Tam Bình mới)",
+            "Phường Tam Phú (P. Tam Bình mới)",
+            "Phường Tân Phú (P. Tăng Nhơn Phú mới)",
+            "Phường Tăng Nhơn Phú A (P. Tăng Nhơn Phú mới)",
+            "Phường Tăng Nhơn Phú B (P. Tăng Nhơn Phú mới)",
             "Phường Thạnh Mỹ Lợi",
-            "Phường Thảo Điền",
-            "Phường Thủ Thiêm",
+            "Phường Thảo Điền (P. An Khánh mới)",
+            "Phường Thủ Thiêm (P. An Khánh mới)",
             "Phường Trường Thạnh",
-            "Phường Trường Thọ",
+            "Phường Trường Thọ (P. Thủ Đức mới)",
           ],
           "Huyện Bình Chánh": [
             "Thị trấn Tân Túc",
@@ -20780,7 +20935,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         document.title = `${storeName} - Quản Lý Menu Healthy`;
 
         // Refresh Favicon
-        let faviconLink = document.querySelector("link[rel~='icon']");
+        let faviconLink = document.querySelector("link[rel='icon']");
         if (!faviconLink) {
           faviconLink = document.createElement("link");
           faviconLink.rel = "icon";
@@ -20788,9 +20943,11 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
         if (faviconData) {
           faviconLink.href = faviconData;
+          faviconLink.type = faviconData.startsWith("data:image/svg") ? "image/svg+xml"
+            : faviconData.startsWith("data:image/png") ? "image/png" : "image/jpeg";
         } else {
-          // Fallback if needed, or leave as default
-          faviconLink.href = "data:image/x-icon;base64,"; // Clears it or you can put a default base64 icon
+          faviconLink.href = "/logo.svg";
+          faviconLink.type = "image/svg+xml";
         }
 
         // Refresh Header Logo & Name
@@ -23127,29 +23284,31 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           return;
         }
 
-        const todayStr = new Date().toISOString().split("T")[0];
-        const storageKey = "nutriadmin_qr_scanned_recorded_" + source + "_" + todayStr;
+        const lastScanTimeStr = localStorage.getItem("nutriadmin_qr_scanned_recorded_time_" + source);
+        const lastScanTime = lastScanTimeStr ? parseInt(lastScanTimeStr) : 0;
+        const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
-        // Nhận diện thiết bị: Mỗi thiết bị chỉ ghi nhận và thông báo 1 lần duy nhất đối với mỗi mã nguồn (shopee food, hộp cơm,...) mỗi ngày
-        const hasScannedThisSourceToday =
-          localStorage.getItem(storageKey) === "true" ||
+        // Nhận diện thiết bị: Mỗi thiết bị chỉ ghi nhận 1 lần duy nhất đối với mỗi nguồn, tính lại sau 24h
+        const hasScannedThisSourceRecently =
+          (Date.now() - lastScanTime < TWENTY_FOUR_HOURS) ||
           (qrScans &&
             qrScans.some((s) => {
-              const scanDate = new Date(s.timestamp).toISOString().split("T")[0];
-              return s.deviceId === customerDeviceId && s.source === source && scanDate === todayStr;
+              if (s.deviceId !== customerDeviceId || s.source !== source) return false;
+              const sTime = s.timestamp.getTime ? s.timestamp.getTime() : new Date(s.timestamp).getTime();
+              return (Date.now() - sTime) < TWENTY_FOUR_HOURS;
             }));
 
-        if (hasScannedThisSourceToday) {
+        if (hasScannedThisSourceRecently) {
           console.log(
             "Thiết bị này đã được ghi nhận quét QR nguồn '" +
               source +
-              "' trong ngày hôm nay. Bỏ qua lượt quét này.",
+              "' trong vòng 24h qua. Bỏ qua lượt quét này.",
           );
           return;
         }
 
-        // Đánh dấu thiết bị đã được ghi nhận quét QR cho nguồn này trong hôm nay
-        localStorage.setItem(storageKey, "true");
+        // Đánh dấu thời gian thiết bị quét QR cho nguồn này
+        localStorage.setItem("nutriadmin_qr_scanned_recorded_time_" + source, Date.now().toString());
 
         // Ghi nhận ngay vào sessionStorage
         const sessionKey =
@@ -42697,6 +42856,98 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       window.adminOtpCountdown = 0;
       window.adminOtpTimerInterval = null;
 
+      function updatePageFavicons() {
+        const appleTouchIcon = document.querySelector(
+          'link[rel="apple-touch-icon"]',
+        );
+        const favicon = document.querySelector('link[rel="icon"]');
+        const manifestLink = document.querySelector('link[rel="manifest"]');
+
+        if (pwaCustomIcon) {
+          if (appleTouchIcon) appleTouchIcon.href = pwaCustomIcon;
+          if (favicon) {
+            favicon.href = pwaCustomIcon;
+            if (pwaCustomIcon.startsWith("data:image/svg+xml")) {
+              favicon.type = "image/svg+xml";
+            } else if (pwaCustomIcon.startsWith("data:image/png")) {
+              favicon.type = "image/png";
+            } else {
+              favicon.type = "image/jpeg";
+            }
+          }
+          if (manifestLink) {
+            const manifestObj = {
+              short_name: "Nuri",
+              name: "Nuri - Tư Vấn Dinh Dưỡng",
+              description:
+                "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
+              icons: [
+                {
+                  src: pwaCustomIcon,
+                  type: pwaCustomIcon.startsWith("data:image/svg")
+                    ? "image/svg+xml"
+                    : pwaCustomIcon.startsWith("data:image/png")
+                      ? "image/png"
+                      : "image/jpeg",
+                  sizes: "192x192 512x512",
+                  purpose: "any maskable",
+                },
+              ],
+              start_url: "/?mode=landing",
+              background_color: "#f8fafc",
+              theme_color: "#10b981",
+              display: "standalone",
+              orientation: "portrait",
+            };
+            const blob = new Blob([JSON.stringify(manifestObj)], {
+              type: "application/json",
+            });
+            manifestLink.href = URL.createObjectURL(blob);
+          }
+        } else {
+          // Khi không có pwaCustomIcon, ưu tiên đọc favicon từ cài đặt cửa hàng
+          // Không được reset về /logo.svg nếu admin đã tải favicon riêng
+          let settingsFavicon = "";
+          try {
+            const s = JSON.parse(localStorage.getItem("nutriadmin_settings") || "{}");
+            settingsFavicon = s.favicon || s.brandLogo || "";
+          } catch (e) {}
+
+          const effectiveFavicon = settingsFavicon || "/logo.svg";
+          const effectiveType = effectiveFavicon === "/logo.svg"
+            ? "image/svg+xml"
+            : effectiveFavicon.startsWith("data:image/svg") ? "image/svg+xml"
+            : effectiveFavicon.startsWith("data:image/png") ? "image/png"
+            : "image/jpeg";
+
+          if (appleTouchIcon) appleTouchIcon.href = effectiveFavicon;
+          if (favicon) {
+            favicon.href = effectiveFavicon;
+            favicon.type = effectiveType;
+          }
+          if (manifestLink) {
+            if (settingsFavicon) {
+              // Tạo manifest động với favicon tùy chỉnh của cửa hàng
+              const manifestObj = {
+                short_name: "Nuri",
+                name: "Nuri - Tư Vấn Dinh Dưỡng",
+                description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
+                icons: [{ src: settingsFavicon, type: effectiveType, sizes: "192x192 512x512", purpose: "any maskable" }],
+                start_url: "/?mode=landing",
+                background_color: "#f8fafc",
+                theme_color: "#10b981",
+                display: "standalone",
+                orientation: "portrait",
+              };
+              const blob = new Blob([JSON.stringify(manifestObj)], { type: "application/json" });
+              manifestLink.href = URL.createObjectURL(blob);
+            } else {
+              manifestLink.href = "/manifest.json";
+            }
+          }
+        }
+      }
+
       function isAdminViewActive() {
         const urlParams = new URLSearchParams(window.location.search);
         const mode = urlParams.get("mode");
@@ -43186,65 +43437,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       // ==========================================
       // PWA CUSTOM ICON UPLOAD SYSTEM
       // ==========================================
-      function updatePageFavicons() {
-        const appleTouchIcon = document.querySelector(
-          'link[rel="apple-touch-icon"]',
-        );
-        const favicon = document.querySelector('link[rel="icon"]');
-        const manifestLink = document.querySelector('link[rel="manifest"]');
 
-        if (pwaCustomIcon) {
-          if (appleTouchIcon) appleTouchIcon.href = pwaCustomIcon;
-          if (favicon) {
-            favicon.href = pwaCustomIcon;
-            if (pwaCustomIcon.startsWith("data:image/svg+xml")) {
-              favicon.type = "image/svg+xml";
-            } else if (pwaCustomIcon.startsWith("data:image/png")) {
-              favicon.type = "image/png";
-            } else {
-              favicon.type = "image/jpeg";
-            }
-          }
-          if (manifestLink) {
-            const manifestObj = {
-              short_name: "Nuri",
-              name: "Nuri - Tư Vấn Dinh Dưỡng",
-              description:
-                "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
-              icons: [
-                {
-                  src: pwaCustomIcon,
-                  type: pwaCustomIcon.startsWith("data:image/svg")
-                    ? "image/svg+xml"
-                    : pwaCustomIcon.startsWith("data:image/png")
-                      ? "image/png"
-                      : "image/jpeg",
-                  sizes: "192x192 512x512",
-                  purpose: "any maskable",
-                },
-              ],
-              start_url: "/?mode=landing",
-              background_color: "#f8fafc",
-              theme_color: "#10b981",
-              display: "standalone",
-              orientation: "portrait",
-            };
-            const blob = new Blob([JSON.stringify(manifestObj)], {
-              type: "application/json",
-            });
-            manifestLink.href = URL.createObjectURL(blob);
-          }
-        } else {
-          if (appleTouchIcon) appleTouchIcon.href = "/logo.svg";
-          if (favicon) {
-            favicon.href = "/logo.svg";
-            favicon.type = "image/svg+xml";
-          }
-          if (manifestLink) {
-            manifestLink.href = "/manifest.json";
-          }
-        }
-      }
 
       function updatePwaIconUI() {
         const adminImg = document.getElementById("pwa-admin-icon-preview-img");
@@ -45275,9 +45468,12 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         class="bg-white dark:bg-slate-900 rounded-2xl p-4 shadow-2xl border border-slate-100 dark:border-slate-800/80 flex gap-3.5 items-start"
       >
         <div
-          class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0 shadow-inner"
+          id="pwa-banner-icon-container"
+          class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center shrink-0 shadow-inner overflow-hidden"
         >
-          <i class="fa-solid fa-mobile-screen-button"></i>
+          <!-- Icon sẽ được cập nhật động bởi showPwaBanner() -->
+          <i id="pwa-banner-default-icon" class="fa-solid fa-mobile-screen-button text-emerald-600 dark:text-emerald-400 text-xl"></i>
+          <img id="pwa-banner-custom-icon" src="" alt="App Icon" class="hidden w-full h-full object-contain rounded-xl" />
         </div>
         <div class="flex-1 min-w-0">
           <h4 class="font-semibold text-slate-800 dark:text-slate-200 text-sm">
@@ -45364,6 +45560,15 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       function showPwaBanner() {
         const banner = document.getElementById("pwa-install-banner");
         if (banner) {
+          // Cập nhật icon trong banner với icon tùy chỉnh nếu có
+          const customIcon = window.pwaCustomIcon || localStorage.getItem("nutriadmin_pwa_custom_icon") || "";
+          const bannerCustomImg = document.getElementById("pwa-banner-custom-icon");
+          const bannerDefaultIcon = document.getElementById("pwa-banner-default-icon");
+          if (customIcon && bannerCustomImg) {
+            bannerCustomImg.src = customIcon;
+            bannerCustomImg.classList.remove("hidden");
+            if (bannerDefaultIcon) bannerDefaultIcon.classList.add("hidden");
+          }
           banner.classList.remove("hidden");
           banner.classList.add("animate-slide-up");
         }
@@ -45378,6 +45583,10 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       }
 
       function triggerPwaInstall() {
+        // Cập nhật lại manifest với icon tùy chỉnh ngay trước khi cài đặt
+        // để trình duyệt dùng đúng icon được cài đặt bởi admin
+        if (typeof updatePageFavicons === "function") updatePageFavicons();
+
         if (deferredPrompt) {
           // Show browser install dialog
           deferredPrompt.prompt();
