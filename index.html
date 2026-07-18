@@ -36268,12 +36268,13 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           // Interval local diffing - autosaves logic
           firebaseSyncTask = setInterval(() => {
             if (!isInitialSyncComplete) return;
-            const isUserAdmin =
-              typeof isAdminViewActive === "function" &&
-              isAdminViewActive() &&
-              typeof checkAdminSessionSilent === "function" &&
-              checkAdminSessionSilent();
-            if (!isUserAdmin) return;
+            // Bỏ comment đoạn này để cho phép khách hàng (không phải admin) đồng bộ dữ liệu lên Firebase
+            // const isUserAdmin =
+            //   typeof isAdminViewActive === "function" &&
+            //   isAdminViewActive() &&
+            //   typeof checkAdminSessionSilent === "function" &&
+            //   checkAdminSessionSilent();
+            // if (!isUserAdmin) return;
 
             const settingsRaw = localStorage.getItem("nutriadmin_settings");
             const currentSettings = settingsRaw ? JSON.parse(settingsRaw) : {};
