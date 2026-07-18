@@ -14687,10 +14687,16 @@
                   return merged;
                 };
 
-                const docSnap = await cloudDb
-                  .collection("nutriadmin_v1")
-                  .doc("system_data")
-                  .get();
+                let docSnap;
+                try {
+                  docSnap = await cloudDb
+                    .collection("nutriadmin_v1")
+                    .doc("system_data")
+                    .get();
+                } catch (getErr) {
+                  console.error("Firebase get() failed, proceeding without server data:", getErr);
+                  docSnap = { exists: false, data: () => ({ state: {} }) };
+                }
 
                 if (isSenderAdmin) {
                   let finalState = { ...currentState };
@@ -36175,7 +36181,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         let configStr =
           localStorage.getItem("nutriadmin_custom_firebase_config") ||
           window.NURI_FIREBASE_CONFIG;
-        if (!configStr) return;
+        if (!configStr) {
+          window.isInitialStateLoaded = true;
+          return;
+        }
 
         let config;
         if (typeof configStr === "object") {
@@ -36192,11 +36201,15 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             configStr = JSON.stringify(config);
           } catch (e) {
             console.error("Firebase config parse error", e);
+            window.isInitialStateLoaded = true;
             return;
           }
         }
 
-        if (!config.apiKey || !config.projectId) return;
+        if (!config.apiKey || !config.projectId) {
+          window.isInitialStateLoaded = true;
+          return;
+        }
 
         let isInitialSyncComplete = false;
 
@@ -36245,6 +36258,10 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 }
               }, (snapErr) => {
                 console.error("Firestore onSnapshot subscription failed on client:", snapErr);
+                window.isInitialStateLoaded = true;
+                if (typeof showToast === "function") {
+                  showToast("Cảnh báo: Không thể đồng bộ dữ liệu từ Cloud (Vui lòng kiểm tra Firebase Rules). Hệ thống đang lưu tạm ở Local.", "error");
+                }
               });
           }
 
@@ -36303,6 +36320,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           }, 1500);
         } catch (e) {
           console.error("Firebase Initialization Error", e);
+          window.isInitialStateLoaded = true;
         }
       }
 
