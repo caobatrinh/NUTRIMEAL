@@ -15057,6 +15057,10 @@
           );
           if (typeof renderPwaNotificationsList === "function")
             renderPwaNotificationsList();
+          // Dong bo lich len Service Worker khi nhan cap nhat tu Firebase
+          if (typeof syncScheduleToServiceWorker === "function") {
+            setTimeout(() => syncScheduleToServiceWorker(), 1000);
+          }
         }
         if (typeof serverState.pwaBadgeActive !== "undefined") {
           pwaBadgeActive = serverState.pwaBadgeActive;
@@ -21866,18 +21870,24 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
         const processFile = (file) => {
           return new Promise((resolve) => {
+            // Giảm độ phân giải nếu là PNG sequence để không vượt quá 1MB của Firebase Firestore
+            const isSequence = files.length > 1;
+            const targetWidth = isSequence ? 350 : 800;
+            const targetHeight = isSequence ? 350 : 600;
+            const quality = isSequence ? 0.6 : 0.8;
+            
             if (position === "trust-center") {
               compressMascotImage(
                 file,
-                800,
-                600,
-                0.8,
+                targetWidth,
+                targetHeight,
+                quality,
                 function (compressedDataUrl) {
                   resolve(compressedDataUrl);
                 },
               );
             } else {
-              compressImage(file, 800, 600, 0.8, function (compressedDataUrl) {
+              compressImage(file, targetWidth, targetHeight, quality, function (compressedDataUrl) {
                 resolve(compressedDataUrl);
               });
             }
@@ -36493,8 +36503,70 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           localStorage.getItem("nutriadmin_custom_firebase_config") ||
           window.NURI_FIREBASE_CONFIG;
         if (!configStr) {
-          window.isInitialStateLoaded = true;
-          return;
+          // --- BOOTSTRAP FIX: Tự động tải Firebase config cho thiết bị mới (chưa vào trang Admin) ---
+          // Nếu không có config local, thử lấy từ server API (/api/config) hoặc config.json
+          // để các thiết bị khách hàng lần đầu truy cập vẫn kết nối được Firebase
+          if (window._firebaseBootstrapAttempted) {
+            // Đã thử, vẫn không có config → chạy không có Firebase
+            window.isInitialStateLoaded = true;
+            return;
+          }
+          window._firebaseBootstrapAttempted = true;
+
+          (async () => {
+            let bootstrapped = false;
+            // Thử /api/config trước (Full-stack mode)
+            try {
+              const res = await fetch("/api/config", { cache: "no-store" });
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.firebaseConfig) {
+                  const fbStr = typeof data.firebaseConfig === "object"
+                    ? JSON.stringify(data.firebaseConfig)
+                    : data.firebaseConfig;
+                  localStorage.setItem("nutriadmin_custom_firebase_config", fbStr);
+                  window.NURI_FIREBASE_CONFIG = data.firebaseConfig;
+                  if (data.geminiApiKey) {
+                    localStorage.setItem("nutriadmin_custom_api_key", data.geminiApiKey);
+                    window.NURI_GEMINI_API_KEY = data.geminiApiKey;
+                  }
+                  bootstrapped = true;
+                }
+              }
+            } catch (e) {}
+
+            // Nếu thất bại, thử config.json
+            if (!bootstrapped) {
+              try {
+                const resLocal = await fetch("config.json", { cache: "no-store" });
+                if (resLocal.ok) {
+                  const localData = await resLocal.json();
+                  if (localData && localData.firebaseConfig) {
+                    const fbStr = typeof localData.firebaseConfig === "object"
+                      ? JSON.stringify(localData.firebaseConfig)
+                      : localData.firebaseConfig;
+                    localStorage.setItem("nutriadmin_custom_firebase_config", fbStr);
+                    window.NURI_FIREBASE_CONFIG = localData.firebaseConfig;
+                    if (localData.geminiApiKey) {
+                      localStorage.setItem("nutriadmin_custom_api_key", localData.geminiApiKey);
+                      window.NURI_GEMINI_API_KEY = localData.geminiApiKey;
+                    }
+                    bootstrapped = true;
+                  }
+                }
+              } catch (e) {}
+            }
+
+            if (bootstrapped && typeof firebase !== "undefined") {
+              console.log("Firebase config bootstrapped for new client device. Retrying initFirebaseSync...");
+              initFirebaseSync();
+            } else {
+              // Vẫn không có config → chạy không có Firebase
+              window.isInitialStateLoaded = true;
+            }
+          })();
+
+          return; // Chờ async bootstrap xong rồi sẽ tự gọi lại initFirebaseSync()
         }
 
         let config;
@@ -39476,11 +39548,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
 
         // Connect to Firebase if configured
+        // Tăng timeout lên 2500ms để chờ async fetch /api/config hoặc config.json
+        // hoàn tất trước khi gọi initFirebaseSync() (tránh race condition trên thiết bị mới)
         setTimeout(() => {
           if (typeof firebase !== "undefined") {
+            window._firebaseBootstrapAttempted = false; // Reset để initFirebaseSync có thể bootstrap
             initFirebaseSync();
           }
-        }, 500);
+        }, 2500);
 
         updateMessagesNavBadge();
 
@@ -43978,8 +44053,13 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
                 </button>
 
                 <!-- Run Test button -->
-                <button onclick="testPwaNotificationTrigger('${noti.id}')" title="Gửi thử nghiệm" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center text-xs transition-colors">
+                <button onclick="testPwaNotificationTrigger('${noti.id}')" title="Gửi thử nghiệm (Trực tiếp)" class="w-7 h-7 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 rounded-lg flex items-center justify-center text-xs transition-colors">
                   <i class="fa-solid fa-paper-plane"></i>
+                </button>
+
+                <!-- Run Test via SW button -->
+                <button onclick="testSyncedSwNotification('${noti.id}')" title="Gửi thử nghiệm qua Service Worker (Test chế độ tắt app)" class="w-7 h-7 bg-fuchsia-50 hover:bg-fuchsia-100 dark:bg-fuchsia-950/20 dark:hover:bg-fuchsia-950/40 text-fuchsia-600 dark:text-fuchsia-400 rounded-lg flex items-center justify-center text-xs transition-colors">
+                  <i class="fa-solid fa-mobile-screen"></i>
                 </button>
 
                 <!-- Delete button -->
@@ -44077,6 +44157,8 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
             `Đã ${checked ? "bật" : "tắt"} lịch nhắc nhở lúc ${noti.time}.`,
             "success",
           );
+          // Dong bo lich len Service Worker
+          syncScheduleToServiceWorker();
         }
       }
 
@@ -44091,6 +44173,8 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
             );
             renderPwaNotificationsList();
             showToast("Đã xóa lịch nhắc nhở thành công.", "success");
+            // Dong bo lich len Service Worker
+            syncScheduleToServiceWorker();
           },
         );
       }
@@ -44181,6 +44265,10 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         if (fileInput) fileInput.value = "";
 
         renderPwaNotificationsList();
+        // Dong bo lich len Service Worker sau khi luu
+        if (typeof syncScheduleToServiceWorker === "function") {
+          syncScheduleToServiceWorker();
+        }
       }
 
       function getMascotDisplayName(id) {
@@ -44269,8 +44357,10 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       }
 
       function triggerPwaWebNotification(title, body, mascotId, customImage) {
+        // Guard chi ap dung voi admin view (khong phai landing/customer)
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+        const isAdminOnly = typeof isAdminViewActive === "function" && isAdminViewActive();
+        if (isAdminOnly && urlParams.get("mode") !== "landing" && !isSimulating) {
           return;
         }
 
@@ -44345,8 +44435,10 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         mascotId,
         customImage,
       ) {
+        // Guard chi ap dung voi admin view (khong phai landing/customer)
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+        const isAdminOnly = typeof isAdminViewActive === "function" && isAdminViewActive();
+        if (isAdminOnly && urlParams.get("mode") !== "landing" && !isSimulating) {
           return;
         }
 
@@ -44543,8 +44635,11 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
           return;
         }
         if (Notification.permission === "granted") {
-          // If already granted, silently ensure we are subscribed to background pushes
+          // Da co quyen -> dong bo lich len SW ngay
           subscribeToWebPush();
+          if (typeof syncScheduleToServiceWorker === "function") {
+            setTimeout(() => syncScheduleToServiceWorker(), 2000);
+          }
           return;
         }
 
@@ -44559,9 +44654,16 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
           }
         }
 
-        // Only show for customers (when mode is landing)
+        // Hien prompt cho:
+        // 1. Trang landing cua khach hang (?mode=landing)
+        // 2. PWA duoc cai dat (standalone display mode)
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("mode") !== "landing") {
+        const isLandingMode = urlParams.get("mode") === "landing";
+        const isPwaInstalled = window.matchMedia(
+          "(display-mode: standalone)"
+        ).matches || window.navigator.standalone === true;
+
+        if (!isLandingMode && !isPwaInstalled) {
           return;
         }
 
@@ -44576,6 +44678,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
           }
         }, 3000); // Show after 3 seconds of load
       }
+
 
       function testPwaNotificationTrigger(id) {
         if (typeof pwaNotifications === "undefined") return;
@@ -44620,7 +44723,114 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       window.checkAndShowPwaPermissionPrompt = checkAndShowPwaPermissionPrompt;
       window.testPwaNotificationTrigger = testPwaNotificationTrigger;
 
-      let phoneNotificationTimeout = null;
+      // =====================================================
+      // SYNC SCHEDULE TO SERVICE WORKER (Duolingo-style)
+      // Gui lich thong bao len SW de hoat dong ca khi dong app
+      // =====================================================
+
+      /**
+       * Gui toan bo pwaNotifications hien tai len Service Worker.
+       * SW se tu lap setTimeout cho tung gio nhac va hien thong bao
+       * he thong ngay ca khi app bi dong hoan toan.
+       */
+      async function syncScheduleToServiceWorker() {
+        if (!("serviceWorker" in navigator)) {
+          console.log("[NURI] Service Worker khong duoc ho tro tren trinh duyet nay.");
+          return;
+        }
+
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (!registration || !registration.active) {
+            console.log("[NURI] Service Worker chua san sang. Thu lai sau...");
+            return;
+          }
+
+          // Gui toan bo lich len SW
+          // SW se luu vao IndexedDB va lap lich nhat lai
+          const notificationsPayload = (pwaNotifications || []).map((n) => ({
+            id: n.id,
+            time: n.time,
+            title: n.title,
+            content: n.content,
+            mascotId: n.mascotId,
+            customImage: n.customImage || null,
+            isActive: n.isActive,
+          }));
+
+          registration.active.postMessage({
+            type: "SYNC_SCHEDULE",
+            notifications: notificationsPayload,
+          });
+
+          console.log(
+            "[NURI] Da gui " + notificationsPayload.length + " lich thong bao len Service Worker."
+          );
+        } catch (e) {
+          console.warn("[NURI] Khong the dong bo lich len Service Worker:", e);
+        }
+      }
+
+      /**
+       * Gui mot thong bao thu ngay lap tuc den SW (de kiem tra)
+       */
+      async function testSyncedSwNotification(notiId) {
+        const noti = pwaNotifications.find((n) => n.id === notiId);
+        if (!noti) return;
+        if (!("serviceWorker" in navigator)) return;
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration && registration.active) {
+            registration.active.postMessage({
+              type: "TEST_NOTIFICATION",
+              noti: {
+                id: noti.id,
+                time: noti.time,
+                title: noti.title,
+                content: noti.content,
+                mascotId: noti.mascotId,
+                customImage: noti.customImage || null,
+                isActive: true,
+              },
+            });
+            showToast("Da gui thong bao thu qua Service Worker! Kiem tra thanh thong bao he thong.", "success");
+          }
+        } catch (e) {
+          console.warn("[NURI] Test SW notification failed:", e);
+        }
+      }
+      window.testSyncedSwNotification = testSyncedSwNotification;
+
+      /**
+       * Nhan phan hoi tu Service Worker (de debug)
+       */
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.addEventListener("message", (event) => {
+          const data = event.data;
+          if (!data) return;
+          if (data.type === "SCHEDULE_SYNCED") {
+            console.log("[NURI] SW xac nhan da lap lich " + data.count + " thong bao.");
+          }
+          if (data.type === "SCHEDULE_STATUS") {
+            console.log("[NURI] Trang thai lich SW:", data.schedules);
+          }
+        });
+      }
+
+      /**
+       * Tu dong dong bo lich len SW ngay khi app load
+       * (sau khi pwaNotifications duoc khoi tao tu localStorage/Firebase)
+       */
+      setTimeout(() => {
+        if (Notification.permission === "granted") {
+          syncScheduleToServiceWorker();
+        }
+      }, 3000);
+
+      // Export
+      window.syncScheduleToServiceWorker = syncScheduleToServiceWorker;
+
+
       function animatePhoneNotification(noti) {
         playNotificationSound();
 
@@ -44737,8 +44947,10 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
 
       let pwaLastSentNotifications = {}; // tracks notification_id => YYYY-MM-DD
       function checkPwaScheduledNotifications() {
+        // Guard chi con trong admin view
         const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get("mode") !== "landing" && !isSimulating) {
+        const isAdminOnly = typeof isAdminViewActive === "function" && isAdminViewActive();
+        if (isAdminOnly && urlParams.get("mode") !== "landing" && !isSimulating) {
           return;
         }
 
