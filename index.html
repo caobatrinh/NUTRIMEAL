@@ -24632,18 +24632,22 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
       function plotLocationsOnMap(locations) {
         if (!dashboardMapInst) return;
 
+        const clusterColors = ["#ef4444", "#3b82f6", "#a855f7", "#f59e0b", "#14b8a6", "#ec4899", "#6366f1", "#84cc16"];
+
         if (typeof L !== "undefined" && dashboardMapInst instanceof L.Map) {
           // Leaflet
           leafletMarkers.forEach((m) => dashboardMapInst.removeLayer(m));
           leafletMarkers = [];
+          
           locations.forEach((pos) => {
+            const color = pos.cluster !== undefined && pos.cluster >= 0 ? clusterColors[pos.cluster % clusterColors.length] : "#10b981";
             const m = L.circleMarker([pos.lat, pos.lng], {
-              radius: pos.weight ? pos.weight * 3 : 6,
-              fillColor: "#10b981",
+              radius: pos.weight ? pos.weight * 3 + 4 : 8,
+              fillColor: color,
               color: "#ffffff",
-              weight: 1,
-              opacity: 0.6,
-              fillOpacity: 0.5,
+              weight: 2,
+              opacity: 0.9,
+              fillOpacity: 0.7,
             })
               .bindPopup(pos.address || "Vị trí đơn hàng")
               .addTo(dashboardMapInst);
@@ -24661,13 +24665,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             .importLibrary("marker")
             .then(({ AdvancedMarkerElement }) => {
               locations.forEach((pos) => {
+                const color = pos.cluster !== undefined && pos.cluster >= 0 ? clusterColors[pos.cluster % clusterColors.length] : "#10b981";
                 const dot = document.createElement("div");
-                const size = pos.weight ? pos.weight * 6 : 18;
+                const size = pos.weight ? pos.weight * 6 + 4 : 20;
                 dot.style.width = size + "px";
                 dot.style.height = size + "px";
-                dot.style.backgroundColor = "rgba(16, 185, 129, 0.4)";
+                dot.style.backgroundColor = color;
                 dot.style.borderRadius = "50%";
-                dot.style.boxShadow = "0 0 10px rgba(16, 185, 129, 0.2)";
+                dot.style.boxShadow = `0 0 10px ${color}`;
 
                 const m = new AdvancedMarkerElement({
                   map: dashboardMapInst,
@@ -24686,38 +24691,149 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         if (!btn) return;
 
         const originalText = btn.innerHTML;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Đang phân tích...`;
+        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> AI đang tính toán tuyến đường...`;
         btn.disabled = true;
 
         try {
-          await new Promise((r) => setTimeout(r, 800)); // Simulate AI processing
+          await new Promise((r) => setTimeout(r, 1200)); // Simulate AI processing
 
-          const addressMap = {};
-          orders.forEach((o) => {
-            if (o.lat && o.lng) {
-              if (!addressMap[o.address]) {
-                addressMap[o.address] = {
-                  lat: o.lat,
-                  lng: o.lng,
-                  address: o.address,
-                  weight: 1,
-                };
-              } else {
-                addressMap[o.address].weight += 1;
+          const distCoords = {
+            "Quận 1": {lat: 10.7765, lng: 106.6967}, "Quận 3": {lat: 10.7835, lng: 106.6871}, "Quận 4": {lat: 10.7562, lng: 106.6998},
+            "Quận 5": {lat: 10.7554, lng: 106.6644}, "Quận 6": {lat: 10.7490, lng: 106.6346}, "Quận 7": {lat: 10.7335, lng: 106.7262},
+            "Quận 8": {lat: 10.7380, lng: 106.6575}, "Quận 10": {lat: 10.7719, lng: 106.6666}, "Quận 11": {lat: 10.7635, lng: 106.6491},
+            "Quận 12": {lat: 10.8672, lng: 106.6413}, "TP. Thủ Đức": {lat: 10.8248, lng: 106.7570}, "Quận Bình Tân": {lat: 10.7655, lng: 106.6025},
+            "Quận Bình Thạnh": {lat: 10.8037, lng: 106.7027}, "Quận Gò Vấp": {lat: 10.8252, lng: 106.6577}, "Quận Phú Nhuận": {lat: 10.7936, lng: 106.6826},
+            "Quận Tân Bình": {lat: 10.7946, lng: 106.6558}, "Quận Tân Phú": {lat: 10.7806, lng: 106.6267}, "Huyện Bình Chánh": {lat: 10.7107, lng: 106.5615},
+            "Huyện Cần Giờ": {lat: 10.4287, lng: 106.8778}, "Huyện Củ Chi": {lat: 11.0028, lng: 106.5160}, "Huyện Hóc Môn": {lat: 10.8841, lng: 106.5912},
+            "Huyện Nhà Bè": {lat: 10.6698, lng: 106.7231}
+          };
+
+          function getWardCoords(district, ward) {
+            const base = distCoords[district];
+            if (!base) return {lat: 10.776, lng: 106.701}; // fallback Q1
+            if (!ward) return {...base};
+            let hash = 0;
+            for (let i = 0; i < ward.length; i++) {
+              hash = (hash << 5) - hash + ward.charCodeAt(i);
+              hash |= 0;
+            }
+            const latOffset = (((Math.abs(hash) % 100) / 100) * 0.04) - 0.02;
+            const lngOffset = (((Math.abs(hash >> 2) % 100) / 100) * 0.04) - 0.02;
+            return { lat: base.lat + latOffset, lng: base.lng + lngOffset };
+          }
+
+          // K-Means function
+          function kMeansClustering(points, k) {
+            if (points.length === 0) return [];
+            if (points.length <= k) return points.map((p, i) => ({ ...p, cluster: i }));
+            
+            let centroids = [];
+            let taken = new Set();
+            while(centroids.length < k) {
+                let idx = Math.floor(Math.random() * points.length);
+                if(!taken.has(idx)) {
+                    taken.add(idx);
+                    centroids.push({lat: points[idx].lat, lng: points[idx].lng});
+                }
+            }
+
+            let assignments = new Array(points.length).fill(-1);
+            let changed = true;
+            let iters = 0;
+            while (changed && iters < 100) {
+              changed = false;
+              iters++;
+              for (let i = 0; i < points.length; i++) {
+                let minDist = Infinity;
+                let bestC = 0;
+                for (let j = 0; j < k; j++) {
+                  const d = Math.pow(points[i].lat - centroids[j].lat, 2) + Math.pow(points[i].lng - centroids[j].lng, 2);
+                  if (d < minDist) { minDist = d; bestC = j; }
+                }
+                if (assignments[i] !== bestC) {
+                  assignments[i] = bestC;
+                  changed = true;
+                }
+              }
+              let newC = Array.from({ length: k }, () => ({ lat: 0, lng: 0, count: 0 }));
+              for (let i = 0; i < points.length; i++) {
+                const cIdx = assignments[i];
+                newC[cIdx].lat += points[i].lat;
+                newC[cIdx].lng += points[i].lng;
+                newC[cIdx].count++;
+              }
+              for (let j = 0; j < k; j++) {
+                if (newC[j].count > 0) {
+                  centroids[j].lat = newC[j].lat / newC[j].count;
+                  centroids[j].lng = newC[j].lng / newC[j].count;
+                }
               }
             }
-          });
-          const locationData = Object.values(addressMap);
-
-          if (locationData && locationData.length > 0) {
-            plotLocationsOnMap(locationData);
-            showToast("Đã cập nhật bản đồ phân tích mật độ!", "success");
-          } else {
-            showToast("Chưa có dữ liệu đơn hàng có tọa độ.", "error");
+            return points.map((p, i) => ({ ...p, cluster: assignments[i] }));
           }
+
+          // Get unassigned/pending orders
+          let targetOrders = orders.filter(o => o.status === 'pending' || o.status === 'processing');
+          if (targetOrders.length === 0) {
+            showToast("Không có đơn hàng cần phân công (Chờ XN/Đang CB).", "info");
+            return;
+          }
+
+          let locations = targetOrders.map(o => {
+            let lat = o.lat, lng = o.lng;
+            if (!lat || !lng) {
+              const cus = purchasedCustomers.find(c => c.id === o.packageCustomerId) || potentialCustomers.find(c => c.phone === o.phone);
+              if (cus && cus.district) {
+                const coords = getWardCoords(cus.district, cus.ward);
+                lat = coords.lat; lng = coords.lng;
+              } else {
+                lat = 10.776 + (Math.random() * 0.04 - 0.02);
+                lng = 106.701 + (Math.random() * 0.04 - 0.02);
+              }
+              o.lat = lat; o.lng = lng; 
+            }
+            return { lat, lng, address: o.address || (o.customerName + " - " + o.id), orderId: o.id, weight: 1 };
+          });
+
+          const activeShippers = shippers.filter(s => s.status === 'active');
+          const k = activeShippers.length > 0 ? activeShippers.length : 1;
+
+          locations = kMeansClustering(locations, k);
+
+          let overwriteOrders = false;
+          locations.forEach(loc => {
+            const o = orders.find(ox => ox.id === loc.orderId);
+            if (o) {
+              o.status = "delivering";
+              if (activeShippers.length > 0) {
+                const assignedShipper = activeShippers[loc.cluster % activeShippers.length];
+                o.shipperId = assignedShipper.id;
+                loc.address = `<b>Đơn:</b> ${o.id}<br><b>Shipper:</b> ${assignedShipper.name}<br><b>Địa chỉ:</b> ${o.address || o.customerName}`;
+              }
+              overwriteOrders = true;
+            }
+          });
+
+          if (overwriteOrders) {
+             localStorage.setItem("nutriadmin_orders", JSON.stringify(orders));
+             if (typeof clientStateUpdates !== 'undefined') {
+                clientStateUpdates.orders = orders;
+                if (!clientStateUpdates.isOverwriteKeys) clientStateUpdates.isOverwriteKeys = [];
+                if (!clientStateUpdates.isOverwriteKeys.includes("orders")) {
+                  clientStateUpdates.isOverwriteKeys.push("orders");
+                }
+             }
+             if (typeof renderOrdersAdmin === "function") renderOrdersAdmin();
+             if (typeof renderDashboard === "function") renderDashboard();
+             if (typeof renderShippers === "function") renderShippers();
+          }
+
+          plotLocationsOnMap(locations);
+          showToast(`AI đã chia ${locations.length} đơn thành ${k} cụm và phân công cho Shipper!`, "success");
+
         } catch (error) {
           console.error("Analysis Error:", error);
-          showToast("Lỗi phân tích dữ liệu mảng.", "error");
+          showToast("Lỗi phân tích dữ liệu mạng.", "error");
         } finally {
           btn.innerHTML = originalText;
           btn.disabled = false;
@@ -33217,6 +33333,22 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 dStatus =
                   '<span class="px-2 py-1 text-[10px] rounded-full bg-blue-500 text-white shadow-sm border border-blue-600">Đang CB</span>';
             }
+            
+            if (c.renewalPending) {
+              dStatus = '<span class="px-2 py-1 text-[10px] rounded-full bg-orange-500 text-white shadow-sm border border-orange-600">Chờ XN Gia hạn</span>';
+            }
+            
+            let isExpired = false;
+            if (c.endDate) {
+              const eDate = new Date(c.endDate);
+              eDate.setHours(0,0,0,0);
+              const today = new Date();
+              today.setHours(0,0,0,0);
+              if (eDate < today) {
+                isExpired = true;
+              }
+            }
+            
             let avatarHtml = `<div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs shrink-0"><i class="fa-solid fa-user"></i></div>`;
             if (c.avatar) {
               avatarHtml = `<img src="${c.avatar}" class="w-8 h-8 rounded-full object-cover shrink-0" alt="${c.name}">`;
@@ -33233,11 +33365,14 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                               </div>
                           </td>
                           <td class="px-6 py-4">
-                              <div class="text-rose-500 font-medium">Gói ${resolvePackageName(c.package)}</div>
+                              <div class="text-rose-500 font-medium flex items-center flex-wrap gap-2">Gói ${resolvePackageName(c.package)}
+                                ${isExpired ? '<span class="text-[10px] font-bold text-white bg-red-500 px-2 py-0.5 rounded shadow-sm">Đã hết hạn</span>' : ''}
+                              </div>
                               <div class="text-xs text-slate-500 font-semibold mt-0.5">
                                   Size: ${c.size === "power" ? "Power (L)" : c.size === "balance" ? "Balance (M)" : "Lean (S)"}
                               </div>
                               ${c.notes ? `<div class="text-xs text-amber-600 italic mt-1 max-w-[200px] truncate" title="${c.notes}"><i class="fa-regular fa-comment-dots mr-1"></i>${c.notes}</div>` : ""}
+                              ${c.renewalPending ? `<div class="text-xs text-orange-600 italic mt-1 max-w-[200px] font-bold"><i class="fa-solid fa-bell mr-1 animate-pulse"></i>Chờ xác nhận đã thanh toán gia hạn</div>` : ""}
                           </td>
                           <td class="px-6 py-4 text-slate-600">${new Date(c.startDate).toLocaleDateString("vi-VN")}${c.endDate ? " - " + new Date(c.endDate).toLocaleDateString("vi-VN") : ""}</td>
                           <td class="px-6 py-4">${dStatus}</td>
@@ -44936,6 +45071,21 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
 
       window.confirmRenewPayment = function () {
         closeRenewSubscriptionModal();
+
+        if (currentUser) {
+          const cIndex = purchasedCustomers.findIndex(c => c.phone === currentUser.phone);
+          if (cIndex !== -1) {
+            purchasedCustomers[cIndex].renewalPending = true;
+            localStorage.setItem("nutriadmin_purchased_customers", JSON.stringify(purchasedCustomers));
+            if (typeof clientStateUpdates !== 'undefined') {
+              clientStateUpdates.purchasedCustomers = purchasedCustomers;
+              if (!clientStateUpdates.isOverwriteKeys) clientStateUpdates.isOverwriteKeys = [];
+              if (!clientStateUpdates.isOverwriteKeys.includes("purchasedCustomers")) {
+                clientStateUpdates.isOverwriteKeys.push("purchasedCustomers");
+              }
+            }
+          }
+        }
 
         const successModal = document.getElementById("renew-success-modal");
         const successContent = document.getElementById(
