@@ -2982,6 +2982,45 @@
                     </div>
                   </div>
                 </div>
+
+                <div class="p-6 border-b border-slate-100">
+                  <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-link text-primary"></i> Liên kết kênh đặt hàng
+                  </h2>
+                  <p class="text-sm text-slate-500 mb-4">
+                    Cấu hình link dẫn đến các app giao đồ ăn. Bật để hiển thị trong bảng chọn khi khách nhấn "Đặt món".
+                  </p>
+
+                  <div class="space-y-5">
+                    <!-- ShopeeFood -->
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <div class="flex items-center gap-3 w-48 shrink-0">
+                        <input type="checkbox" id="set-order-shopeefood-enable" onchange="window.silentSaveSettings(event)" class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2" />
+                        <label for="set-order-shopeefood-enable" class="font-bold text-slate-700">ShopeeFood</label>
+                      </div>
+                      <input type="text" id="set-order-shopeefood-url" oninput="window.silentSaveSettings(event)" class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Link ShopeeFood của quán..." />
+                    </div>
+
+                    <!-- GrabFood -->
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <div class="flex items-center gap-3 w-48 shrink-0">
+                        <input type="checkbox" id="set-order-grabfood-enable" onchange="window.silentSaveSettings(event)" class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2" />
+                        <label for="set-order-grabfood-enable" class="font-bold text-slate-700">GrabFood</label>
+                      </div>
+                      <input type="text" id="set-order-grabfood-url" oninput="window.silentSaveSettings(event)" class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Link GrabFood của quán..." />
+                    </div>
+
+                    <!-- Xanh SM Food -->
+                    <div class="flex flex-col md:flex-row md:items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                      <div class="flex items-center gap-3 w-48 shrink-0">
+                        <input type="checkbox" id="set-order-xanhsm-enable" onchange="window.silentSaveSettings(event)" class="w-4 h-4 text-primary bg-slate-100 border-slate-300 rounded focus:ring-primary focus:ring-2" />
+                        <label for="set-order-xanhsm-enable" class="font-bold text-slate-700">Xanh SM Food</label>
+                      </div>
+                      <input type="text" id="set-order-xanhsm-url" oninput="window.silentSaveSettings(event)" class="w-full border-slate-300 rounded-lg py-2 px-3 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="Link Xanh SM Food của quán..." />
+                    </div>
+                  </div>
+                </div>
+
                 <div class="p-6 border-b border-slate-100">
                   <h2
                     class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"
@@ -3264,117 +3303,6 @@
                       onchange="importData(event)"
                     />
                   </label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Giám sát & Quản lý Bảo mật Cấu hình (Phương án 2) -->
-            <div
-              class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-6"
-            >
-              <div class="p-6">
-                <h2
-                  class="text-lg font-semibold text-slate-800 mb-2 flex items-center gap-3"
-                >
-                  <div
-                    class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg"
-                  >
-                    <i class="fa-solid fa-shield-virus"></i>
-                  </div>
-                  <div>
-                    Giám Sát & Quản Lý Bảo Mật Cấu Hình
-                    <p class="text-sm text-slate-500 font-normal mt-0.5">
-                      Kiểm tra trạng thái bảo mật của API Keys & Firebase khi
-                      chạy trên GitHub Pages / Production.
-                    </p>
-                  </div>
-                </h2>
-
-                <div class="mt-6 pl-0 sm:pl-12 space-y-5">
-                  <!-- Trạng thái đánh giá bảo mật -->
-                  <div
-                    id="security-evaluation-banner"
-                    class="p-4 rounded-xl border flex gap-3 items-start"
-                  >
-                    <!-- Sẽ được cập nhật bằng JS -->
-                  </div>
-
-                  <!-- Chi tiết nguồn cấu hình hiện tại -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div
-                      class="p-4 rounded-xl bg-slate-50 border border-slate-100"
-                    >
-                      <div
-                        class="text-xs text-slate-400 font-semibold uppercase tracking-wider"
-                      >
-                        Nguồn nạp Gemini API
-                      </div>
-                      <div
-                        id="active-gemini-source"
-                        class="mt-1 font-bold text-slate-700 flex items-center gap-2"
-                      >
-                        <!-- Sẽ cập nhật bằng JS -->
-                      </div>
-                    </div>
-                    <div
-                      class="p-4 rounded-xl bg-slate-50 border border-slate-100"
-                    >
-                      <div
-                        class="text-xs text-slate-400 font-semibold uppercase tracking-wider"
-                      >
-                        Nguồn nạp Firebase Config
-                      </div>
-                      <div
-                        id="active-firebase-source"
-                        class="mt-1 font-bold text-slate-700 flex items-center gap-2"
-                      >
-                        <!-- Sẽ cập nhật bằng JS -->
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Nhập/Xuất cấu hình nhanh -->
-                  <div class="pt-4 border-t border-slate-100">
-                    <div
-                      class="text-xs text-slate-400 font-semibold mb-3 uppercase tracking-wider"
-                    >
-                      Sao lưu & Đồng bộ Cấu hình Bảo mật nhanh
-                    </div>
-                    <div class="flex flex-col sm:flex-row gap-3">
-                      <button
-                        onclick="exportSecurityConfig()"
-                        type="button"
-                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-semibold transition-all"
-                        title="Tải về file cấu hình để lưu trữ bảo mật"
-                      >
-                        <i class="fa-solid fa-file-export text-slate-500"></i>
-                        Xuất cấu hình (.json)
-                      </button>
-                      <label
-                        class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-semibold transition-all cursor-pointer"
-                        title="Tải lên nhanh file cấu hình bảo mật"
-                      >
-                        <i class="fa-solid fa-file-import text-slate-500"></i>
-                        Nhập cấu hình (.json)
-                        <input
-                          type="file"
-                          id="security-config-import"
-                          accept=".json"
-                          class="hidden"
-                          onchange="importSecurityConfig(event)"
-                        />
-                      </label>
-                    </div>
-                    <p class="text-xs text-slate-400 mt-2">
-                      <i class="fa-solid fa-info-circle mr-1"></i>
-                      <strong>Mẹo bảo mật:</strong> Tạo file
-                      <code>config.json</code> ở thư mục root với nội dung mẫu
-                      từ <code>config.json.example</code> (đã được bỏ qua trong
-                      git) hoặc sử dụng tính năng
-                      <strong>Nhập cấu hình (.json)</strong> này trên trình
-                      duyệt admin để tránh lộ khóa bí mật lên GitHub!
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
@@ -4383,7 +4311,7 @@
                         document
                           .getElementById('grand-opening-modal')
                           .classList.add('hidden');
-                        setTimeout(() => switchView('order-form'), 100);
+                        setTimeout(() => openOrderPlatformModal(), 100);
                       "
                       class="flex-none bg-white hover:bg-slate-50 text-[#0f7632] border-2 border-[#0f7632] px-12 py-5 rounded-xl font-bold text-xl shadow-sm transition-all hover:-translate-y-1 flex items-center justify-center gap-2 hover:shadow-md animate-glow-pulse-emerald relative z-10"
                     >
@@ -6697,7 +6625,7 @@
                       <button
                         id="skip-analysis-btn"
                         type="button"
-                        onclick="switchView('order-form')"
+                        onclick="openOrderPlatformModal()"
                         class="w-full bg-orange-500 text-white hover:bg-orange-600 px-6 py-3 rounded-xl font-bold text-sm transition-all focus:outline-none flex items-center justify-center shadow-md hover:shadow-lg active:scale-[0.98]"
                       >
                         Bỏ qua phân tích, đến trang đặt hàng
@@ -20381,7 +20309,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                             <button onclick="openCustomerMenuModal(${currentUser.id})" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-utensils"></i> Chọn lại menu tuần
                             </button>
-                            <button onclick="switchView('order-form')" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
+                            <button onclick="openOrderPlatformModal()" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
                                 <i class="fa-solid fa-cart-shopping"></i> Đặt hàng ngoài gói đăng ký
                             </button>
                             <button onclick="openRenewSubscriptionModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-xl text-sm transition-colors flex justify-center items-center gap-2 shadow-sm">
@@ -21448,6 +21376,21 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             if (setWeekly)
               setWeekly.checked = settings.weeklySpecialFilterEnabled !== false;
 
+            const setShopeeFoodEnable = document.getElementById("set-order-shopeefood-enable");
+            if (setShopeeFoodEnable && setShopeeFoodEnable !== document.activeElement) setShopeeFoodEnable.checked = settings.orderShopeeFoodEnable || false;
+            const setShopeeFoodUrl = document.getElementById("set-order-shopeefood-url");
+            if (setShopeeFoodUrl && setShopeeFoodUrl !== document.activeElement) setShopeeFoodUrl.value = settings.orderShopeeFoodUrl || "";
+
+            const setGrabFoodEnable = document.getElementById("set-order-grabfood-enable");
+            if (setGrabFoodEnable && setGrabFoodEnable !== document.activeElement) setGrabFoodEnable.checked = settings.orderGrabFoodEnable || false;
+            const setGrabFoodUrl = document.getElementById("set-order-grabfood-url");
+            if (setGrabFoodUrl && setGrabFoodUrl !== document.activeElement) setGrabFoodUrl.value = settings.orderGrabFoodUrl || "";
+
+            const setXanhSMEnable = document.getElementById("set-order-xanhsm-enable");
+            if (setXanhSMEnable && setXanhSMEnable !== document.activeElement) setXanhSMEnable.checked = settings.orderXanhSMEnable || false;
+            const setXanhSMUrl = document.getElementById("set-order-xanhsm-url");
+            if (setXanhSMUrl && setXanhSMUrl !== document.activeElement) setXanhSMUrl.value = settings.orderXanhSMUrl || "";
+
             const setZaloOaToken = document.getElementById("set-zalo-oa-token");
             if (setZaloOaToken)
               setZaloOaToken.value = settings.zaloOaToken || "";
@@ -21560,9 +21503,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }
 
         refreshBrandUI();
-        if (typeof updateSecurityStatusUI === "function") {
-          updateSecurityStatusUI();
-        }
 
         try {
           const savedSettingsObj = savedSettings
@@ -21969,6 +21909,27 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         });
       }
 
+      window.silentSaveSettings = function(e) {
+        if (e) e.preventDefault();
+        if (window.silentSaveTimeout) clearTimeout(window.silentSaveTimeout);
+        window.silentSaveTimeout = setTimeout(() => {
+          const savedSettings = localStorage.getItem("nutriadmin_settings");
+          let existingSettings = savedSettings ? JSON.parse(savedSettings) : {};
+          
+          existingSettings.orderShopeeFoodEnable = document.getElementById("set-order-shopeefood-enable")?.checked ?? false;
+          existingSettings.orderShopeeFoodUrl = document.getElementById("set-order-shopeefood-url")?.value || "";
+          existingSettings.orderGrabFoodEnable = document.getElementById("set-order-grabfood-enable")?.checked ?? false;
+          existingSettings.orderGrabFoodUrl = document.getElementById("set-order-grabfood-url")?.value || "";
+          existingSettings.orderXanhSMEnable = document.getElementById("set-order-xanhsm-enable")?.checked ?? false;
+          existingSettings.orderXanhSMUrl = document.getElementById("set-order-xanhsm-url")?.value || "";
+
+          localStorage.setItem("nutriadmin_settings", JSON.stringify(existingSettings));
+          if (typeof syncStateToServer === "function") {
+            syncStateToServer();
+          }
+        }, 500);
+      };
+
       function saveSettings(e) {
         e.preventDefault();
 
@@ -22131,6 +22092,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           weeklySpecialFilterEnabled: document.getElementById(
             "set-weekly-special-filter-enable",
           ).checked,
+          orderShopeeFoodEnable: document.getElementById("set-order-shopeefood-enable")?.checked ?? false,
+          orderShopeeFoodUrl: document.getElementById("set-order-shopeefood-url")?.value || "",
+          orderGrabFoodEnable: document.getElementById("set-order-grabfood-enable")?.checked ?? false,
+          orderGrabFoodUrl: document.getElementById("set-order-grabfood-url")?.value || "",
+          orderXanhSMEnable: document.getElementById("set-order-xanhsm-enable")?.checked ?? false,
+          orderXanhSMUrl: document.getElementById("set-order-xanhsm-url")?.value || "",
           zaloOaToken: document.getElementById("set-zalo-oa-token").value,
           packagesText: packagesText,
           bannerTexts: bannerTexts,
@@ -22187,9 +22154,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             "Đã xóa API Key cá nhân. Hệ thống sẽ dùng key mặc định.",
             "info",
           );
-        }
-        if (typeof updateSecurityStatusUI === "function") {
-          updateSecurityStatusUI();
         }
       }
 
@@ -22318,9 +22282,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             "info",
           );
         }
-        if (typeof updateSecurityStatusUI === "function") {
-          updateSecurityStatusUI();
-        }
       }
 
       function saveCustomAppUrl() {
@@ -22385,186 +22346,6 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
             .classList.add("hidden");
         }
       }
-
-      window.updateSecurityStatusUI = function () {
-        const isGithubPages = window.location.hostname.includes("github.io");
-        const customApiKey = localStorage.getItem("nutriadmin_custom_api_key");
-        const customFirebase = localStorage.getItem(
-          "nutriadmin_custom_firebase_config",
-        );
-
-        const hasHardcodedKey =
-          window.NURI_GEMINI_API_KEY &&
-          window.NURI_GEMINI_API_KEY.startsWith("AIzaSy");
-        const hasHardcodedFirebase =
-          window.NURI_FIREBASE_CONFIG &&
-          window.NURI_FIREBASE_CONFIG.includes("apiKey");
-
-        // Compute Gemini Source UI
-        const geminiSourceEl = document.getElementById("active-gemini-source");
-        if (geminiSourceEl) {
-          if (customApiKey) {
-            geminiSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">CÁ NHÂN</span> Trình duyệt (LocalStorage)`;
-          } else if (window.NURI_CONFIG_SOURCE === "config_file") {
-            geminiSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">CỤC BỘ</span> File config.json (An toàn)`;
-          } else if (window.NURI_CONFIG_SOURCE === "server") {
-            geminiSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">MÁY CHỦ</span> Server Environment (An toàn)`;
-          } else if (hasHardcodedKey) {
-            geminiSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">DÁN CỨNG</span> Hardcoded index.html (Không an toàn)`;
-          } else {
-            geminiSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">MẶC ĐỊNH</span> Server Proxy / Key mặc định`;
-          }
-        }
-
-        // Compute Firebase Source UI
-        const firebaseSourceEl = document.getElementById(
-          "active-firebase-source",
-        );
-        if (firebaseSourceEl) {
-          if (customFirebase) {
-            firebaseSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">CÁ NHÂN</span> Trình duyệt (LocalStorage)`;
-          } else if (window.NURI_CONFIG_SOURCE === "config_file") {
-            firebaseSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800">CỤC BỘ</span> File config.json (An toàn)`;
-          } else if (window.NURI_CONFIG_SOURCE === "server") {
-            firebaseSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 text-indigo-800">MÁY CHỦ</span> Server Config (An toàn)`;
-          } else if (hasHardcodedFirebase) {
-            firebaseSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">DÁN CỨNG</span> Hardcoded index.html (Không an toàn)`;
-          } else {
-            firebaseSourceEl.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-800">MẶC ĐỊNH</span> Lưu trữ LocalStorage Trình duyệt`;
-          }
-        }
-
-        // Compute Security Evaluation Banner
-        const evaluationEl = document.getElementById(
-          "security-evaluation-banner",
-        );
-        if (evaluationEl) {
-          if (isGithubPages && (hasHardcodedKey || hasHardcodedFirebase)) {
-            // HIGH RISK
-            evaluationEl.className =
-              "p-4 rounded-xl border border-rose-200 bg-rose-50/50 flex gap-3 items-start text-rose-800";
-            evaluationEl.innerHTML = `
-              <div class="text-xl text-rose-500 mt-0.5"><i class="fa-solid fa-triangle-exclamation"></i></div>
-              <div class="text-sm">
-                <strong class="text-rose-900 block font-bold mb-1">CẢNH BÁO BẢO MẬT: NGUY CƠ RÒ RỈ KHÓA (HIGH RISK)</strong>
-                Bạn đang chạy trên GitHub Pages nhưng API Key hoặc Firebase Config đang được dán trực tiếp trong mã nguồn của file <code>index.html</code>. 
-                Khi đẩy lên kho lưu trữ GitHub công khai, các khóa này có nguy cơ cao bị quét và sử dụng trái phép. 
-                <br><strong class="block mt-2 text-rose-950 font-semibold">Khuyến nghị:</strong> Hãy xóa các giá trị dán cứng đó đi, và cấu hình chúng thông qua một tệp <code>config.json</code> cục bộ (đã được bỏ qua trong file gitignore) hoặc dán trực tiếp vào mục cài đặt LocalStorage bên dưới.
-              </div>
-            `;
-          } else if (
-            customApiKey ||
-            customFirebase ||
-            window.NURI_CONFIG_SOURCE === "config_file" ||
-            window.NURI_CONFIG_SOURCE === "server"
-          ) {
-            // SECURE
-            evaluationEl.className =
-              "p-4 rounded-xl border border-emerald-200 bg-emerald-50/50 flex gap-3 items-start text-emerald-800";
-            evaluationEl.innerHTML = `
-              <div class="text-xl text-emerald-500 mt-0.5"><i class="fa-solid fa-circle-check"></i></div>
-              <div class="text-sm">
-                <strong class="text-emerald-900 block font-bold mb-1">HỆ THỐNG AN TOÀN (SECURE)</strong>
-                Cấu hình API và dữ liệu đám mây của bạn đang được nạp an toàn từ LocalStorage hoặc file <code>config.json</code> ngoại tuyến (nằm ngoài phạm vi Git). 
-                Bạn có thể tự tin đẩy mã nguồn lên GitHub công khai mà không lo bị lộ bất kỳ thông tin nhạy cảm nào.
-              </div>
-            `;
-          } else {
-            // DEFAULT / WARNING
-            evaluationEl.className =
-              "p-4 rounded-xl border border-amber-200 bg-amber-50/50 flex gap-3 items-start text-amber-800";
-            evaluationEl.innerHTML = `
-              <div class="text-xl text-amber-500 mt-0.5"><i class="fa-solid fa-circle-info"></i></div>
-              <div class="text-sm">
-                <strong class="text-amber-900 block font-bold mb-1">CẦN CẤU HÌNH (PENDING CONFIGURATION)</strong>
-                Hệ thống chưa nhận diện được API Key cá nhân của bạn. Hiện tại hệ thống đang chạy với Key mặc định từ Server Proxy (nếu có). 
-                Để đảm bảo dịch vụ không bị gián đoạn và có cơ sở dữ liệu riêng biệt, vui lòng cấu hình bằng cách:
-                <ul class="list-disc pl-4 mt-1.5 space-y-1">
-                  <li>Tạo file <code>config.json</code> dựa trên <code>config.json.example</code> rồi tải lên hosting của bạn (an toàn, không đẩy lên Git).</li>
-                  <li>Hoặc nhập trực tiếp thông tin vào LocalStorage trình duyệt bằng các ô cấu hình ở dưới.</li>
-                </ul>
-              </div>
-            `;
-          }
-        }
-      };
-
-      window.exportSecurityConfig = function () {
-        const apiKey = localStorage.getItem("nutriadmin_custom_api_key") || "";
-        const firebaseConfigStr =
-          localStorage.getItem("nutriadmin_custom_firebase_config") || "";
-        const appUrl = localStorage.getItem("nutriadmin_custom_app_url") || "";
-
-        let firebaseConfig = null;
-        if (firebaseConfigStr) {
-          try {
-            firebaseConfig = JSON.parse(firebaseConfigStr);
-          } catch (e) {
-            firebaseConfig = firebaseConfigStr;
-          }
-        }
-
-        const configObj = {
-          geminiApiKey: apiKey,
-          firebaseConfig: firebaseConfig,
-          appUrl: appUrl,
-        };
-
-        const dataStr =
-          "data:text/json;charset=utf-8," +
-          encodeURIComponent(JSON.stringify(configObj, null, 2));
-        const downloadAnchor = document.createElement("a");
-        downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "nutri_secure_config.json");
-        document.body.appendChild(downloadAnchor);
-        downloadAnchor.click();
-        downloadAnchor.remove();
-        showToast("Đã xuất file cấu hình bảo mật thành công!", "success");
-      };
-
-      window.importSecurityConfig = function (event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          try {
-            const config = JSON.parse(e.target.result);
-            if (config.geminiApiKey !== undefined) {
-              localStorage.setItem(
-                "nutriadmin_custom_api_key",
-                config.geminiApiKey.trim(),
-              );
-            }
-            if (config.firebaseConfig !== undefined) {
-              const fbConfig =
-                typeof config.firebaseConfig === "object"
-                  ? JSON.stringify(config.firebaseConfig)
-                  : config.firebaseConfig;
-              localStorage.setItem(
-                "nutriadmin_custom_firebase_config",
-                fbConfig.trim(),
-              );
-            }
-            if (config.appUrl !== undefined) {
-              localStorage.setItem(
-                "nutriadmin_custom_app_url",
-                config.appUrl.trim(),
-              );
-            }
-            showToast(
-              "Đã nhập cấu hình bảo mật thành công! Đang tải lại...",
-              "success",
-            );
-            setTimeout(() => {
-              window.location.reload();
-            }, 1500);
-          } catch (err) {
-            showToast("File không đúng định dạng JSON hoặc bị lỗi.", "error");
-          }
-        };
-        reader.readAsText(file);
-      };
 
       function decodeJwtResponse(token) {
         var base64Url = token.split(".")[1];
@@ -27731,12 +27512,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           ${
                             showBanner
                               ? `
-      <button id="cta-order-now-btn" type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+      <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
           <i class="fa-solid fa-utensils"></i> Đăng ký đặt 1 bữa
       </button>
       `
                               : `
-      <button id="cta-order-now-btn" type="button" onclick="switchView('order-form')" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
+      <button id="cta-order-now-btn" type="button" onclick="openOrderPlatformModal()" class="bg-[#F97316] text-white px-8 py-3.5 rounded-xl font-bold text-lg transition-all lg:hover:-translate-y-1 lg:hover:shadow-lg active:scale-[0.98] lg:hover:bg-[#EA580C] flex items-center justify-center gap-2 mx-auto animate-glow-pulse">
           <i class="fa-solid fa-motorcycle"></i> Đặt món giao ngay
       </button>
       `
@@ -45082,6 +44863,23 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       </div>
     </div>
 
+    <!-- Order Platform Modal -->
+    <div id="order-platform-modal" class="fixed inset-0 z-[9999] hidden items-end justify-center sm:items-center bg-slate-900/60 backdrop-blur-sm p-4 transition-all duration-300 opacity-0">
+      <div id="order-platform-modal-content" class="bg-white w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden transform translate-y-full sm:translate-y-0 sm:scale-95 transition-all duration-300">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-emerald-50">
+          <h3 class="text-xl font-bold text-emerald-800 flex items-center gap-2">
+            <i class="fa-solid fa-motorcycle"></i> Chọn kênh đặt hàng
+          </h3>
+          <button onclick="closeOrderPlatformModal()" class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+        <div class="p-6 space-y-3" id="order-platform-list">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+
     <!-- iOS Help Overlay -->
     <div
       id="pwa-ios-modal"
@@ -45437,6 +45235,115 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
       window.closePwaIosModal = closePwaIosModal;
       window.triggerPwaInstall = triggerPwaInstall;
       window.dismissPwaBanner = dismissPwaBanner;
+
+      function openOrderPlatformModal() {
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settings = savedSettings ? JSON.parse(savedSettings) : {};
+
+        const listContainer = document.getElementById("order-platform-list");
+        if (!listContainer) return;
+        let html = '';
+
+        // Website option
+        html += `
+          <button onclick="closeOrderPlatformModal(); switchView('order-form');" class="w-full flex items-center justify-between p-4 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-2xl transition-all group">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-orange-500 text-white flex items-center justify-center text-lg shadow-md group-hover:scale-110 transition-transform">
+                <i class="fa-solid fa-store"></i>
+              </div>
+              <div class="text-left">
+                <p class="font-bold text-orange-800">Trang Web Nuri</p>
+                <p class="text-[10px] text-orange-600 font-medium">Đặt trực tiếp, tích điểm</p>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-orange-400"></i>
+          </button>
+        `;
+
+        if (settings.orderShopeeFoodEnable && settings.orderShopeeFoodUrl) {
+          html += `
+            <a href="${settings.orderShopeeFoodUrl}" target="_blank" onclick="closeOrderPlatformModal()" class="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all group">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#EE4D2D] text-white flex items-center justify-center text-lg shadow-md group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-bag-shopping"></i>
+                </div>
+                <div class="text-left">
+                  <p class="font-bold text-slate-800">ShopeeFood</p>
+                  <p class="text-[10px] text-slate-500 font-medium">Mã miễn phí vận chuyển</p>
+                </div>
+              </div>
+              <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
+            </a>
+          `;
+        }
+
+        if (settings.orderGrabFoodEnable && settings.orderGrabFoodUrl) {
+          html += `
+            <a href="${settings.orderGrabFoodUrl}" target="_blank" onclick="closeOrderPlatformModal()" class="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all group">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#00B14F] text-white flex items-center justify-center text-lg shadow-md group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-motorcycle"></i>
+                </div>
+                <div class="text-left">
+                  <p class="font-bold text-slate-800">GrabFood</p>
+                  <p class="text-[10px] text-slate-500 font-medium">Giao hàng nhanh chóng</p>
+                </div>
+              </div>
+              <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
+            </a>
+          `;
+        }
+
+        if (settings.orderXanhSMEnable && settings.orderXanhSMUrl) {
+          html += `
+            <a href="${settings.orderXanhSMUrl}" target="_blank" onclick="closeOrderPlatformModal()" class="w-full flex items-center justify-between p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition-all group">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-[#00AEEF] text-white flex items-center justify-center text-lg shadow-md group-hover:scale-110 transition-transform">
+                  <i class="fa-solid fa-car-side"></i>
+                </div>
+                <div class="text-left">
+                  <p class="font-bold text-slate-800">Xanh SM Food</p>
+                  <p class="text-[10px] text-slate-500 font-medium">Thân thiện môi trường</p>
+                </div>
+              </div>
+              <i class="fa-solid fa-arrow-up-right-from-square text-slate-400"></i>
+            </a>
+          `;
+        }
+
+        listContainer.innerHTML = html;
+
+        const modal = document.getElementById("order-platform-modal");
+        const content = document.getElementById("order-platform-modal-content");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        setTimeout(() => {
+          modal.classList.remove("opacity-0");
+          if (window.innerWidth < 640) {
+            content.classList.remove("translate-y-full");
+          } else {
+            content.classList.remove("sm:scale-95");
+          }
+        }, 10);
+      }
+
+      function closeOrderPlatformModal() {
+        const modal = document.getElementById("order-platform-modal");
+        const content = document.getElementById("order-platform-modal-content");
+        modal.classList.add("opacity-0");
+        if (window.innerWidth < 640) {
+          content.classList.add("translate-y-full");
+        } else {
+          content.classList.add("sm:scale-95");
+        }
+        setTimeout(() => {
+          modal.classList.add("hidden");
+          modal.classList.remove("flex");
+        }, 300);
+      }
+
+      window.openOrderPlatformModal = openOrderPlatformModal;
+      window.closeOrderPlatformModal = closeOrderPlatformModal;
 
       // Run on startup
       setTimeout(initPwaInstallChecks, 2000);
