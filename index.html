@@ -8,7 +8,7 @@
     />
     <title>Nuri Kitchen - Quản Lý Menu Healthy</title>
     <!-- PWA Configurations -->
-    <link rel="manifest" href="/manifest.json" />
+    <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#10b981" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
@@ -22,7 +22,7 @@
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
           navigator.serviceWorker
-            .register("/sw.js")
+            .register("./sw.js")
             .then((reg) =>
               console.log("PWA Service Worker registered!", reg.scope),
             )
@@ -801,8 +801,8 @@
 
     <!-- Cấu hình Firebase & Gemini cho Github Pages -->
     <script>
-      window.NURI_FIREBASE_CONFIG = null; // Dán chuỗi JSON config của Firebase vào đây. VD: '{"apiKey": "...", ...}'
-      window.NURI_GEMINI_API_KEY = null; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
+      window.NURI_FIREBASE_CONFIG = {"apiKey":"AIzaSyBioRMLK2aA42E3pESwxg3cd3FgPlofmDs","authDomain":"nurikitchen.firebaseapp.com","projectId":"nurikitchen","storageBucket":"nurikitchen.firebasestorage.app","messagingSenderId":"401182710108","appId":"1:401182710108:web:f5c66f6da027bdc285c999","measurementId":"G-BWPSJWE34S"}; // Dán chuỗi JSON config của Firebase vào đây. VD: '{"apiKey": "...", ...}'
+      window.NURI_GEMINI_API_KEY = "AQ.Ab8RN6KXY74E7w9y6RQU3mpngU3sgkIENBFtT3waV9O1b_fr3w"; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
       window.NURI_CONFIG_SOURCE = "default"; // Nguồn cấu hình ("default", "server", "config_file")
     </script>
 
@@ -43143,7 +43143,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
                 name: "Nuri - Tư Vấn Dinh Dưỡng",
                 description: "Chuyên gia dinh dưỡng ảo & Thực đơn cá nhân hóa của bạn",
                 icons: [{ src: settingsFavicon, type: effectiveType, sizes: "192x192 512x512", purpose: "any maskable" }],
-                start_url: "/?mode=landing",
+                start_url: "./?mode=landing",
                 background_color: "#f8fafc",
                 theme_color: "#10b981",
                 display: "standalone",
@@ -43152,7 +43152,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
               const blob = new Blob([JSON.stringify(manifestObj)], { type: "application/json" });
               manifestLink.href = URL.createObjectURL(blob);
             } else {
-              manifestLink.href = "/manifest.json";
+              manifestLink.href = "./manifest.json";
             }
           }
         }
@@ -45894,6 +45894,11 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         e.preventDefault();
         deferredPrompt = e;
 
+        // Check if user already dismissed it this session
+        if (sessionStorage.getItem("nuri_pwa_dismissed") === "true") {
+          return;
+        }
+
         // Show our beautiful custom installation banner
         showPwaBanner();
       });
@@ -45906,7 +45911,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         }
 
         const isDismissed =
-          localStorage.getItem("nuri_pwa_dismissed") === "true";
+          sessionStorage.getItem("nuri_pwa_dismissed") === "true";
         if (isDismissed) {
           return;
         }
@@ -45941,7 +45946,7 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
         if (banner) {
           banner.classList.add("hidden");
         }
-        localStorage.setItem("nuri_pwa_dismissed", "true");
+        sessionStorage.setItem("nuri_pwa_dismissed", "true");
       }
 
       function triggerPwaInstall() {
