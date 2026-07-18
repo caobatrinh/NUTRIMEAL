@@ -23294,6 +23294,16 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           return;
         }
 
+        // Chờ Firebase kết nối thành công trước khi ghi nhận lượt quét để đảm bảo sync lên server
+        if (window.NURI_FIREBASE_CONFIG && (typeof cloudDb === "undefined" || cloudDb === null)) {
+          window._qrScanAttempt = (window._qrScanAttempt || 0) + 1;
+          if (window._qrScanAttempt < 20) { // Đợi tối đa 10 giây
+            setTimeout(() => logQrScanOnLoad(source), 500);
+            return;
+          }
+        }
+        window._qrScanAttempt = 0;
+
         const lastScanTimeStr = localStorage.getItem("nutriadmin_qr_scanned_recorded_time_" + source);
         const lastScanTime = lastScanTimeStr ? parseInt(lastScanTimeStr) : 0;
         const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
@@ -39582,10 +39592,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           if (shareBtn) shareBtn.classList.add("hidden");
           switchView("consulting");
 
-          // Auto-prompt to enable notifications on user's device
-          if (typeof checkAndShowPwaPermissionPrompt === "function") {
-            checkAndShowPwaPermissionPrompt();
-          }
+
         } else if (mode === "shipper-app") {
           const nav = document.querySelector("nav");
           if (nav) nav.classList.add("hidden");
