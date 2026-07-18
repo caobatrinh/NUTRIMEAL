@@ -21771,6 +21771,23 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           await syncStateToServer();
         }
 
+        // Đồng bộ bannerImagesCloud lên Firebase document riêng để khách hàng có thể tải về
+        // (bannerImagesCloud bị xóa khỏi system_data trước khi sync để tránh vượt giới hạn 1MB)
+        if (typeof cloudDb !== "undefined" && cloudDb !== null && frames && frames.length > 0) {
+          try {
+            const bannerDoc = {};
+            bannerDoc[position] = frames;
+            await cloudDb
+              .collection("nutriadmin_v1")
+              .doc("banner_images")
+              .set(bannerDoc, { merge: true })
+              .catch((e) => console.warn("banner_images sync error:", e.message));
+            console.log("Banner images synced to Firebase banner_images doc for position:", position);
+          } catch (e) {
+            console.warn("Could not sync banner images to Firebase:", e);
+          }
+        }
+
         inputEl.disabled = false;
         inputEl.value = "";
         setElementUploadLoading(previewId, buttonSelector, false);
@@ -36262,6 +36279,56 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 if (typeof showToast === "function") {
                   showToast("Cảnh báo: Không thể đồng bộ dữ liệu từ Cloud (Vui lòng kiểm tra Firebase Rules). Hệ thống đang lưu tạm ở Local.", "error");
                 }
+              });
+
+            // Đọc ảnh banner từ Firebase document riêng 'banner_images' và apply cho tất cả người dùng
+            // (kể cả khách hàng - không cần quyền admin)
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("banner_images")
+              .onSnapshot((bannerSnap) => {
+                if (!bannerSnap.exists) return;
+                const bannerData = bannerSnap.data();
+                if (!bannerData) return;
+
+                const positions = ["banner-top", "banner-bottom", "trust-top", "trust-bottom", "trust-center"];
+                positions.forEach((pos) => {
+                  const frames = bannerData[pos];
+                  if (!frames || !Array.isArray(frames) || frames.length === 0) return;
+
+                  // Lưu vào MascotDB để cache local
+                  if (window.MascotDB) {
+                    window.MascotDB.init().then(() => {
+                      window.MascotDB.saveSequence(`seq_${pos}`, frames).catch(() => {});
+                    }).catch(() => {});
+                  }
+
+                  // Cập nhật settings local để loadAllBannerImages biết dùng frames này
+                  try {
+                    const settingsRaw = localStorage.getItem("nutriadmin_settings");
+                    const s = settingsRaw ? JSON.parse(settingsRaw) : {};
+                    if (!s.bannerImagesCloud) s.bannerImagesCloud = {};
+                    s.bannerImagesCloud[pos] = frames;
+                    if (!s.bannerImages) s.bannerImages = {};
+                    s.bannerImages[pos] = `IDB:seq_${pos}`;
+                    localStorage.setItem("nutriadmin_settings", JSON.stringify(s));
+                  } catch (e) {}
+
+                  // Apply trực tiếp vào các phần tử ảnh trên trang
+                  if (window.applySequence) {
+                    window.applySequence("banner-img-" + pos, frames);
+                    if (pos === "banner-top" || pos === "banner-bottom") {
+                      window.applySequence("user-banner-img-" + pos, frames);
+                    } else if (pos === "trust-top" || pos === "trust-bottom" || pos === "trust-center") {
+                      window.applySequence("user-banner-img-" + pos, frames);
+                      window.applySequence("user-banner-img-" + pos + "-2", frames);
+                      window.applySequence("user-banner-img-" + pos + "-3", frames);
+                    }
+                  }
+                  console.log("Banner frames applied from Firebase banner_images for position:", pos, "frames:", frames.length);
+                });
+              }, (err) => {
+                console.warn("Could not subscribe to banner_images document:", err);
               });
           }
 
