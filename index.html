@@ -802,7 +802,7 @@
     <!-- Cấu hình Firebase & Gemini cho Github Pages -->
     <script>
       window.NURI_FIREBASE_CONFIG = {"apiKey":"AIzaSyBioRMLK2aA42E3pESwxg3cd3FgPlofmDs","authDomain":"nurikitchen.firebaseapp.com","projectId":"nurikitchen","storageBucket":"nurikitchen.firebasestorage.app","messagingSenderId":"401182710108","appId":"1:401182710108:web:f5c66f6da027bdc285c999","measurementId":"G-BWPSJWE34S"}; // Dán chuỗi JSON config của Firebase vào đây. VD: '{"apiKey": "...", ...}'
-      window.NURI_GEMINI_API_KEY = "AQ.Ab8RN6KXY74E7w9y6RQU3mpngU3sgkIENBFtT3waV9O1b_fr3w"; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
+      window.NURI_GEMINI_API_KEY = "AQ.Ab8RN6JaOoNJr_YJZsAcZlGAUIPKwiP5CwhwioIwi7N-zvSq0g"; // Dán API Key Gemini vào đây. VD: 'AIzaSy...'
       window.NURI_CONFIG_SOURCE = "default"; // Nguồn cấu hình ("default", "server", "config_file")
     </script>
 
@@ -3078,7 +3078,37 @@
                     </div>
                   </div>
                 </div>
+
+                <!-- Giấy phép ATVS thực phẩm -->
                 <div class="p-6 border-b border-slate-100">
+                  <h2 class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-certificate text-primary"></i> Giấy phép An toàn Vệ sinh Thực phẩm
+                  </h2>
+                  <p class="text-sm text-slate-500 mb-4">Tải lên ảnh giấy phép ATVS thực phẩm. Ảnh sẽ hiển thị ở cuối trang tư vấn để tăng uy tín với khách hàng.</p>
+                  <div class="flex items-start gap-5">
+                    <div class="w-32 h-44 rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0 shadow-sm">
+                      <img id="set-food-cert-preview"
+                           src="https://via.placeholder.com/128x180?text=Gi%E1%BA%A5y+ph%C3%A9p"
+                           class="w-full h-full object-cover" alt="Giấy phép ATVSTP" />
+                    </div>
+                    <div class="flex-1 space-y-3">
+                      <label class="block text-sm font-medium text-slate-700">Tải lên ảnh giấy phép</label>
+                      <label for="set-food-cert-upload" class="cursor-pointer inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary font-semibold text-sm px-4 py-2.5 rounded-lg border border-primary/30 transition-colors">
+                        <i class="fa-solid fa-upload"></i> Chọn ảnh từ máy tính
+                      </label>
+                      <input type="file" id="set-food-cert-upload" accept="image/*" class="hidden"
+                             onchange="handleFoodCertUpload(event)" />
+                      <p class="text-xs text-slate-400">Hỗ trợ: JPG, PNG, WEBP. Kích thước tối đa 3MB.</p>
+                      <button type="button" onclick="clearFoodCert()"
+                              class="text-xs text-red-500 hover:text-red-700 underline">
+                        <i class="fa-solid fa-trash-alt"></i> Xóa ảnh
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-6 border-b border-slate-100">
+
                   <h2
                     class="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2"
                   >
@@ -17738,6 +17768,36 @@
       // ==========================================
       // 2. UTILITY FUNCTIONS (Toasts, Modals, API)
       // ==========================================
+      // Helper: tạo URL và Headers đúng cho cả key định dạng cũ (AIzaSy...) và mới (AQ....)
+      function buildGeminiDirectFetch(apiKey, payload) {
+        const GEMINI_MODEL = "gemini-2.5-flash";
+        const BASE = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+        if (apiKey.startsWith("AQ.")) {
+          // Định dạng key mới - dùng Bearer token trong Authorization header
+          return {
+            url: BASE,
+            options: {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify(payload),
+            }
+          };
+        } else {
+          // Định dạng key cũ (AIzaSy...) - dùng query param
+          return {
+            url: `${BASE}?key=${apiKey}`,
+            options: {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+            }
+          };
+        }
+      }
+
       async function fetchGeminiAPI(prompt, isJson = false) {
         const customKey =
           localStorage.getItem("nutriadmin_custom_api_key") ||
@@ -17770,12 +17830,8 @@
               });
             } catch (err) {
               if (customKey) {
-                const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`;
-                response = await fetch(directUrl, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
+                const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
+                response = await fetch(dUrl, dOpts);
               } else {
                 throw err;
               }
@@ -17785,12 +17841,8 @@
               (response?.status === 404 || response?.status === 405) &&
               customKey
             ) {
-              const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`;
-              response = await fetch(directUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-              });
+              const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
+              response = await fetch(dUrl, dOpts);
             }
 
             if (!response.ok) {
@@ -21478,6 +21530,12 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               if (logoImg) logoImg.src = settings.brandLogo;
             }
 
+            // Load ảnh giấy phép ATVS thực phẩm
+            if (settings.foodSafetyCertImg) {
+              const certImg = document.getElementById("set-food-cert-preview");
+              if (certImg) certImg.src = settings.foodSafetyCertImg;
+            }
+
             if (settings.favicon) {
               const favImg = document.getElementById("set-favicon-preview");
               if (favImg) favImg.src = settings.favicon;
@@ -22075,7 +22133,53 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         });
       }
 
+      function handleFoodCertUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) {
+          showToast("Ảnh quá lớn! Vui lòng chọn ảnh dưới 3MB.", "error");
+          return;
+        }
+        const inputEl = event.target;
+        inputEl.disabled = true;
+        const previewId = "set-food-cert-preview";
+        setElementUploadLoading(previewId, null, true, "Đang nén...");
+
+        compressImage(file, 800, 1100, 0.82, function(compressedDataUrl) {
+          const img = document.getElementById(previewId);
+          if (img) img.src = compressedDataUrl;
+          setElementUploadLoading(previewId, null, false);
+
+          const savedSettings = localStorage.getItem("nutriadmin_settings");
+          let settings = savedSettings ? JSON.parse(savedSettings) : {};
+          settings.foodSafetyCertImg = compressedDataUrl;
+          localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+          window.appSettings = settings;
+
+          if (typeof syncStateToServer === "function") syncStateToServer();
+          showToast("Đã tải lên giấy phép ATVSTP!", "success");
+
+          inputEl.disabled = false;
+          inputEl.value = "";
+        });
+      }
+
+      function clearFoodCert() {
+        const img = document.getElementById("set-food-cert-preview");
+        if (img) img.src = "https://via.placeholder.com/128x180?text=Gi%E1%BA%A5y+ph%C3%A9p";
+
+        const savedSettings = localStorage.getItem("nutriadmin_settings");
+        let settings = savedSettings ? JSON.parse(savedSettings) : {};
+        settings.foodSafetyCertImg = "";
+        localStorage.setItem("nutriadmin_settings", JSON.stringify(settings));
+        window.appSettings = settings;
+
+        if (typeof syncStateToServer === "function") syncStateToServer();
+        showToast("Đã xóa ảnh giấy phép.", "info");
+      }
+
       window.silentSaveSettings = function(e) {
+
         if (e) e.preventDefault();
         if (window.silentSaveTimeout) clearTimeout(window.silentSaveTimeout);
         window.silentSaveTimeout = setTimeout(() => {
@@ -22154,7 +22258,17 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           bankQrBase64 = bankImg.src;
         }
 
+        // Lưu ảnh giấy phép ATVS thực phẩm
+        let foodSafetyCertImg = existing.foodSafetyCertImg || "";
+        const certPreviewEl = document.getElementById("set-food-cert-preview");
+        if (certPreviewEl && certPreviewEl.src &&
+            !certPreviewEl.src.includes("placeholder.com") &&
+            !certPreviewEl.src.includes("Gi%E1%BA%A5y")) {
+          foodSafetyCertImg = certPreviewEl.src;
+        }
+
         let existingSettings = savedSettings ? JSON.parse(savedSettings) : {};
+
 
         const pkgIds = [
           "front-pkg1-subtitle",
@@ -22255,7 +22369,9 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           paymentBankInfo: document.getElementById("set-payment-bank-info")
             .value,
           paymentBankQr: bankQrBase64,
+          foodSafetyCertImg: foodSafetyCertImg,
           zaloOaEnable: document.getElementById("set-zalo-oa-enable").checked,
+
           weeklySpecialFilterEnabled: document.getElementById(
             "set-weekly-special-filter-enable",
           ).checked,
@@ -23436,10 +23552,28 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
           location: locationStr,
           device: deviceLabel,
           deviceId: customerDeviceId,
-          timestamp: timestamp || new Date(),
+          timestamp: (timestamp || new Date()).toISOString(),
         };
-        qrScans.unshift(newScan);
+        // Chuyển timestamp về ISO string để tránh lỗi khi lưu Firebase / JSON
+        qrScans.unshift({ ...newScan, timestamp: timestamp || new Date() });
         localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+
+        // Ghi trực tiếp lên Firebase (không qua syncStateToServer bị guard bởi isInitialStateLoaded)
+        // Đây là cơ chế đặc biệt cho trang Landing/Tư vấn trên điện thoại khách hàng
+        try {
+          if (cloudDb) {
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("qr_scans_log")
+              .set({
+                scans: firebase.firestore.FieldValue.arrayUnion(newScan)
+              }, { merge: true })
+              .then(() => console.log("QR scan pushed directly to Firebase:", scanId))
+              .catch((e) => console.warn("QR direct Firebase write failed:", e.message));
+          }
+        } catch (e) {}
+
+        // Fallback: cũng thử syncStateToServer (nếu admin đang xem trang quản trị)
         syncStateToServer();
         renderQrScansList();
 
@@ -27892,6 +28026,83 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                           <div class="flex items-center gap-2"><i class="fa-solid fa-user-doctor text-2xl"></i> Chuẩn Y khoa</div>
                       </div>
                   `;
+
+        if (parsedSettings.foodSafetyCertImg) {
+          htmlToRender += `
+                      <!-- Food Safety Certificate -->
+                      <div class="mt-8 flex justify-center animate-fade-in mb-4">
+                          <img src="${parsedSettings.foodSafetyCertImg}" alt="Giấy chứng nhận ATVSTP" class="max-w-full md:max-w-sm rounded-lg shadow-md border border-slate-200" />
+                      </div>
+          `;
+        }
+
+        // --- Business Info Block ---
+        let businessInfoHtml = `
+            <div class="mt-4 pt-8 border-t border-slate-200 mb-12 max-w-xl mx-auto px-4 md:px-0 animate-fade-in">
+                <h3 class="text-lg font-bold text-slate-800 mb-4 text-center">Thông tin liên hệ</h3>
+                <div class="bg-white rounded-2xl p-5 md:p-6 shadow-[0_8px_30px_rgba(15,23,42,0.04)] border border-slate-200">
+                    <div class="flex flex-col gap-4">
+        `;
+
+        if (parsedSettings.address) {
+            businessInfoHtml += `
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Địa chỉ</p>
+                                <p class="text-sm text-slate-700 font-medium">${parsedSettings.address}</p>
+                            </div>
+                        </div>
+            `;
+        }
+        if (parsedSettings.phone) {
+            businessInfoHtml += `
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Điện thoại</p>
+                                <a href="tel:${parsedSettings.phone}" class="text-sm text-slate-700 font-medium hover:text-blue-600 transition-colors">${parsedSettings.phone}</a>
+                            </div>
+                        </div>
+            `;
+        }
+        if (parsedSettings.zalo) {
+            businessInfoHtml += `
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#0068FF]/10 text-[#0068FF] flex items-center justify-center shrink-0 border border-[#0068FF]/20">
+                                <span class="font-black text-sm">Z</span>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Zalo</p>
+                                <a href="${zaloUrl}" target="_blank" class="text-sm text-slate-700 font-medium hover:text-[#0068FF] transition-colors">${parsedSettings.zalo}</a>
+                            </div>
+                        </div>
+            `;
+        }
+        if (parsedSettings.facebook) {
+            businessInfoHtml += `
+                        <div class="flex items-start gap-4">
+                            <div class="w-10 h-10 rounded-full bg-[#1877F2]/10 text-[#1877F2] flex items-center justify-center shrink-0 border border-[#1877F2]/20">
+                                <i class="fa-brands fa-facebook-f text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Fanpage Facebook</p>
+                                <a href="${parsedSettings.facebook}" target="_blank" class="text-sm text-slate-700 font-medium hover:text-[#1877F2] transition-colors break-all line-clamp-2">${parsedSettings.facebook}</a>
+                            </div>
+                        </div>
+            `;
+        }
+
+        businessInfoHtml += `
+                    </div>
+                </div>
+            </div>
+        `;
+        htmlToRender += businessInfoHtml;
 
         container.innerHTML = htmlToRender;
         if (window.loadAllBannerImages) window.loadAllBannerImages();
@@ -36234,12 +36445,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               });
             } catch (err) {
               if (customKey) {
-                const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`;
-                response = await fetch(directUrl, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(payload),
-                });
+                const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
+                response = await fetch(dUrl, dOpts);
               } else {
                 throw err;
               }
@@ -36249,12 +36456,8 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               (response?.status === 404 || response?.status === 405) &&
               customKey
             ) {
-              const directUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${customKey}`;
-              response = await fetch(directUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-              });
+              const { url: dUrl, options: dOpts } = buildGeminiDirectFetch(customKey, payload);
+              response = await fetch(dUrl, dOpts);
             }
             if (!response.ok)
               throw new Error(`HTTP error! status: ${response.status}`);
@@ -36658,6 +36861,43 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
                 }
               });
 
+            // Lắng nghe real-time lượt quét QR từ điện thoại khách hàng (ghi vào doc riêng để tránh race condition)
+            cloudDb
+              .collection("nutriadmin_v1")
+              .doc("qr_scans_log")
+              .onSnapshot((scanSnap) => {
+                if (!scanSnap.exists) return;
+                const data = scanSnap.data();
+                if (!data || !Array.isArray(data.scans) || data.scans.length === 0) return;
+
+                // Merge các lượt quét mới từ Firebase vào qrScans (tránh trùng lặp theo id)
+                const existingIds = new Set(qrScans.map((s) => s.id));
+                let merged = false;
+                data.scans.forEach((s) => {
+                  if (!existingIds.has(s.id)) {
+                    qrScans.unshift({
+                      ...s,
+                      timestamp: parseSafeDate ? parseSafeDate(s.timestamp) : new Date(s.timestamp),
+                    });
+                    merged = true;
+                  }
+                });
+
+                if (merged) {
+                  // Sắp xếp theo thời gian mới nhất
+                  qrScans.sort((a, b) => {
+                    const ta = a.timestamp instanceof Date ? a.timestamp.getTime() : new Date(a.timestamp).getTime();
+                    const tb = b.timestamp instanceof Date ? b.timestamp.getTime() : new Date(b.timestamp).getTime();
+                    return tb - ta;
+                  });
+                  localStorage.setItem("nutriadmin_qr_scans", JSON.stringify(qrScans));
+                  try { renderQrScansList(); } catch (e) {}
+                  console.log("QR scans merged from qr_scans_log:", qrScans.length, "total scans.");
+                }
+              }, (e) => {
+                console.warn("Could not subscribe to qr_scans_log:", e.message);
+              });
+
             // Đọc ảnh banner từ Firebase document riêng 'banner_images' và apply cho tất cả người dùng
             // (kể cả khách hàng - không cần quyền admin)
             cloudDb
@@ -36734,6 +36974,7 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
               orders,
               allReviews,
               allChats,
+              qrScans,
               settings: currentSettings,
               mascotExpressions,
               mascotActions,
@@ -40902,6 +41143,647 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
         }, 1000);
       }
 
+      window.openCreateDishModal = function () {
+        selfMixContext = null;
+        createDishStep = 1;
+        createDishData = {
+          protein: null,
+          method: null,
+          size: "balance",
+          carb: null,
+          vegs: [],
+          sauce: null,
+          name: "",
+        };
+        renderCreateDishStep();
+        document.getElementById("create-dish-modal").classList.remove("hidden");
+      };
+
+      window.closeCreateDishModal = function () {
+        document.getElementById("create-dish-modal").classList.add("hidden");
+      };
+
+      window.prevCreateDishStep = function () {
+        if (createDishStep > 1) {
+          createDishStep--;
+          renderCreateDishStep();
+        }
+      };
+
+      window.nextCreateDishStep = function () {
+        if (createDishStep === 1) {
+          if (!createDishData?.protein) {
+            showToast("Vui lòng chọn nguồn đạm!", "error");
+            return;
+          }
+          if (!createDishData.method) {
+            showToast("Vui lòng chọn cách chế biến!", "error");
+            return;
+          }
+          createDishStep = 2;
+          renderCreateDishStep();
+        } else if (createDishStep === 2) {
+          if (!createDishData.carb) {
+            showToast("Vui lòng chọn tinh bột!", "error");
+            return;
+          }
+          createDishStep = 3;
+          renderCreateDishStep();
+        } else if (createDishStep === 3) {
+          if (!createDishData.vegs || createDishData.vegs.length === 0) {
+            showToast("Vui lòng chọn ít nhất 1 loại rau củ!", "error");
+            return;
+          }
+          createDishStep = 4;
+          renderCreateDishStep();
+        } else if (createDishStep === 4) {
+          if (!createDishData.sauce) {
+            showToast("Vui lòng chọn nước sốt!", "error");
+            return;
+          }
+          saveCreatedDish();
+        }
+      };
+
+      window.selectProteinInModal = function (id) {
+        const dish = dishes.find((d) => d.id === id);
+        if (dish) {
+          createDishData.protein = dish;
+          const visibleMethods = dish.methods
+            ? dish.methods.filter((m) => !m.isHidden)
+            : [];
+          if (visibleMethods.length > 0) {
+            createDishData.method = visibleMethods[0].name;
+          } else {
+            createDishData.method = "";
+          }
+          renderCreateDishStep();
+        }
+      };
+
+      window.selectMethodInModal = function (methodName) {
+        createDishData.method = methodName;
+        renderCreateDishStep();
+      };
+
+      window.selectSizeInModal = function (sizeKey) {
+        if (selfMixContext) {
+          showToast("Size đã được khóa theo gói đăng ký của khách hàng!", "warning");
+          return;
+        }
+        createDishData.size = sizeKey;
+        renderCreateDishStep();
+      };
+
+      window.selectCarbInModal = function (id) {
+        const dish = dishes.find((d) => d.id === id);
+        if (dish) {
+          createDishData.carb = dish;
+          renderCreateDishStep();
+        }
+      };
+
+      window.selectVegInModal = function (id) {
+        const dish = dishes.find((d) => d.id === id);
+        if (dish) {
+          if (!createDishData.vegs) createDishData.vegs = [];
+          const index = createDishData.vegs.findIndex((v) => v.id === id);
+          if (index !== -1) {
+            createDishData.vegs.splice(index, 1);
+          } else {
+            if (createDishData.vegs.length < 3) {
+              createDishData.vegs.push(dish);
+            } else {
+              showToast("Chỉ được chọn tối đa 3 loại rau củ!", "error");
+              return;
+            }
+          }
+          renderCreateDishStep();
+        }
+      };
+
+      window.selectSauceInModal = function (id) {
+        const dish = dishes.find((d) => d.id === id);
+        if (dish) {
+          createDishData.sauce = dish;
+          renderCreateDishStep();
+        }
+      };
+
+      window.renderCreateDishStep = function () {
+        const container = document.getElementById("create-dish-step-container");
+        if (!container) return;
+
+        // Update step badges & lines
+        for (let i = 1; i <= 4; i++) {
+          const ind = document.getElementById(`step-ind-${i}`);
+          const line = document.getElementById(`step-line-${i - 1}`);
+          if (ind) {
+            const badge = ind.querySelector("span");
+            const text = ind.querySelector("span:last-child");
+            if (i < createDishStep) {
+              // Completed step
+              badge.className =
+                "w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs font-bold";
+              badge.innerHTML = '<i class="fa-solid fa-check"></i>';
+              text.className = "text-xs font-bold text-emerald-600";
+            } else if (i === createDishStep) {
+              // Current step
+              badge.className =
+                "w-6 h-6 rounded-full bg-orange-500 text-white flex items-center justify-center text-xs font-bold";
+              badge.innerHTML = i.toString();
+              text.className = "text-xs font-bold text-orange-600";
+            } else {
+              // Future step
+              badge.className =
+                "w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold";
+              badge.innerHTML = i.toString();
+              text.className = "text-xs font-semibold text-slate-500";
+            }
+          }
+          if (line) {
+            if (i < createDishStep) {
+              line.className = "h-0.5 w-6 bg-emerald-500 shrink-0";
+            } else {
+              line.className = "h-0.5 w-6 bg-slate-200 shrink-0";
+            }
+          }
+        }
+
+        // Show/hide prev button
+        const prevBtn = document.getElementById("create-dish-prev-btn");
+        if (prevBtn) {
+          if (createDishStep === 1) {
+            prevBtn.classList.add("hidden");
+          } else {
+            prevBtn.classList.remove("hidden");
+          }
+        }
+
+        // Update next button label
+        const nextBtn = document.getElementById("create-dish-next-btn");
+        if (nextBtn) {
+          if (createDishStep === 4) {
+            nextBtn.innerHTML =
+              'Hoàn thành <i class="fa-solid fa-square-check ml-1.5 mt-0.5"></i>';
+            nextBtn.className =
+              "inline-flex justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-emerald-700 transition-colors cursor-pointer";
+          } else {
+            nextBtn.innerHTML =
+              'Tiếp tục <i class="fa-solid fa-arrow-right ml-1.5 mt-0.5"></i>';
+            nextBtn.className =
+              "inline-flex justify-center rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:bg-orange-600 transition-colors cursor-pointer";
+          }
+        }
+
+        let html = "";
+        const sizeKey = createDishData.size;
+
+        if (createDishStep === 1) {
+          // Select protein, cooking method, and size
+          const proteins = dishes.filter((d) => d.category === "protein" && d.isActive !== false);
+          html = `
+            <div class="space-y-6">
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5">1. Chọn Nguồn Đạm <span class="text-red-500">*</span></h4>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  ${proteins
+                    .map((p) => {
+                      const isSel =
+                        createDishData?.protein &&
+                        createDishData?.protein.id === p.id;
+                      return `
+                      <div onclick="selectProteinInModal(${p.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer relative flex flex-col items-center text-center ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
+                        ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
+                        <img src="${p.image}" class="w-16 h-16 rounded-full object-cover border border-slate-100 shadow-sm mb-2">
+                        <span class="text-xs font-bold text-slate-800 leading-tight">${p.name}</span>
+                      </div>
+                    `;
+                    })
+                    .join("")}
+                </div>
+              </div>
+          `;
+
+          if (createDishData?.protein) {
+            const p = createDishData?.protein;
+            const methods = p.methods || [];
+            html += `
+              <div class="animate-fadeIn">
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5">2. Cách Chế Biến <span class="text-red-500">*</span></h4>
+                <div class="flex flex-wrap gap-2">
+                  ${methods
+                    .filter((m) => !m.isHidden)
+                    .map((m) => {
+                      const isSel = createDishData.method === m.name;
+                      return `
+                      <button type="button" onclick="selectMethodInModal('${m.name}')" class="px-4 py-2 rounded-xl text-xs font-bold transition-all border ${isSel ? "bg-orange-500 text-white border-orange-500 shadow-sm" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"}">
+                        ${m.name}
+                      </button>
+                    `;
+                    })
+                    .join("")}
+                </div>
+              </div>
+            `;
+          }
+
+          let sizeLockedLabel = "";
+          if (selfMixContext) {
+            sizeLockedLabel = `<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/50 ml-2 animate-pulse"><i class="fa-solid fa-lock text-[9px]"></i> Đã khóa theo gói đăng ký</span>`;
+          }
+
+          html += `
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1.5 flex items-center">
+                  3. Size Món Ăn (Quyết định mặc định của các bước sau) <span class="text-red-500 ml-1">*</span>
+                  ${sizeLockedLabel}
+                </h4>
+                <div class="grid grid-cols-3 gap-3">
+                  <button type="button" onclick="selectSizeInModal('lean')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "lean" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+                    <span class="flex items-center gap-1">
+                      Size Lean (S)
+                      ${selfMixContext && sizeKey === "lean" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                    </span>
+                    <span class="text-[9px] ${sizeKey === "lean" ? "text-orange-100" : "text-slate-400"} font-medium">Gọn gàng ít năng lượng</span>
+                  </button>
+<button type="button" onclick="selectSizeInModal('balance')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "balance" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+                    <span class="flex items-center gap-1">
+                      Size Balance (M)
+                      ${selfMixContext && sizeKey === "balance" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                    </span>
+                    <span class="text-[9px] ${sizeKey === "balance" ? "text-orange-100" : "text-slate-400"} font-medium">Bữa ăn cân bằng cơ bản</span>
+                  </button>
+                  <button type="button" onclick="selectSizeInModal('power')" ${selfMixContext ? "disabled" : ""} class="py-2.5 rounded-xl border font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${sizeKey === "power" ? "bg-orange-500 text-white border-orange-500 shadow-sm" : selfMixContext ? "bg-slate-50 text-slate-400 border-slate-200 opacity-50 cursor-not-allowed" : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"}">
+                    <span class="flex items-center gap-1">
+                      Size Power (L)
+                      ${selfMixContext && sizeKey === "power" ? '<i class="fa-solid fa-lock text-[9px] text-orange-200"></i>' : ""}
+                    </span>
+                    <span class="text-[9px] ${sizeKey === "power" ? "text-orange-100" : "text-slate-400"} font-medium">Tăng cường năng lượng & đạm</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        } else if (createDishStep === 2) {
+          // Select carb
+          const carbs = dishes.filter((d) => d.category === "carbs" && d.isActive !== false);
+          html = `
+            <div class="space-y-4 animate-fadeIn">
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Tinh Bột <span class="text-red-500">*</span></h4>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${carbs
+                  .map((c) => {
+                    const isSel =
+                      createDishData.carb && createDishData.carb.id === c.id;
+                    const info = c.sizes?.[sizeKey] || c.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
+                    return `
+                    <div onclick="selectCarbInModal(${c.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
+                      ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
+                      <img src="${c.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
+                      <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <span class="text-xs font-bold text-slate-800 block truncate mb-1">${c.name}</span>
+                        <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
+                          <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
+                          <span>P: ${info?.protein}g</span>
+                          <span>C: ${info?.carbs}g</span>
+                          <span>F: ${info?.fat}g</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+${formatCurrency(info?.price)}đ</span>
+                      </div>
+                    </div>
+                  `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+          `;
+        } else if (createDishStep === 3) {
+          // Select veggie
+          const veggies = dishes.filter((d) => d.category === "veggies" && d.isActive !== false && d.id >= 111);
+          const vegsLength = createDishData.vegs
+            ? createDishData.vegs.length
+            : 0;
+          html = `
+            <div class="space-y-4 animate-fadeIn">
+              <div>
+                <div class="flex justify-between items-end mb-1">
+                  <h4 class="font-bold text-slate-800 text-sm">Chọn Rau Củ <span class="text-red-500">*</span></h4>
+                  <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">${vegsLength}/3</span>
+                </div>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn. <em>(bạn có thể chọn 1 đến 3 loại)</em></p>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                ${veggies
+                  .map((v) => {
+                    const isSel =
+                      createDishData.vegs &&
+                      createDishData.vegs.some((veg) => veg.id === v.id);
+                    const info = v.sizes?.[sizeKey] || v.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
+                    return `
+                    <div onclick="selectVegInModal(${v.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
+                      ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
+                      <img src="${v.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
+                      <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <span class="text-xs font-bold text-slate-800 block truncate mb-1">${v.name}</span>
+                        <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
+                          <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
+                          <span>P: ${info?.protein}g</span>
+                          <span>C: ${info?.carbs}g</span>
+                          <span>F: ${info?.fat}g</span>
+                        </div>
+                        <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+${formatCurrency(info?.price)}đ</span>
+                      </div>
+                    </div>
+                  `;
+                  })
+                  .join("")}
+              </div>
+            </div>
+          `;
+        } else if (createDishStep === 4) {
+          // Select sauce and customize name/preview
+          const sauces = dishes.filter((d) => d.category === "sauce" && d.isActive !== false);
+
+          // Generate default name
+          const pName = createDishData?.protein
+            ? createDishData?.protein.name
+            : "";
+          const pMethod = createDishData.method ? createDishData.method : "";
+          const cName = createDishData.carb ? createDishData.carb.name : "";
+          let vName = "";
+          if (createDishData.vegs && createDishData.vegs.length > 0) {
+            vName =
+              createDishData.vegs.length > 1
+                ? "Rau thập cẩm"
+                : createDishData.vegs[0].name;
+          }
+          const sName = createDishData.sauce ? createDishData.sauce.name : "";
+
+          // Clean up the name nicely
+          let defaultGeneratedName = "";
+          if (pName && cName && vName) {
+            defaultGeneratedName = `${pName} ${pMethod} ${cName} ${vName}`;
+            if (sName) {
+              defaultGeneratedName += ` Sốt ${sName}`;
+            }
+          }
+          createDishData.name = defaultGeneratedName;
+
+          // Calculate standard preview
+          const sumLean = getMacrosSum("lean");
+        const sumBalance = getMacrosSum("balance");
+          const sumPower = getMacrosSum("power");
+
+          html = `
+            <div class="space-y-6 animate-fadeIn">
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">Chọn Nước Sốt <span class="text-red-500">*</span></h4>
+                <p class="text-xs text-slate-500 mb-3">Hiển thị các chỉ số đa lượng theo size <b>${sizeKey === "power" ? "Power (L)" : sizeKey === "balance" ? "Balance (M)" : "Lean (S)"}</b> đã chọn</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                  ${sauces
+                    .map((s) => {
+                      const isSel =
+                        createDishData.sauce &&
+                        createDishData.sauce.id === s.id;
+                      const info = s.sizes?.[sizeKey] || s.sizes?.balance || {kcal:0, protein:0, carbs:0, fat:0, price:0};
+                      return `
+                      <div onclick="selectSauceInModal(${s.id})" class="border-2 rounded-2xl p-3 bg-white hover:border-orange-500 transition-all cursor-pointer flex gap-3 relative ${isSel ? "border-orange-500 ring-2 ring-orange-500/10 shadow-md" : "border-slate-200 shadow-sm"}">
+                        ${isSel ? '<span class="absolute top-2 right-2 bg-orange-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-sm"><i class="fa-solid fa-check"></i></span>' : ""}
+                        <img src="${s.image}" class="w-16 h-16 rounded-xl object-cover border shrink-0">
+                        <div class="flex-1 min-w-0 flex flex-col justify-center">
+                          <span class="text-xs font-bold text-slate-800 block truncate mb-1">${s.name}</span>
+                          <div class="flex flex-wrap gap-2 text-[10px] text-slate-500 font-medium">
+                            <span class="text-orange-600 font-bold">${info?.kcal} kcal</span>
+                            <span>P: ${info?.protein}g</span>
+                            <span>C: ${info?.carbs}g</span>
+                            <span>F: ${info?.fat}g</span>
+                          </div>
+                          <span class="text-[10px] font-bold text-emerald-600 mt-1 block">+ ${formatCurrency(info?.price)}đ</span>
+                        </div>
+                      </div>
+                    `;
+                    })
+                    .join("")}
+                </div>
+              </div>
+          `;
+
+          if (createDishData.sauce) {
+            html += `
+              <div>
+                <h4 class="font-bold text-slate-800 text-sm mb-2">Tên Món Ăn Đầy Đủ</h4>
+                <input type="text" id="cd-name-input" value="${defaultGeneratedName}" class="w-full rounded-xl border border-slate-300 py-3 px-4 text-sm font-semibold focus:border-orange-500 focus:ring-1 focus:ring-orange-500 focus:outline-none transition-colors shadow-sm bg-white">
+              </div>
+
+              <!-- Real-time Summary Card -->
+              <div class="border border-slate-200 bg-white rounded-2xl overflow-hidden shadow-sm">
+                <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 flex justify-between items-center">
+                  <h4 class="font-bold text-xs text-slate-600 uppercase tracking-wider">
+                    <i class="fa-solid fa-circle-nodes mr-1 text-slate-400"></i> Tổng Chỉ Số Món Ăn
+                  </h4>
+                  <span class="text-[10px] font-bold bg-orange-500 text-white px-2 py-0.5 rounded-full">Tính theo Tổng Thành Phần</span>
+                </div>
+                <div class="p-4 grid gap-4 sm:grid-cols-3">
+                  <div class="bg-emerald-50/40 rounded-xl p-3.5 border border-emerald-100/50">
+                    <div class="flex justify-between items-center border-b border-emerald-100 pb-1.5 mb-2">
+                      <span class="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Lean (S)
+                      </span>
+                      <span class="text-sm font-bold text-emerald-900">${formatCurrency(sumLean?.price)}đ</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Calo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean?.kcal} kcal</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Đạm</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean?.protein}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Cacbon</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean?.carbs}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-emerald-600 font-bold uppercase mb-0.5">Béo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumLean?.fat}g</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-orange-50/40 rounded-xl p-3.5 border border-orange-100/50">
+                    <div class="flex justify-between items-center border-b border-orange-100 pb-1.5 mb-2">
+                      <span class="text-xs font-bold text-orange-800 flex items-center gap-1">
+                        <i class="fa-solid fa-pizza-slice text-[10px]"></i> Size Balance (M)
+                      </span>
+                      <span class="text-sm font-bold text-orange-900">${formatCurrency(sumBalance?.price)}đ</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Calo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance?.kcal} kcal</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Đạm</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance?.protein}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Cacbon</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance?.carbs}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-orange-600 font-bold uppercase mb-0.5">Béo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumBalance?.fat}g</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="bg-indigo-50/40 rounded-xl p-3.5 border border-indigo-100/50">
+                    <div class="flex justify-between items-center border-b border-indigo-100 pb-1.5 mb-2">
+                      <span class="text-xs font-bold text-indigo-800 flex items-center gap-1">
+                        <i class="fa-solid fa-expand text-[10px]"></i> Size Power (L) (L)
+                      </span>
+                      <span class="text-sm font-bold text-indigo-900">${formatCurrency(sumPower?.price)}đ</span>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Calo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower?.kcal} kcal</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Đạm</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower?.protein}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Cacbon</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower?.carbs}g</p>
+                      </div>
+                      <div>
+                        <p class="text-[9px] text-indigo-600 font-bold uppercase mb-0.5">Béo</p>
+                        <p class="text-xs font-bold text-slate-800">${sumPower?.fat}g</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `;
+          }
+
+          html += `
+            </div>
+          `;
+        }
+
+        container.innerHTML = html;
+      };
+
+      
+      window.recalculateCompleteDishes = function() {
+        if (typeof dishes === "undefined" || !Array.isArray(dishes)) return;
+        let changed = false;
+        dishes.filter(d => d.category === "complete" && d.components).forEach(d => {
+          let sumLean = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumBalance = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          let sumPower = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
+          const comps = d.components;
+          
+          const addMacros = (sourceSizes) => {
+            if (sourceSizes.lean) {
+              sumLean.kcal += sourceSizes.lean?.kcal || 0;
+              sumLean.protein += sourceSizes.lean?.protein || 0;
+              sumLean.carbs += sourceSizes.lean?.carbs || 0;
+              sumLean.fat += sourceSizes.lean?.fat || 0;
+              sumLean.price += sourceSizes.lean?.price || 0;
+            }
+
+            if (sourceSizes.balance) {
+              sumBalance.kcal += sourceSizes.balance?.kcal || 0;
+              sumBalance.protein += sourceSizes.balance?.protein || 0;
+              sumBalance.carbs += sourceSizes.balance?.carbs || 0;
+              sumBalance.fat += sourceSizes.balance?.fat || 0;
+              sumBalance.price += sourceSizes.balance?.price || 0;
+            }
+            if (sourceSizes.power) {
+              sumPower.kcal += sourceSizes.power?.kcal || 0;
+              sumPower.protein += sourceSizes.power?.protein || 0;
+              sumPower.carbs += sourceSizes.power?.carbs || 0;
+              sumPower.fat += sourceSizes.power?.fat || 0;
+              sumPower.price += sourceSizes.power?.price || 0;
+            }
+          };
+
+          // Protein & Method
+          const protein = dishes.find(x => x.id === comps?.proteinId);
+          if (protein) {
+            let methodObj = null;
+            if (protein.methods) {
+              methodObj = protein.methods.find(m => m.name === comps.methodName);
+            }
+            if (methodObj && methodObj.sizes) {
+              addMacros(methodObj.sizes);
+            } else if (protein.sizes) {
+              addMacros(protein.sizes);
+            }
+          }
+          
+          // Carb
+          const carb = dishes.find(x => x.id === comps.carbId);
+          if (carb && carb.sizes) {
+            addMacros(carb.sizes);
+          }
+
+          // Vegs
+          if (comps.vegIds && Array.isArray(comps.vegIds)) {
+            comps.vegIds.forEach(vId => {
+              const veg = dishes.find(x => x.id === vId);
+              if (veg && veg.sizes) {
+                addMacros(veg.sizes);
+              }
+            });
+          }
+
+          // Sauce
+          const sauce = dishes.find(x => x.id === comps.sauceId);
+          if (sauce && sauce.sizes) {
+            addMacros(sauce.sizes);
+          }
+
+          if (!d.sizes) d.sizes = {};
+          if (!d.sizes.lean) d.sizes.lean = {};
+          
+          d.sizes.lean.kcal = sumLean?.kcal;
+          d.sizes.lean.protein = sumLean?.protein;
+          d.sizes.lean.carbs = sumLean?.carbs;
+          d.sizes.lean.fat = sumLean?.fat;
+          d.sizes.lean.price = sumLean?.price;
+
+          if (!d.sizes.balance) d.sizes.balance = {};
+          if (!d.sizes.power) d.sizes.power = {};
+          
+          d.sizes.balance.kcal = sumBalance?.kcal;
+          d.sizes.balance.protein = sumBalance?.protein;
+          d.sizes.balance.carbs = sumBalance?.carbs;
+          d.sizes.balance.fat = sumBalance?.fat;
+          d.sizes.balance.price = sumBalance?.price;
+
+          d.sizes.power.kcal = sumPower?.kcal;
+          d.sizes.power.protein = sumPower?.protein;
+          d.sizes.power.carbs = sumPower?.carbs;
+          d.sizes.power.fat = sumPower?.fat;
+          d.sizes.power.price = sumPower?.price;
+          
+          changed = true;
+        });
+        
+        if (changed && typeof syncStateToServer === "function") {
+          lastStateStr = "";
+          syncStateToServer();
+        }
+      };
       function getMacrosSum(sizeKey) {
         let sum = { kcal: 0, protein: 0, carbs: 0, fat: 0, price: 0 };
         if (createDishData?.protein) {
@@ -44671,7 +45553,11 @@ Tôi đã hoàn thành 7 ngày ăn uống lành mạnh cùng Nuri Kitchen! Hành
           "(display-mode: standalone)"
         ).matches || window.navigator.standalone === true;
 
-        if (!isLandingMode && !isPwaInstalled) {
+        if (isPwaInstalled) {
+          return;
+        }
+
+        if (!isLandingMode) {
           return;
         }
 
