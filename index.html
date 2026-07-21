@@ -26583,8 +26583,51 @@ Yêu cầu trả về đúng định dạng JSON thô (không bọc trong ký hi
 
       function handleAnalysisSubmit(e) {
         e.preventDefault();
-        const form = e.target;
 
+        // --- Rate Limiting Logic ---
+        const now = Date.now();
+        const sixtyMins = 60 * 60 * 1000;
+        let aiConsultations = [];
+        try {
+          aiConsultations = JSON.parse(localStorage.getItem("ai_consultation_timestamps") || "[]");
+        } catch(e) {}
+        
+        aiConsultations = aiConsultations.filter(timestamp => now - timestamp < sixtyMins);
+        
+        if (aiConsultations.length >= 4) {
+          showToast("Bạn đã hết lượt tư vấn, hãy quay lại sau 60 phút", "error");
+          
+          const container = document.getElementById("analysis-result");
+          if (container) {
+             container.classList.remove("hidden");
+             
+             let mascotHtml = '<img src="assets/mascot/xin_loi/0.png" alt="Xin lỗi" class="w-48 h-48 object-contain mx-auto mb-6">';
+             if (typeof drawMascotSVG === "function") {
+                // Pre-render SVG fallback just in case PNG fails
+                const svgFallback = drawMascotSVG("xin_loi", 0).replace(/"/g, "&quot;");
+                mascotHtml = `<img src="assets/mascot/xin_loi/0.png" alt="Xin lỗi" class="w-48 h-48 object-contain mx-auto mb-6" onerror="this.outerHTML='${svgFallback}'">`;
+             }
+             
+             container.innerHTML = `
+                <div class="flex flex-col items-center justify-center p-8 md:p-12 text-center animate-fade-in bg-white rounded-3xl border border-red-100 shadow-sm mt-8">
+                   ${mascotHtml}
+                   <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-3">Bạn đã hết lượt tư vấn!</h3>
+                   <p class="text-sm md:text-base text-slate-600 mb-2 max-w-md mx-auto leading-relaxed">Vì giới hạn hệ thống để chống spam, mỗi thiết bị chỉ được phân tích tối đa 4 lần mỗi 60 phút.</p>
+                   <p class="text-sm md:text-base font-bold text-red-500">Vui lòng quay lại sau 60 phút để tiếp tục nhận thực đơn nhé.</p>
+                </div>
+             `;
+             setTimeout(() => {
+                container.scrollIntoView({ behavior: "smooth", block: "center" });
+             }, 100);
+          }
+          return;
+        }
+
+        aiConsultations.push(now);
+        localStorage.setItem("ai_consultation_timestamps", JSON.stringify(aiConsultations));
+        // ---------------------------
+
+        const form = e.target;
         const activityRadio = form.querySelector(
           'input[name="activity"]:checked',
         );
